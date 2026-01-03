@@ -22,5 +22,17 @@ export default async function PageEditorPage({ params }: { params: Promise<{ id:
         redirect("/dashboard/pages")
     }
 
-    return <PageEditorClient page={page} />
+    // Map to match PageEditorClient interface
+    const pageData = {
+        id: page.id,
+        title: page.title || "",
+        blocks: page.blocks.map(b => ({
+            id: b.id,
+            blockType: b.blockType,
+            content: b.content,
+            displayOrder: b.displayOrder
+        }))
+    }
+
+    return <PageEditorClient page={pageData} />
 }
