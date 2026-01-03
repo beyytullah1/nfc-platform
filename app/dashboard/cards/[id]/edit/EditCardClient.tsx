@@ -198,11 +198,7 @@ export default function EditCardClient({ card, userName }: EditCardClientProps) 
         // Prepare structure for backend
         // We will send groups array, each containing its fields
         const groupsData = groups.map((g, index) => ({
-            name: g.id === 'ungrouped' ? null : g.name, // 'ungrouped' logic handled by backend if null name or specific flag?
-            // Actually, better to send all valid groups. If 'ungrouped' exists and has fields, we can send it as fields without group or special group 
-            // For now let's assume updateCard will handle 'groups' array.
-            // If ID is temp, backend creates new. If ID exists, backend updates/keeps???
-            // NO, `updateCard` strategy is "Delete All -> Recreate". So just sending names is enough.
+            // 'ungrouped' should not have a name
             name: g.id === 'ungrouped' ? undefined : g.name,
             fields: g.fields.filter(f => f.value)
         })).filter(g => g.fields.length > 0 || (g.name && g.id !== 'ungrouped')) // Keep empty named groups if user created them? Maybe.
