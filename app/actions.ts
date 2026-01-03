@@ -377,22 +377,39 @@ export async function getCardWithFields(
  */
 export async function sendConnectionRequest(
     userId: string,
-    friendId: string,
+    cardId: string, // Card ID zorunlu (card-based connection)
     categoryId?: string,
     meetingNote?: string
 ) {
-    // Mevcut bağlantı kontrolü
-    const existing = await prisma.connection.findFirst({
+    // Card sahibini bul
+    const card = await prisma.card.findUnique({
+        where: { id: cardId },
+        select: { userId: true }
+    })
+
+    if (!card) {
+        return { error: 'Kartvizit bulunamadı.' }
+    }
+
+    const friendId = card.userId
+
+    // Kendi kartını kaydedemez
+    if (userId === friendId) {
+        return { error: 'Kendi kartınızı kaydedemezsiniz.' }
+    }
+
+    // Mevcut bağlantı kontrolü (aynı kartı daha önce kaydettiyse)
+    const existing = await prisma.connection.findUnique({
         where: {
-            OR: [
-                { userId, friendId },
-                { userId: friendId, friendId: userId },
-            ],
-        },
+            userId_cardId: {
+                userId,
+                cardId
+            }
+        }
     })
 
     if (existing) {
-        return { error: 'Zaten bağlantı mevcut veya beklemede.' }
+        return { error: 'Bu kartı zaten kaydettiniz.' }
     }
 
     await prisma.$transaction([
@@ -401,9 +418,10 @@ export async function sendConnectionRequest(
             data: {
                 userId,
                 friendId,
+                cardId,
                 categoryId,
                 meetingNote,
-                status: 'pending',
+                status: 'saved', // Artık direkt saved
             },
         }),
         // Bildirim gönder
@@ -412,8 +430,8 @@ export async function sendConnectionRequest(
                 userId: friendId,
                 senderId: userId,
                 type: 'connection_request',
-                title: 'Yeni Bağlantı İsteği',
-                body: 'Birisi sizinle bağlantı kurmak istiyor.',
+                title: 'Kartvizitiniz Kaydedildi',
+                body: 'Birisi kartvizitinizi ağına ekledi.',
             },
         }),
     ])
