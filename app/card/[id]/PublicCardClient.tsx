@@ -95,6 +95,7 @@ interface CardData {
     user: {
         name: string | null
         avatarUrl: string | null
+        email: string | null
     }
     title: string | null
     bio: string | null
