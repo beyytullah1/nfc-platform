@@ -1,0 +1,602 @@
+.page {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
+    padding: 2rem 1rem;
+}
+
+/* Kart Container - Mobil benzeri dikey form */
+.cardContainer {
+    width: 100%;
+    max-width: 420px;
+    background: #0f0f0f;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* Hero Section - Görsel Arka Plan */
+.heroSection {
+    position: relative;
+    width: 100%;
+    height: 320px;
+    overflow: hidden;
+}
+
+.heroImage {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center center;
+}
+
+.heroGradient {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom,
+            rgba(15, 15, 15, 0) 0%,
+            rgba(15, 15, 15, 0) 40%,
+            rgba(15, 15, 15, 0.6) 70%,
+            #0f0f0f 100%);
+    pointer-events: none;
+}
+
+.heroFallback {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+}
+
+/* Logo - Sağ üst köşe */
+.heroLogo {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 45px;
+    height: 45px;
+    object-fit: contain;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 10px;
+    padding: 5px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    z-index: 20;
+}
+
+/* Main Content */
+.contentSection {
+    padding: 1.5rem;
+    margin-top: -40px;
+    position: relative;
+    z-index: 10;
+}
+
+.card {
+    text-align: center;
+}
+
+/* Name & Info */
+.name {
+    color: #fff;
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.title {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+}
+
+.bio {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+}
+
+/* Action Buttons */
+.actionButtons {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.saveContactBtn,
+.shareBtn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1rem;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.saveContactBtn {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+}
+
+.saveContactBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px -5px rgba(16, 185, 129, 0.4);
+}
+
+.shareBtn {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.shareBtn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+}
+
+.saveContactBtn svg,
+.shareBtn svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Toast Notification */
+.toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(16, 185, 129, 0.95);
+    color: #fff;
+    padding: 0.875rem 1.5rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    animation: toastIn 0.3s ease;
+    z-index: 200;
+}
+
+@keyframes toastIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* Quick Social Links */
+.socialQuickLinks {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.socialIcon {
+    width: 44px;
+    height: 44px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    text-decoration: none;
+    transition: all 0.3s;
+    color: #fff;
+}
+
+.socialIcon:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.1);
+}
+
+.socialIcon svg {
+    width: 22px;
+    height: 22px;
+    fill: currentColor;
+}
+
+/* Fields */
+.section {
+    margin-bottom: 1rem;
+}
+
+.fields {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.fieldLink,
+.fieldBlock {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.875rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.fieldLink:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateX(4px);
+}
+
+.fieldIcon {
+    width: 44px;
+    height: 44px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.fieldContent {
+    flex: 1;
+    text-align: left;
+}
+
+.fieldLabel {
+    display: block;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.2rem;
+}
+
+.fieldValue {
+    display: block;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.fieldArrow {
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 1.1rem;
+}
+
+.fieldLink:hover .fieldArrow {
+    color: #fff;
+}
+
+/* Footer */
+.footer {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 0.75rem;
+    text-align: center;
+}
+
+/* Password Overlay */
+.passwordOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 1rem;
+}
+
+.passwordCard {
+    width: 100%;
+    max-width: 360px;
+    background: rgba(30, 41, 59, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 2rem;
+    text-align: center;
+}
+
+.lockIcon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.passwordTitle {
+    color: #fff;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.passwordDesc {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+}
+
+.passwordForm {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.passwordInput {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    color: #fff;
+    font-size: 0.95rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.passwordInput:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+.passwordInput::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.passwordError {
+    color: #f87171;
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+.passwordBtn {
+    width: 100%;
+    padding: 0.875rem;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.passwordBtn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px -5px rgba(59, 130, 246, 0.4);
+}
+
+.passwordBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Locked Field */
+.lockedField {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.875rem;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.15);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.lockedField:hover {
+    background: rgba(239, 68, 68, 0.12);
+}
+
+.unlockBtn {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+    border: none;
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+
+/* Mobil için ekstra küçültme yok - zaten mobil boyutunda */
+@media (max-width: 480px) {
+    .page {
+        padding: 0;
+        align-items: stretch;
+    }
+
+    .cardContainer {
+        max-width: 100%;
+        border-radius: 0;
+    }
+
+    .heroSection {
+        height: 350px;
+    }
+}
+
+/* ============================================
+   ENTRANCE ANIMATIONS
+   ============================================ */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Animation Classes */
+.animateFadeIn {
+    animation: fadeIn 0.6s ease-out forwards;
+}
+
+.animateSlideUp {
+    animation: slideUp 0.5s ease-out forwards;
+}
+
+.animateScaleIn {
+    animation: scaleIn 0.4s ease-out forwards;
+}
+
+/* Staggered delays for list items */
+.animateDelay1 {
+    animation-delay: 0.1s;
+    opacity: 0;
+}
+
+.animateDelay2 {
+    animation-delay: 0.2s;
+    opacity: 0;
+}
+
+.animateDelay3 {
+    animation-delay: 0.3s;
+    opacity: 0;
+}
+
+.animateDelay4 {
+    animation-delay: 0.4s;
+    opacity: 0;
+}
+
+.animateDelay5 {
+    animation-delay: 0.5s;
+    opacity: 0;
+}
+
+.animateDelay6 {
+    animation-delay: 0.6s;
+    opacity: 0;
+}
+
+/* Hero animation */
+.heroSection {
+    animation: fadeIn 0.8s ease-out;
+}
+
+/* Content section animations */
+.name {
+    animation: slideUp 0.5s ease-out 0.2s forwards;
+    opacity: 0;
+}
+
+.title {
+    animation: slideUp 0.5s ease-out 0.3s forwards;
+    opacity: 0;
+}
+
+.bio {
+    animation: slideUp 0.5s ease-out 0.4s forwards;
+    opacity: 0;
+}
+
+.actionButtons {
+    animation: slideUp 0.5s ease-out 0.5s forwards;
+    opacity: 0;
+}
+
+.quickSocials {
+    animation: slideUp 0.5s ease-out 0.6s forwards;
+    opacity: 0;
+}
+
+.fieldsSection {
+    animation: fadeIn 0.6s ease-out 0.7s forwards;
+    opacity: 0;
+}
+
+/* Field items stagger */
+.fieldItem {
+    animation: slideInRight 0.4s ease-out forwards;
+    opacity: 0;
+}
+
+.fieldItem:nth-child(1) {
+    animation-delay: 0.8s;
+}
+
+.fieldItem:nth-child(2) {
+    animation-delay: 0.9s;
+}
+
+.fieldItem:nth-child(3) {
+    animation-delay: 1.0s;
+}
+
+.fieldItem:nth-child(4) {
+    animation-delay: 1.1s;
+}
+
+.fieldItem:nth-child(5) {
+    animation-delay: 1.2s;
+}
+
+.fieldItem:nth-child(6) {
+    animation-delay: 1.3s;
+}
+
+.fieldItem:nth-child(7) {
+    animation-delay: 1.4s;
+}
+
+.fieldItem:nth-child(8) {
+    animation-delay: 1.5s;
+}

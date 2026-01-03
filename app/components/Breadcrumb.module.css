@@ -1,0 +1,33 @@
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.875rem;
+}
+
+.crumbItem {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.separator {
+    color: rgba(255, 255, 255, 0.3);
+    margin: 0 0.25rem;
+}
+
+.link {
+    color: rgba(255, 255, 255, 0.6);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.link:hover {
+    color: #60a5fa;
+}
+
+.current {
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+}

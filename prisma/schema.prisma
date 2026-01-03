@@ -1,0 +1,419 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// =============================================
+// SYSTEM & GATEWAY
+// =============================================
+
+model SystemSettings {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("system_settings")
+}
+
+// =============================================
+// USERS & AUTH
+// =============================================
+
+model User {
+  id           String   @id @default(cuid())
+  email        String?  @unique
+  phone        String?
+  passwordHash String?  @map("password_hash")
+  name         String?
+  avatarUrl    String?  @map("avatar_url")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // İlişkiler
+  ownedTags           NfcTag[]             @relation("TagOwner")
+  cards               Card[]
+  plants              Plant[]              @relation("PlantOwner")
+  giftedPlants        Plant[]              @relation("PlantGifter")
+  mugs                Mug[]
+  pages               Page[]
+  connections         Connection[]         @relation("ConnectionOwner")
+  friendConnections   Connection[]         @relation("ConnectionFriend")
+  categories          ConnectionCategory[]
+  notifications       Notification[]       @relation("NotificationReceiver")
+  sentNotifications   Notification[]       @relation("NotificationSender")
+  plantChats          PlantAiChat[]
+  transfersFrom       OwnershipTransfer[]  @relation("TransferFrom")
+  transfersTo         OwnershipTransfer[]  @relation("TransferTo")
+  sentGifts           Gift[]               @relation("GiftSender")
+  receivedGifts       Gift[]               @relation("GiftReceiver")
+  follows             Follow[]
+
+  @@map("users")
+}
+
+// =============================================
+// NFC TAGS & OWNERSHIP
+// =============================================
+
+model NfcTag {
+  id          String    @id @default(cuid())
+  tagId       String    @unique @map("tag_id") // Fiziksel NFC ID
+  publicCode  String    @unique @map("public_code") // URL kodu
+  ownerId     String?   @map("owner_id")
+  moduleType  String?   @map("module_type") // 'card', 'plant', 'mug', 'gift', 'canvas'
+  status      String    @default("unclaimed") @map("status") // unclaimed, claimed, linked
+  allowFollow Boolean   @default(false) @map("allow_follow")
+  isPublic    Boolean   @default(true) @map("is_public")
+  isActive    Boolean   @default(true) @map("is_active")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  claimedAt   DateTime? @map("claimed_at")
+
+  // İlişkiler
+  owner     User?               @relation("TagOwner", fields: [ownerId], references: [id])
+  card      Card?
+  plant     Plant?
+  mug       Mug?
+  page      Page?
+  gift      Gift?
+  transfers OwnershipTransfer[]
+  followers Follow[]
+
+  @@map("nfc_tags")
+}
+
+// =============================================
+// MODÜL 1: AKILLI KARTVİZİT
+// =============================================
+
+model Card {
+  id             String   @id @default(cuid())
+  userId         String   @map("user_id")
+  tagId          String?  @unique @map("tag_id")
+  slug           String?  @unique // Benzersiz kullanıcı adı: /c/kullaniciadi
+  cardType       String   @default("personal") @map("card_type") // personal, health, child, elderly, pet
+  title          String? // "CEO @ Company"
+  bio            String?
+  logoUrl        String?  @map("logo_url") // Kurumsal logo
+  avatarUrl      String?  @map("avatar_url") // Kullanıcı fotoğrafı
+  theme          String   @default("{\"color\": \"#2ecc71\", \"style\": \"modern\"}")
+  isPublic       Boolean  @default(true) @map("is_public")
+  level1Password String?  @map("level1_password") // Seviye 1 şifresi
+  level2Password String?  @map("level2_password") // Seviye 2 şifresi
+  viewCount      Int      @default(0) @map("view_count") // Görüntülenme sayısı
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // İlişkiler
+  user   User            @relation(fields: [userId], references: [id])
+  tag    NfcTag?         @relation(fields: [tagId], references: [id])
+  fields CardField[]
+  groups CardLinkGroup[]
+
+  @@map("cards")
+}
+
+model CardLinkGroup {
+  id           String   @id @default(cuid())
+  cardId       String   @map("card_id")
+  name         String   // "Kişisel Bilgiler", "Sosyal Medya"
+  icon         String?  // emoji veya icon adı
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  // İlişkiler
+  card   Card        @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  fields CardField[]
+
+  @@map("card_link_groups")
+}
+
+model CardField {
+  id           String   @id @default(cuid())
+  cardId       String   @map("card_id")
+  groupId      String?  @map("group_id") // Link grubuna bağlantı (opsiyonel)
+  fieldType    String   @map("field_type") // phone, email, sms, whatsapp, instagram, linkedin, twitter, facebook, tiktok, youtube, website, github, vcard, video, custom
+  label        String?
+  value        String
+  privacyLevel Int      @default(0) @map("privacy_level") // 0: Public, 1: Seviye 1, 2: Seviye 2
+  isActive     Boolean  @default(true) @map("is_active") // Aktif/Pasif toggle
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  // İlişkiler
+  card  Card           @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  group CardLinkGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+
+  @@map("card_fields")
+}
+
+// Networking bağlantıları
+model Connection {
+  id              String    @id @default(cuid())
+  userId          String    @map("user_id")
+  friendId        String    @map("friend_id")
+  categoryId      String?   @map("category_id")
+  meetingNote     String?   @map("meeting_note")
+  meetingLocation String?   @map("meeting_location")
+  status          String    @default("pending") // 'pending', 'accepted', 'blocked'
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  // İlişkiler
+  user     User                @relation("ConnectionOwner", fields: [userId], references: [id])
+  friend   User                @relation("ConnectionFriend", fields: [friendId], references: [id])
+  category ConnectionCategory? @relation(fields: [categoryId], references: [id])
+
+  @@unique([userId, friendId])
+  @@map("connections")
+}
+
+model ConnectionCategory {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  name      String
+  color     String   @default("#3498db")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // İlişkiler
+  user        User         @relation(fields: [userId], references: [id])
+  connections Connection[]
+
+  @@map("connection_categories")
+}
+
+// =============================================
+// MODÜL 2: AKILLI SAKSI
+// =============================================
+
+model Plant {
+  id            String    @id @default(cuid())
+  tagId         String?   @unique @map("tag_id")
+  ownerId       String    @map("owner_id")
+  name          String
+  species       String? // Bitki türü
+  birthDate     DateTime? @map("birth_date")
+  coverImageUrl String?   @map("cover_image_url")
+  theme         String    @default("{\"style\": \"nature\"}")
+  isGift        Boolean   @default(false) @map("is_gift")
+  giftedById    String?   @map("gifted_by")
+  giftMessage   String?   @map("gift_message")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  // İlişkiler
+  tag      NfcTag?       @relation(fields: [tagId], references: [id])
+  owner    User          @relation("PlantOwner", fields: [ownerId], references: [id])
+  giftedBy User?         @relation("PlantGifter", fields: [giftedById], references: [id])
+  logs     PlantLog[]
+  chats    PlantAiChat[]
+
+  @@map("plants")
+}
+
+model PlantLog {
+  id         String   @id @default(cuid())
+  plantId    String   @map("plant_id")
+  logType    String   @map("log_type") // 'water', 'photo', 'note', 'fertilize', 'repot'
+  amountMl   Int?     @map("amount_ml")
+  content    String?
+  imageUrl   String?  @map("image_url")
+  aiAnalysis String?  @map("ai_analysis")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // İlişkiler
+  plant Plant @relation(fields: [plantId], references: [id], onDelete: Cascade)
+
+  @@map("plant_logs")
+}
+
+model PlantAiChat {
+  id        String   @id @default(cuid())
+  plantId   String   @map("plant_id")
+  userId    String?  @map("user_id")
+  role      String // 'user', 'assistant'
+  content   String
+  imageUrl  String?  @map("image_url")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // İlişkiler
+  plant Plant @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  user  User? @relation(fields: [userId], references: [id])
+
+  @@map("plant_ai_chats")
+}
+
+// Sahiplik transfer geçmişi
+model OwnershipTransfer {
+  id            String   @id @default(cuid())
+  tagId         String   @map("tag_id")
+  fromUserId    String?  @map("from_user_id")
+  toUserId      String   @map("to_user_id")
+  transferType  String   @map("transfer_type") // 'gift', 'sale', 'claim'
+  message       String?
+  transferredAt DateTime @default(now()) @map("transferred_at")
+
+  // İlişkiler
+  tag      NfcTag @relation(fields: [tagId], references: [id])
+  fromUser User?  @relation("TransferFrom", fields: [fromUserId], references: [id])
+  toUser   User   @relation("TransferTo", fields: [toUserId], references: [id])
+
+  @@map("ownership_transfers")
+}
+
+// =============================================
+// MODÜL 3: AKILLI KUPA
+// =============================================
+
+model Mug {
+  id        String   @id @default(cuid())
+  tagId     String?  @unique @map("tag_id")
+  ownerId   String   @map("owner_id")
+  name      String   @default("Kupam")
+  theme     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // İlişkiler
+  tag   NfcTag?  @relation(fields: [tagId], references: [id])
+  owner User     @relation(fields: [ownerId], references: [id])
+  logs  MugLog[]
+
+  @@map("mugs")
+}
+
+model MugLog {
+  id                String   @id @default(cuid())
+  mugId             String   @map("mug_id")
+  logType           String   @map("log_type") // 'coffee', 'tea', 'water'
+  amountMl          Int?     @map("amount_ml")
+  note              String?
+  sharedWithFriends Boolean  @default(true) @map("shared_with_friends")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  // İlişkiler
+  mug Mug @relation(fields: [mugId], references: [id], onDelete: Cascade)
+
+  @@map("mug_logs")
+}
+
+// =============================================
+// MODÜL 4 & 5: HEDİYE & CANVAS
+// =============================================
+
+model Page {
+  id               String   @id @default(cuid())
+  tagId            String?  @unique @map("tag_id")
+  ownerId          String   @map("owner_id")
+  moduleType       String   @map("module_type") // 'gift', 'canvas'
+  title            String?
+  isSurprise       Boolean  @default(false) @map("is_surprise")
+  surpriseRevealed Boolean  @default(false) @map("surprise_revealed")
+  isLocked         Boolean  @default(false) @map("is_locked") // Hediye için kilit
+  unlockCode       String?  @map("unlock_code") // Hediye kilit kodu
+  theme            String?
+  settings         String?
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  // İlişkiler
+  tag    NfcTag?     @relation(fields: [tagId], references: [id])
+  owner  User        @relation(fields: [ownerId], references: [id])
+  blocks PageBlock[]
+
+  @@map("pages")
+}
+
+model PageBlock {
+  id           String   @id @default(cuid())
+  pageId       String   @map("page_id")
+  blockType    String   @map("block_type") // 'text', 'image', 'video', 'music', 'link', 'countdown', 'gallery'
+  content      String
+  displayOrder Int      @default(0) @map("display_order")
+  animation    String?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  // İlişkiler
+  page Page @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@map("page_blocks")
+}
+
+// =============================================
+// BİLDİRİMLER
+// =============================================
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  senderId  String?   @map("sender_id")
+  type      String // 'connection_request', 'coffee_break', 'plant_reminder', 'gift_received'
+  title     String?
+  body      String?
+  data      String?
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  // İlişkiler
+  user   User  @relation("NotificationReceiver", fields: [userId], references: [id])
+  sender User? @relation("NotificationSender", fields: [senderId], references: [id])
+
+
+  @@map("notifications")
+}
+
+// =============================================
+// MODÜL 4: HEDİYE (GIFT)
+// =============================================
+
+model Gift {
+  id          String   @id @default(cuid())
+  senderId    String?  @map("sender_id")
+  senderName  String?  @map("sender_name")
+  receiverId  String?  @map("receiver_id")
+  tagId       String?  @unique @map("tag_id")
+  
+  title       String?  // Hediye Başlığı
+  message     String?  // Hediye Notu
+  giftType    String   @default("generic") @map("gift_type") // birthday, anniversary, new_year, generic
+  
+  mediaUrl    String?  @map("media_url") // Video/Fotoğraf
+  spotifyUrl  String?  @map("spotify_url") // Şarkı
+  
+  isClaimed   Boolean  @default(false) @map("is_claimed")
+  claimedAt   DateTime? @map("claimed_at")
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // İlişkiler
+  sender      User?    @relation("GiftSender", fields: [senderId], references: [id])
+  receiver    User?    @relation("GiftReceiver", fields: [receiverId], references: [id])
+  tag         NfcTag?  @relation(fields: [tagId], references: [id])
+
+  @@map("gifts")
+}
+
+// =============================================
+// TAKİP SİSTEMİ
+// =============================================
+
+model Follow {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  tagId     String   @map("tag_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // İlişkiler
+  user User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tag  NfcTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tagId])
+  @@map("follows")
+}
+

@@ -1,0 +1,122 @@
+.container {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 2rem;
+    align-items: start;
+}
+
+.formSection {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.previewSection {
+    position: sticky;
+    top: 2rem;
+}
+
+.previewTitle {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.previewCard {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.9));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 2rem;
+    text-align: center;
+}
+
+.avatar {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 auto 1rem;
+    box-shadow: 0 10px 30px -5px rgba(59, 130, 246, 0.4);
+}
+
+.name {
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.title {
+    color: #60a5fa;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.bio {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+}
+
+.fields {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.fieldItem {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    text-align: left;
+}
+
+.fieldIcon {
+    font-size: 1.25rem;
+}
+
+.fieldContent {
+    flex: 1;
+}
+
+.fieldLabel {
+    display: block;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+}
+
+.fieldValue {
+    display: block;
+    color: #fff;
+    font-size: 0.85rem;
+}
+
+.emptyFields {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.8rem;
+    font-style: italic;
+    padding: 1rem;
+}
+
+@media (max-width: 900px) {
+    .container {
+        grid-template-columns: 1fr;
+    }
+
+    .previewSection {
+        position: static;
+        order: -1;
+    }
+}

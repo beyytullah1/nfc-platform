@@ -1,0 +1,120 @@
+.toastContainer {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    z-index: 9999;
+    pointer-events: none;
+}
+
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1.25rem;
+    border-radius: 12px;
+    backdrop-filter: blur(20px);
+    animation: slideIn 0.3s ease-out;
+    cursor: pointer;
+    pointer-events: auto;
+    min-width: 200px;
+    max-width: 400px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.toast:hover {
+    transform: scale(1.02);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+}
+
+.message {
+    flex: 1;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* Success */
+.success {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: #6ee7b7;
+}
+
+.success .icon {
+    background: #10b981;
+    color: #fff;
+}
+
+/* Error */
+.error {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #fca5a5;
+}
+
+.error .icon {
+    background: #ef4444;
+    color: #fff;
+}
+
+/* Warning */
+.warning {
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    color: #fcd34d;
+}
+
+.warning .icon {
+    background: #f59e0b;
+    color: #fff;
+}
+
+/* Info */
+.info {
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    color: #93c5fd;
+}
+
+.info .icon {
+    background: #3b82f6;
+    color: #fff;
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+    .toastContainer {
+        bottom: 1rem;
+        right: 1rem;
+        left: 1rem;
+    }
+
+    .toast {
+        max-width: none;
+    }
+}
