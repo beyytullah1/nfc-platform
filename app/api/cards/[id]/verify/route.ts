@@ -6,19 +6,24 @@ export async function POST(
     { params }: { params: Promise<{ id: string }> }
 ) {
     const { id } = await params
-    const { password } = await request.json()
+    const { password, level } = await request.json()
 
     const card = await prisma.card.findUnique({
         where: { id },
-        select: { password: true }
+        select: {
+            level1Password: true,
+            level2Password: true
+        }
     })
 
     if (!card) {
         return NextResponse.json({ error: "Kartvizit bulunamadı" }, { status: 404 })
     }
 
-    // Şifre kontrolü
-    if (card.password === password) {
+    // Şifre kontrolü - seviye bazlı
+    const targetPassword = level === 1 ? card.level1Password : card.level2Password
+
+    if (targetPassword === password) {
         return NextResponse.json({ success: true })
     }
 
