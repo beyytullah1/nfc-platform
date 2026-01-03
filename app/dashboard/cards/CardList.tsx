@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useState, useMemo } from "react"
 import cardStyles from "./cards.module.css"
+import { getCardUrl as buildCardUrl } from "@/lib/env"
 import { QRCodeModal } from "../components/QRCodeModal"
 
 interface Card {
@@ -37,7 +38,7 @@ export default function CardList({ cards, userName }: CardListProps) {
 
     const copyLink = async (card: Card) => {
         const slug = card.slug || card.id
-        const url = `${window.location.origin}/c/${slug}`
+        const url = buildCardUrl(slug)
         await navigator.clipboard.writeText(url)
         setCopiedId(card.id)
         setTimeout(() => setCopiedId(null), 2000)
@@ -45,7 +46,7 @@ export default function CardList({ cards, userName }: CardListProps) {
 
     const getCardUrl = (card: Card) => {
         const slug = card.slug || card.id
-        return `${window.location.origin}/c/${slug}`
+        return buildCardUrl(slug)
     }
 
     if (cards.length === 0) {
@@ -120,7 +121,7 @@ export default function CardList({ cards, userName }: CardListProps) {
                             </Link>
                             <div className={cardStyles.cardActions}>
                                 <a
-                                    href={`/card/${card.id}`}
+                                    href={getCardUrl(card)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className={cardStyles.actionBtn}

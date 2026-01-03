@@ -1,0 +1,29 @@
+{
+    "name": "nfc-platform",
+    "version": "1.2.0",
+    "description": "Transform physical objects into digital experiences with NFC technology",
+    "keywords": [
+        "nfc",
+        "digital-business-card",
+        "nextjs",
+        "prisma",
+        "postgresql",
+        "authentication",
+        "qr-code",
+        "smart-cards"
+    ],
+    "author": "NFC Platform Team",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/yourusername/nfc-platform.git"
+    },
+    "bugs": {
+        "url": "https://github.com/yourusername/nfc-platform/issues"
+    },
+    "homepage": "https://github.com/yourusername/nfc-platform#readme",
+    "engines": {
+        "node": ">=18.0.0",
+        "npm": ">=9.0.0"
+    }
+}

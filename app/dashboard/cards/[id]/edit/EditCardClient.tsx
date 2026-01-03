@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { updateCard } from "@/lib/card-actions"
+import { getBaseUrl } from "@/lib/env"
 import styles from "../../cards.module.css"
 import previewStyles from "../../new/preview.module.css"
 import ImageUpload from "../../ImageUpload"
@@ -124,7 +125,7 @@ export default function EditCardClient({ card, userName }: EditCardClientProps) 
         return mappedGroups
     })
 
-    const baseUrl = typeof window !== "undefined" ? window.location.origin : ""
+    const baseUrl = getBaseUrl()
 
     const addGroup = () => {
         setGroups([...groups, {

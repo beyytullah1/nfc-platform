@@ -75,13 +75,15 @@ export default async function SlugCardPage({ params }: Props) {
 
     const cardData = {
         id: card.id,
+        userId: card.userId,
         hasLevel1Password: !!card.level1Password,
         hasLevel2Password: !!card.level2Password,
         logoUrl: card.logoUrl,
         avatarUrl: card.avatarUrl,
         user: {
             name: card.user.name,
-            avatarUrl: card.user.avatarUrl
+            avatarUrl: card.user.avatarUrl,
+            email: card.user.email
         },
         title: card.title,
         bio: card.bio,

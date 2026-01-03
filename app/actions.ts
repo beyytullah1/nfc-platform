@@ -15,10 +15,25 @@ export async function checkTag(publicCode: string) {
     const tag = await prisma.nfcTag.findUnique({
         where: { publicCode },
         include: {
-            card: true,
+            card: {
+                select: {
+                    id: true,
+                    slug: true,
+                    user: {
+                        select: {
+                            name: true
+                        }
+                    }
+                }
+            },
             plant: true,
             mug: true,
             page: true,
+            owner: {
+                select: {
+                    name: true
+                }
+            }
         },
     })
 
@@ -26,15 +41,27 @@ export async function checkTag(publicCode: string) {
         return { error: 'Etiket bulunamadı.' }
     }
 
-    // Sahipsiz tag → Claim sayfasına yönlendir
+    // Sahipsiz tag → Login'e yönlendir ve cookie'de sakla
     if (!tag.ownerId) {
-        return { redirect: `/claim?code=${publicCode}` }
+        // Cookie'ye NFC kodunu kaydet (Next.js cookies API)
+        const { cookies } = await import('next/headers')
+        const cookieStore = await cookies()
+        cookieStore.set('pending_nfc_code', publicCode, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 60 * 60 // 1 saat
+        })
+
+        return { redirect: `/login?from=nfc&code=${publicCode}` }
     }
 
     // Modüle göre yönlendir
     switch (tag.moduleType) {
         case 'card':
-            return { redirect: `/c/${tag.card?.id}` }
+            // Slug varsa kullan, yoksa ID kullan
+            const cardPath = tag.card?.slug || tag.card?.id
+            return { redirect: `/c/${cardPath}` }
         case 'plant':
             return { redirect: `/p/${tag.plant?.id}` }
         case 'mug':

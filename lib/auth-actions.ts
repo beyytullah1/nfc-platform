@@ -28,13 +28,41 @@ export async function registerUser(formData: FormData) {
     const passwordHash = await bcrypt.hash(password, 12)
 
     // Kullanıcı oluştur
-    await prisma.user.create({
+    const newUser = await prisma.user.create({
         data: {
             email,
             name,
             passwordHash
         }
     })
+
+    // Pending NFC varsa claim et
+    try {
+        const { cookies } = await import('next/headers')
+        const cookieStore = await cookies()
+        const pendingCode = cookieStore.get('pending_nfc_code')
+
+        if (pendingCode?.value) {
+            // Tag'i claim et
+            await prisma.nfcTag.updateMany({
+                where: {
+                    publicCode: pendingCode.value,
+                    ownerId: null // Sadece sahipsiz tag'leri claim et
+                },
+                data: {
+                    ownerId: newUser.id,
+                    claimedAt: new Date(),
+                    status: 'claimed'
+                }
+            })
+
+            // Cookie'yi temizle
+            cookieStore.delete('pending_nfc_code')
+        }
+    } catch (error) {
+        console.error('NFC claim after register error:', error)
+        // Hata olursa da kayıt başarılı sayılır
+    }
 
     return { success: true }
 }
@@ -57,6 +85,20 @@ export async function loginWithCredentials(formData: FormData) {
         }
         throw error
     }
+
+    // Pending NFC varsa claim sayfasına yönlendir
+    try {
+        const { cookies } = await import('next/headers')
+        const cookieStore = await cookies()
+        const pendingCode = cookieStore.get('pending_nfc_code')
+
+        if (pendingCode?.value) {
+            redirect(`/claim?code=${pendingCode.value}`)
+        }
+    } catch (error) {
+        console.error('Check pending NFC error:', error)
+    }
+
     redirect("/dashboard")
 }
 

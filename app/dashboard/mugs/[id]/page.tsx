@@ -14,7 +14,8 @@ export default async function MugDetailPage({ params }: { params: Promise<{ id: 
     const mug = await prisma.mug.findUnique({
         where: { id },
         include: {
-            logs: { orderBy: { createdAt: 'desc' }, take: 50 }
+            logs: { orderBy: { createdAt: 'desc' }, take: 50 },
+            tag: { select: { id: true } }
         }
     })
 

@@ -56,6 +56,19 @@ export default function LoginPage() {
                         />
                     </div>
 
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+                        <Link
+                            href="/forgot-password"
+                            style={{
+                                color: 'var(--color-text-muted)',
+                                fontSize: '0.875rem',
+                                textDecoration: 'none'
+                            }}
+                        >
+                            Şifremi Unuttum?
+                        </Link>
+                    </div>
+
                     <button type="submit" className={styles.submitBtn} disabled={loading}>
                         {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
                     </button>

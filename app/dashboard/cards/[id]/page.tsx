@@ -5,6 +5,7 @@ import Link from "next/link"
 import styles from "../cards.module.css"
 import { deleteCard } from "@/lib/card-actions"
 import { CardActions } from "../CardActions"
+import { LinkNfcSection } from "../LinkNfcSection"
 
 const FIELD_ICONS: Record<string, string> = {
     phone: "📱",
@@ -29,7 +30,12 @@ export default async function CardDetailPage({ params }: { params: Promise<{ id:
         where: { id },
         include: {
             fields: { orderBy: { displayOrder: 'asc' } },
-            user: true
+            user: true,
+            tag: {
+                select: {
+                    publicCode: true
+                }
+            }
         }
     })
 
@@ -123,7 +129,17 @@ export default async function CardDetailPage({ params }: { params: Promise<{ id:
                         </div>
                     </div>
 
-                    <CardActions cardId={card.id} cardTitle={card.title || "Kartvizit"} />
+                    <CardActions
+                        cardId={card.id}
+                        cardSlug={card.slug}
+                        cardTitle={card.title || "Kartvizit"}
+                    />
+
+                    {/* NFC Eşleştirme */}
+                    <LinkNfcSection
+                        cardId={card.id}
+                        currentTagCode={card.tag?.publicCode}
+                    />
 
                     {/* Danger Zone */}
                     <div className={styles.formCard} style={{ marginTop: "1rem", borderColor: "rgba(239, 68, 68, 0.3)" }}>

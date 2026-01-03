@@ -112,10 +112,11 @@ model Card {
   updatedAt      DateTime @updatedAt @map("updated_at")
 
   // İlişkiler
-  user   User            @relation(fields: [userId], references: [id])
-  tag    NfcTag?         @relation(fields: [tagId], references: [id])
-  fields CardField[]
-  groups CardLinkGroup[]
+  user           User            @relation(fields: [userId], references: [id])
+  tag            NfcTag?         @relation(fields: [tagId], references: [id])
+  fields         CardField[]
+  groups         CardLinkGroup[]
+  connections    Connection[]    // Bu kartı kaydedenler
 
   @@map("cards")
 }
@@ -149,7 +150,7 @@ model CardField {
 
   // İlişkiler
   card  Card           @relation(fields: [cardId], references: [id], onDelete: Cascade)
-  group CardLinkGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  group CardLinkGroup? @relation(fields: [groupId], references: [id])
 
   @@map("card_fields")
 }
@@ -157,20 +158,35 @@ model CardField {
 // Networking bağlantıları
 model Connection {
   id              String    @id @default(cuid())
-  userId          String    @map("user_id")
-  friendId        String    @map("friend_id")
-  categoryId      String?   @map("category_id")
-  meetingNote     String?   @map("meeting_note")
-  meetingLocation String?   @map("meeting_location")
-  status          String    @default("pending") // 'pending', 'accepted', 'blocked'
+  userId          String    @map("user_id")           // Kaydeden kişi
+  friendId        String    @map("friend_id")         // Kaydedilen kişi (card sahibi)
+  cardId          String    @map("card_id")           // HANGİ KART kaydedildi (CARD-LEVEL!)
+  categoryId      String?   @map("category_id")       // Grup
+  
+  // Renamed & Updated
+  myNote          String?   @map("my_note")           // Özel notum
+  myTags          String?   @map("my_tags")           // JSON: ["İş", "Arkadaş"]
+  
+  // Privacy & Status
+  visibility      String    @default("private")       // "private" = sadece ben görürüm
+  status          String    @default("saved")         // "saved" (artık pending yok!)
+  
+  // Password save
+  savedPassword   String?   @map("saved_password")    // Kilitli alanlar için
+  
+  // Deprecated
+  meetingNote     String?   @map("meeting_note")     
+  meetingLocation String?   @map("meeting_location")  
+  
   createdAt       DateTime  @default(now()) @map("created_at")
 
   // İlişkiler
   user     User                @relation("ConnectionOwner", fields: [userId], references: [id])
   friend   User                @relation("ConnectionFriend", fields: [friendId], references: [id])
+  card     Card                @relation(fields: [cardId], references: [id])
   category ConnectionCategory? @relation(fields: [categoryId], references: [id])
 
-  @@unique([userId, friendId])
+  @@unique([userId, cardId])  // AYNI KART SADECE 1 KEZ KAYDEDİLEBİLİR (Kişi bazlı değil, kart bazlı)
   @@map("connections")
 }
 
@@ -179,6 +195,7 @@ model ConnectionCategory {
   userId    String   @map("user_id")
   name      String
   color     String   @default("#3498db")
+  icon      String?  @default("📁")  // Emoji icon
   createdAt DateTime @default(now()) @map("created_at")
 
   // İlişkiler

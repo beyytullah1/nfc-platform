@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { createCard } from "@/lib/card-actions"
+import { getBaseUrl, getCardUrl } from "@/lib/env"
 import styles from "../cards.module.css"
 import previewStyles from "./preview.module.css"
 import CardTypeSelector, { CARD_TYPES } from "../CardTypeSelector"
@@ -76,8 +77,8 @@ export default function NewCardPage() {
     const hasLevel1Fields = allFields.some(f => f.privacyLevel >= 1 && f.value)
     const hasLevel2Fields = allFields.some(f => f.privacyLevel >= 2 && f.value)
 
-    const baseUrl = typeof window !== "undefined" ? window.location.origin : ""
-    const cardUrl = slug ? `${baseUrl}/c/${slug}` : ""
+    const baseUrl = getBaseUrl()
+    const cardUrl = slug ? getCardUrl(slug) : ""
 
     useEffect(() => {
         fetch("/api/user/me")

@@ -1,8 +1,8 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
-import { logout } from "@/lib/auth-actions"
 import Link from "next/link"
 import styles from "./dashboard.module.css"
+import LogoutButton from "@/app/components/LogoutButton"
 import { MobileMenuWrapper } from "./MobileMenu"
 import { Breadcrumb } from "../components/Breadcrumb"
 
@@ -24,8 +24,7 @@ export default async function DashboardLayout({
             </div>
             <nav className={styles.nav}>
                 <Link href="/dashboard" className={styles.navItem}>
-                    <span className={styles.icon}>🏠</span>
-                    Anasayfa
+                    🏠 Profil
                 </Link>
                 <Link href="/dashboard/cards" className={styles.navItem}>
                     <span className={styles.icon}>💳</span>
@@ -51,23 +50,21 @@ export default async function DashboardLayout({
                     <span className={styles.icon}>👤</span>
                     Profil
                 </Link>
-                <Link href="/dashboard/settings" className={styles.navItem}>
-                    <span className={styles.icon}>⚙️</span>
-                    Ayarlar
+                <Link href="/dashboard/connections" className={styles.navItem}>
+                    <span className={styles.icon}>👥</span>
+                    İletişim Ağı
                 </Link>
+
+                {/* Logout Button */}
+                <LogoutButton />
             </nav>
-            <form action={logout} className={styles.logoutForm}>
-                <button type="submit" className={styles.logoutBtn}>
-                    Çıkış Yap
-                </button>
-            </form>
         </>
     )
 
     return (
         <div className={styles.container}>
             {/* Desktop Sidebar */}
-            <aside className={`${styles.sidebar} ${styles.desktopOnly}`}>
+            <aside className={`${styles.sidebar} ${styles.desktopOnly} `}>
                 {sidebarContent}
             </aside>
 

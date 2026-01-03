@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { AddToNetworkButton } from "@/app/components/AddToNetworkButton"
 import styles from "./public-card.module.css"
 
 const FIELD_ICONS: Record<string, string> = {
@@ -86,6 +87,7 @@ const FIELD_LINKS: Record<string, (value: string) => string> = {
 
 interface CardData {
     id: string
+    userId: string
     hasLevel1Password: boolean
     hasLevel2Password: boolean
     logoUrl?: string | null
@@ -271,29 +273,58 @@ export default function PublicCardClient({ initialCard }: PublicCardClientProps)
                             </button>
                         </div>
 
-                        {/* Quick Social Icons with SVG */}
-                        {socialFields.length > 0 && (
-                            <div className={styles.socialQuickLinks}>
-                                {socialFields.map((field) => {
-                                    const linkFn = FIELD_LINKS[field.fieldType]
-                                    const href = linkFn ? linkFn(field.value) : "#"
-                                    const svgIcon = getSocialSVG(field.fieldType)
+                        {/* Add to Network Button */}
+                        <AddToNetworkButton
+                            cardId={initialCard.id}
+                            cardOwnerId={initialCard.userId}
+                            cardOwnerName={initialCard.user.name || "Bu kişi"}
+                        />
 
-                                    return (
+                        {/* Quick Social Icons with SVG */}
+                        {(() => {
+                            // Sadece header'da gösterilecek popüler ikonlar
+                            const HEADER_ICONS = ['phone', 'whatsapp', 'instagram', 'linkedin', 'twitter']
+                            const headerFields = initialCard.fields.filter(f =>
+                                HEADER_ICONS.includes(f.fieldType) && f.privacyLevel === 0
+                            )
+
+                            // Helper functions (assuming they are defined elsewhere or need to be added)
+                            // For this change, we'll use the existing getSocialSVG and FIELD_LINKS/FIELD_ICONS
+                            const getFieldLink = (fieldType: string, value: string) => {
+                                const linkFn = FIELD_LINKS[fieldType]
+                                return linkFn ? linkFn(value) : "#"
+                            }
+
+                            const renderFieldIcon = (fieldType: string) => {
+                                return getSocialSVG(fieldType) || FIELD_ICONS[fieldType]
+                            }
+
+                            const FIELD_LABELS: { [key: string]: string } = {
+                                phone: "Telefon",
+                                whatsapp: "WhatsApp",
+                                instagram: "Instagram",
+                                linkedin: "LinkedIn",
+                                twitter: "Twitter",
+                                // Add other field types as needed
+                            }
+
+                            return (
+                                <div className={styles.socialQuickLinks}>
+                                    {headerFields.map((field) => (
                                         <a
                                             key={field.id}
-                                            href={href}
+                                            href={getFieldLink(field.fieldType, field.value)}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className={styles.socialIcon}
-                                            title={field.fieldType}
+                                            className={styles.socialIconBtn}
+                                            title={FIELD_LABELS[field.fieldType as keyof typeof FIELD_LABELS] || field.fieldType}
                                         >
-                                            {svgIcon || FIELD_ICONS[field.fieldType]}
+                                            {renderFieldIcon(field.fieldType)}
                                         </a>
-                                    )
-                                })}
-                            </div>
-                        )}
+                                    ))}
+                                </div>
+                            )
+                        })()}
 
                         {/* Other Fields */}
                         {otherFields.length > 0 && (
@@ -357,6 +388,12 @@ export default function PublicCardClient({ initialCard }: PublicCardClientProps)
                         {/* Footer */}
                         <div className={styles.footer}>
                             <span>🏷️ NFC Platform</span>
+                            {initialCard.user?.email && (
+                                <>
+                                    <span style={{ margin: '0 0.5rem', color: 'rgba(255,255,255,0.3)' }}>•</span>
+                                    <span style={{ fontSize: '0.85rem', opacity: 0.7 }}>{initialCard.user.email}</span>
+                                </>
+                            )}
                             {unlockedLevel > 0 && (
                                 <span style={{ marginLeft: "1rem", color: "#10b981" }}>
                                     🔓 Seviye {unlockedLevel}

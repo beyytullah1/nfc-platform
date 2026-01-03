@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "./providers";
+import { ThemeProvider } from "./context/ThemeContext";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,27 +16,14 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "NFC Platform",
-  description: "Fiziksel nesnelerinizi dijitale dönüştürün",
-  manifest: "/manifest.json",
-  themeColor: "#3b82f6",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
-    title: "NFC Platform",
-  },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
-};
+  description: "Dijital kartvizit ve NFC yönetim platformu",
+}
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
     <html lang="tr">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
@@ -44,5 +32,5 @@ export default function RootLayout({
         </Providers>
       </body>
     </html>
-  );
+  )
 }

@@ -3,23 +3,25 @@
   --color-bg: #0a0a0a;
   --color-surface: #1a1a1a;
   --color-surface-hover: #252525;
-  --color-primary: #2ecc71; /* Vibrant Green */
+  --color-primary: #2ecc71;
+  /* Vibrant Green */
   --color-primary-glow: rgba(46, 204, 113, 0.4);
-  --color-accent: #3498db; /* Calm Blue */
+  --color-accent: #3498db;
+  /* Calm Blue */
   --color-text: #ecf0f1;
   --color-text-muted: #95a5a6;
   --color-border: #333;
-  
+
   --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  
+
   --radius-sm: 8px;
   --radius-md: 16px;
   --radius-lg: 24px;
-  
-  --shadow-sm: 0 2px 8px rgba(0,0,0,0.2);
-  --shadow-md: 0 8px 24px rgba(0,0,0,0.3);
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.3);
   --shadow-glow: 0 0 20px var(--color-primary-glow);
-  
+
   --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
@@ -49,7 +51,8 @@ button {
 
 /* Utilities */
 .container {
-  max-width: 600px; /* Mobile-first focus */
+  max-width: 600px;
+  /* Mobile-first focus */
   margin: 0 auto;
   padding: 20px;
 }
@@ -111,7 +114,91 @@ button {
 
 .title-gradient {
   background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   font-weight: 800;
+}
+
+/* Responsive Utilities */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  .card {
+    padding: 16px;
+  }
+
+  body {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+  }
+
+  .btn {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Utility Classes */
+.text-center {
+  text-align: center;
+}
+
+.mt-1 {
+  margin-top: 0.5rem;
+}
+
+.mt-2 {
+  margin-top: 1rem;
+}
+
+.mt-3 {
+  margin-top: 1.5rem;
+}
+
+.mb-1 {
+  margin-bottom: 0.5rem;
+}
+
+.mb-2 {
+  margin-bottom: 1rem;
+}
+
+.mb-3 {
+  margin-bottom: 1.5rem;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.gap-1 {
+  gap: 0.5rem;
+}
+
+.gap-2 {
+  gap: 1rem;
 }

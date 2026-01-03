@@ -36,6 +36,6 @@ export default async function PublicGiftPage({ params }: { params: Promise<{ cod
     }
 
     return (
-        <GiftReveal gift={tag.gift} />
+        <GiftReveal gift={tag.gift} tagId={tag.id} />
     )
 }

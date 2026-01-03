@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import styles from '../gift-public.module.css'
+import { FollowButton } from '@/app/components/FollowButton'
 
 interface Gift {
     title: string | null
@@ -13,7 +14,7 @@ interface Gift {
     senderName: string | null
 }
 
-export function GiftReveal({ gift }: { gift: Gift }) {
+export function GiftReveal({ gift, tagId }: { gift: Gift; tagId?: string }) {
     const [isOpened, setIsOpened] = useState(false)
     const [audio] = useState(typeof Audio !== 'undefined' ? new Audio('/sounds/pop.mp3') : null) // Optional sound
 
@@ -166,6 +167,13 @@ export function GiftReveal({ gift }: { gift: Gift }) {
                                 title="Music Player"
                             ></iframe>
                         )}
+                    </div>
+                )}
+
+                {/* Follow Button */}
+                {tagId && (
+                    <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center' }}>
+                        <FollowButton tagId={tagId} />
                     </div>
                 )}
             </div>

@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { addMugLog, deleteMug } from "@/lib/mug-actions"
+import { TransferModal } from "@/app/components/TransferModal"
 import styles from "../mugs.module.css"
 import { useToast } from "../../../components/Toast"
 
@@ -16,6 +17,7 @@ interface MugDetailClientProps {
             logType: string
             createdAt: Date
         }[]
+        tag?: { id: string } | null
     }
 }
 
@@ -23,6 +25,7 @@ export default function MugDetailClient({ mug }: MugDetailClientProps) {
     const [loading, setLoading] = useState(false)
     const [deleting, setDeleting] = useState(false)
     const [note, setNote] = useState("")
+    const [showTransfer, setShowTransfer] = useState(false)
 
     const { showToast } = useToast()
 
@@ -236,7 +239,37 @@ export default function MugDetailClient({ mug }: MugDetailClientProps) {
                 >
                     {deleting ? "Siliniyor..." : "🗑️ Kupayı Sil"}
                 </button>
+
+                {mug.tag && (
+                    <button
+                        onClick={() => setShowTransfer(true)}
+                        style={{
+                            marginTop: "0.75rem",
+                            padding: "0.875rem 1.5rem",
+                            background: "rgba(168, 85, 247, 0.15)",
+                            border: "1px solid rgba(168, 85, 247, 0.3)",
+                            borderRadius: "12px",
+                            color: "#c4b5fd",
+                            cursor: "pointer",
+                            fontSize: "0.9rem",
+                            width: "100%"
+                        }}
+                    >
+                        🎁 Sahipliği Devret
+                    </button>
+                )}
             </div>
+
+            {/* Transfer Modal */}
+            {mug.tag && (
+                <TransferModal
+                    isOpen={showTransfer}
+                    onClose={() => setShowTransfer(false)}
+                    tagId={mug.tag.id}
+                    itemName={mug.name}
+                    moduleType="mug"
+                />
+            )}
         </>
     )
 }

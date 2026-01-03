@@ -2,25 +2,26 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { getCardUrl as buildCardUrl } from "@/lib/env"
 import { QRCodeModal } from "../components/QRCodeModal"
 import styles from "./cards.module.css"
 
 interface CardActionsProps {
     cardId: string
+    cardSlug?: string | null
     cardTitle: string
 }
 
-export function CardActions({ cardId, cardTitle }: CardActionsProps) {
+export function CardActions({ cardId, cardSlug, cardTitle }: CardActionsProps) {
     const [showQR, setShowQR] = useState(false)
-    const publicUrl = typeof window !== "undefined"
-        ? `${window.location.origin}/card/${cardId}`
-        : `/card/${cardId}`
+    const slug = cardSlug || cardId
+    const publicUrl = buildCardUrl(slug)
 
     return (
         <>
             <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
                 <Link
-                    href={`/card/${cardId}`}
+                    href={publicUrl}
                     target="_blank"
                     className={styles.createBtn}
                     style={{ flex: 1, justifyContent: "center" }}

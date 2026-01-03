@@ -149,11 +149,11 @@ export default function ClaimPage() {
             {/* Header */}
             <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
                 <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🏷️</div>
-                <h1 className="title-gradient" style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>
+                <h1 className="title-gradient" style={{ fontSize: '1.8rem', marginBottom: '0.5rem', color: '#fff' }}>
                     Etiketi Sahiplen
                 </h1>
-                <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
-                    Kod: <strong>{code}</strong>
+                <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem' }}>
+                    Kod: <strong style={{ color: '#fff' }}>{code}</strong>
                 </p>
             </div>
 
@@ -164,7 +164,7 @@ export default function ClaimPage() {
                         textAlign: 'center',
                         fontSize: '1.1rem',
                         marginBottom: '1.5rem',
-                        color: 'var(--color-text-muted)'
+                        color: 'rgba(255,255,255,0.8)'
                     }}>
                         Bu etiketi neye yapıştırdın?
                     </h2>
@@ -187,11 +187,11 @@ export default function ClaimPage() {
                             >
                                 <span style={{ fontSize: '2.5rem' }}>{module.emoji}</span>
                                 <div>
-                                    <div style={{ fontWeight: 600, fontSize: '1.1rem' }}>
+                                    <div style={{ fontWeight: 600, fontSize: '1.1rem', color: '#fff' }}>
                                         {module.name}
                                     </div>
                                     <div style={{
-                                        color: 'var(--color-text-muted)',
+                                        color: 'rgba(255,255,255,0.6)',
                                         fontSize: '0.85rem'
                                     }}>
                                         {module.description}

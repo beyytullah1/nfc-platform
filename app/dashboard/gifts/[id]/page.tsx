@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db"
 import Link from "next/link"
 import styles from "../gifts.module.css"
 import { deleteGift } from "@/lib/gift-actions"
+import { GiftActions } from "./GiftActions"
 
 export default async function GiftDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
@@ -16,7 +17,8 @@ export default async function GiftDetailPage({ params }: { params: Promise<{ id:
     const gift = await prisma.page.findUnique({
         where: { id },
         include: {
-            blocks: { orderBy: { displayOrder: 'asc' } }
+            blocks: { orderBy: { displayOrder: 'asc' } },
+            tag: { select: { id: true } }
         }
     })
 
@@ -127,6 +129,13 @@ export default async function GiftDetailPage({ params }: { params: Promise<{ id:
                     >
                         🔗 Hediyeyi Görüntüle
                     </Link>
+
+                    {/* Transfer Actions */}
+                    <GiftActions
+                        giftId={gift.id}
+                        giftTitle={gift.title || "Hediye"}
+                        tagId={gift.tag?.id}
+                    />
 
                     <form action={async () => {
                         "use server"

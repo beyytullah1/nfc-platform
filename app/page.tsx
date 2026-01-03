@@ -2,6 +2,13 @@ import Link from "next/link"
 import { auth } from "@/lib/auth"
 import styles from "./landing.module.css"
 import MobileLandingMenu from "./MobileLandingMenu"
+import ProfileDropdown from "./components/ProfileDropdown"
+
+export const metadata = {
+  title: "NFC Platform - Dijital Kartvizit Sistemi",
+  description: "NFC etiketleriyle kartvizitler, bitkiler ve daha fazlasını akıllı dijital deneyimlere çevirin",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=5",
+}
 
 export default async function Home() {
   const session = await auth()
@@ -16,9 +23,7 @@ export default async function Home() {
         </div>
         <div className={styles.navLinks}>
           {session?.user ? (
-            <Link href="/dashboard" className={styles.navBtn}>
-              Dashboard
-            </Link>
+            <ProfileDropdown userName={session.user.name || 'Kullanıcı'} />
           ) : (
             <>
               <Link href="/login" className={styles.navLink}>Giriş</Link>
