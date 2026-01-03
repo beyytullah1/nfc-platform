@@ -195,18 +195,7 @@ export default function EditCardClient({ card, userName }: EditCardClientProps) 
         formData.append("logoUrl", logoUrl)
         formData.append("avatarUrl", avatarUrl)
 
-        // Prepare structure for backend
-        // We will send groups array, each containing its fields
-        const groupsData = groups.map((g, index) => ({
-            // 'ungrouped' should not have a name
-            name: g.id === 'ungrouped' ? undefined : g.name,
-            fields: g.fields.filter(f => f.value)
-        })).filter(g => g.fields.length > 0 || (g.name && g.id !== 'ungrouped')) // Keep empty named groups if user created them? Maybe.
-
-        // Simplify: Flatten everything but attach groupName
-        // Backend handles recreation.
-        // Wait, groups have displayOrder.
-
+        // Prepare payload for backend
         const payloadData = {
             groups: groups.filter(g => g.id !== 'ungrouped').map(g => ({
                 name: g.name,
