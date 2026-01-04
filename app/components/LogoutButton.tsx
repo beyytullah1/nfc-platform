@@ -2,8 +2,11 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { signOut } from 'next-auth/react'
+import { useToast } from '@/app/components/Toast'
 
 export default function LogoutButton() {
+    const { showToast } = useToast()
     const [loading, setLoading] = useState(false)
     const router = useRouter()
 
@@ -22,7 +25,7 @@ export default function LogoutButton() {
             }
         } catch (error) {
             console.error('Logout error:', error)
-            alert('Çıkış yapılırken bir hata oluştu')
+            showToast('Çıkış yapılırken bir hata oluştu', 'error')
         } finally {
             setLoading(false)
         }

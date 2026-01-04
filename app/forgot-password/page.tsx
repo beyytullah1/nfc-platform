@@ -3,9 +3,11 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useToast } from '@/app/components/Toast'
 
 export default function ForgotPasswordPage() {
     const router = useRouter()
+    const { showToast } = useToast()
     const [email, setEmail] = useState('')
     const [newPassword, setNewPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
@@ -43,7 +45,7 @@ export default function ForgotPasswordPage() {
             const data = await res.json()
 
             if (res.ok) {
-                alert('✅ Şifreniz başarıyla güncellendi!')
+                showToast('✅ Şifreniz başarıyla güncellendi!', 'success')
                 router.push('/login')
             } else {
                 setError(data.error || 'Bir hata oluştu')

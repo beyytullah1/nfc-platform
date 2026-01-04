@@ -3,9 +3,11 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useToast } from '@/app/components/Toast'
 
 export default function ProfileDropdown({ userName }: { userName: string }) {
     const [isOpen, setIsOpen] = useState(false)
+    const { showToast } = useToast()
     const [loading, setLoading] = useState(false)
     const dropdownRef = useRef<HTMLDivElement>(null)
     const router = useRouter()
@@ -38,7 +40,7 @@ export default function ProfileDropdown({ userName }: { userName: string }) {
             }
         } catch (error) {
             console.error('Logout error:', error)
-            alert('Çıkış yapılırken bir hata oluştu')
+            showToast('Çıkış yapılırken bir hata oluştu', 'error')
             setLoading(false)
         }
     }

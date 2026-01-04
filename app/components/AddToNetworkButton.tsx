@@ -1,12 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useToast } from '@/app/components/Toast'
 import { useRouter } from 'next/navigation'
 
 interface AddToNetworkButtonProps {
     cardId: string
     cardOwnerId: string
     cardOwnerName: string
+    onSuccess: () => void
 }
 
 interface Category {
@@ -16,6 +18,7 @@ interface Category {
 }
 
 export function AddToNetworkButton({ cardId, cardOwnerId, cardOwnerName }: AddToNetworkButtonProps) {
+    const { showToast } = useToast()
     const [status, setStatus] = useState<'idle' | 'added' | 'loading'>('idle')
     const [showModal, setShowModal] = useState(false)
     const [categories, setCategories] = useState<Category[]>([])
@@ -69,13 +72,13 @@ export function AddToNetworkButton({ cardId, cardOwnerId, cardOwnerName }: AddTo
 
             // Validation
             if (tagsArray.length > 10) {
-                alert('En fazla 10 etiket ekleyebilirsiniz')
+                showToast('En fazla 10 etiket ekleyebilirsiniz', 'error')
                 setStatus('idle')
                 return
             }
 
             if (note.length > 500) {
-                alert('Not en fazla 500 karakter olabilir')
+                showToast('Not en fazla 500 karakter olabilir', 'error')
                 setStatus('idle')
                 return
             }
@@ -100,12 +103,12 @@ export function AddToNetworkButton({ cardId, cardOwnerId, cardOwnerName }: AddTo
                 setSelectedCategory('')
             } else {
                 const data = await res.json()
-                alert(data.error || 'İletişim ağına eklenemedi. Lütfen tekrar deneyin.')
+                showToast(data.error || 'İletişim ağına eklenemedi. Lütfen tekrar deneyin.', 'error')
                 setStatus('idle')
             }
         } catch (error) {
             console.error('Add to network error:', error)
-            alert('Bir hata oluştu. Lütfen internet bağlantınızı kontrol edin.')
+            showToast('Bir hata oluştu. Lütfen internet bağlantınızı kontrol edin.', 'error')
             setStatus('idle')
         }
     }

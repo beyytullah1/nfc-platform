@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useToast } from '@/app/components/Toast'
 
 interface FollowButtonProps {
     tagId: string
@@ -9,6 +10,7 @@ interface FollowButtonProps {
 }
 
 export function FollowButton({ tagId, initialFollowing = false, initialCount = 0 }: FollowButtonProps) {
+    const { showToast } = useToast()
     const [isFollowing, setIsFollowing] = useState(initialFollowing)
     const [followerCount, setFollowerCount] = useState(initialCount)
     const [loading, setLoading] = useState(false)
@@ -58,7 +60,7 @@ export function FollowButton({ tagId, initialFollowing = false, initialCount = 0
                     setFollowerCount(prev => prev + 1)
                 } else {
                     const data = await res.json()
-                    alert(data.error || 'Takip edilemedi')
+                    showToast(data.error || 'Takip edilemedi', 'error')
                 }
             }
         } catch (err) {
