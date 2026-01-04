@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { updateProfile, changePassword } from '@/lib/user-actions'
-import { useToast } from '../../components/Toast' // Assuming Toast exists in ../..
+import { useToast } from '@/app/components/Toast'
 
 export default function ProfilePage() {
     const { data: session, update } = useSession()
