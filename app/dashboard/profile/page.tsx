@@ -39,8 +39,8 @@ export default function ProfilePage() {
         if (res.error) {
             showToast(res.error, 'error')
         } else {
-            showToast(res.message || 'Şifre değiştirildi', 'success')
-                (e.target as HTMLFormElement).reset()
+            showToast(res.message || 'Şifre değiştirildi', 'success');
+            (e.target as HTMLFormElement).reset()
         }
         setIsLoading(false)
     }

@@ -24,7 +24,7 @@ async function main() {
         update: {},
         create: {
             slug: 'beytullah',
-            ownerId: beytullahUser.id,
+            userId: beytullahUser.id,
             name: 'Beytullah Çiçek',
             title: 'Bilişim Teknolojileri Öğretmeni',
             company: 'Milli Eğitim Bakanlığı',
