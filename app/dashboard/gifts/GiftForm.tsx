@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import styles from './gifts.module.css'
 import { createGift, updateGift } from '@/lib/gift-actions'
-import { useToast } from '../../components/Toast'
+import { useToast } from '@/app/components/Toast'
 
 interface GiftFormProps {
     gift?: {

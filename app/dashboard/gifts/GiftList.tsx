@@ -7,7 +7,7 @@ import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { QRCodeModal } from '../components/QRCodeModal'
 import { useCopyToClipboard } from '../../hooks/useCopy'
 import { deleteGift } from '@/lib/gift-actions'
-import { useToast } from '../../components/Toast'
+import { useToast } from '@/app/components/Toast'
 
 interface Gift {
     id: string

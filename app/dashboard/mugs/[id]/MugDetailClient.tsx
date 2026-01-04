@@ -5,7 +5,7 @@ import Link from "next/link"
 import { addMugLog, deleteMug } from "@/lib/mug-actions"
 import { TransferModal } from "@/app/components/TransferModal"
 import styles from "../mugs.module.css"
-import { useToast } from "../../../components/Toast"
+import { useToast } from "@/app/components/Toast"
 
 interface MugDetailClientProps {
     mug: {
