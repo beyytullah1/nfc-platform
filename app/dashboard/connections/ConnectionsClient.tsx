@@ -48,6 +48,7 @@ export function ConnectionsClient({
     const { showToast } = useToast()
     const [connections, setConnections] = useState(initialConnections)
     const [searchQuery, setSearchQuery] = useState('')
+    const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('all')
     const [removingId, setRemovingId] = useState<string | null>(null)
     const [showNewGroupModal, setShowNewGroupModal] = useState(false)
     const [newGroupName, setNewGroupName] = useState('')
@@ -55,7 +56,7 @@ export function ConnectionsClient({
     const [selectedContact, setSelectedContact] = useState<Connection | null>(null)
     const [editingContact, setEditingContact] = useState<string | null>(null)
 
-    // Arama filtresi
+    // Arama ve kategori filtresi
     const filteredConnections = connections.filter(conn => {
         const searchLower = searchQuery.toLowerCase()
         const name = conn.friend.name?.toLowerCase() || ''
@@ -74,10 +75,16 @@ export function ConnectionsClient({
 
         const note = conn.myNote?.toLowerCase() || ''
 
-        return name.includes(searchLower) ||
+        const matchesSearch = name.includes(searchLower) ||
             email.includes(searchLower) ||
             tags.includes(searchLower) ||
             note.includes(searchLower)
+
+        const matchesCategory = selectedCategoryFilter === 'all' ||
+            (selectedCategoryFilter === 'uncategorized' && !conn.category) ||
+            conn.category?.id === selectedCategoryFilter
+
+        return matchesSearch && matchesCategory
     })
 
     // Gruplara göre ayır
@@ -180,15 +187,41 @@ export function ConnectionsClient({
                 </div>
             </div>
 
-            {/* Arama */}
-            <div style={{ marginBottom: '2rem' }}>
+            {/* Filters */}
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+                {/* Category Filter */}
+                <select
+                    value={selectedCategoryFilter}
+                    onChange={(e) => setSelectedCategoryFilter(e.target.value)}
+                    style={{
+                        padding: '1rem',
+                        background: '#1e293b',
+                        border: '1px solid #334155',
+                        borderRadius: '0.75rem',
+                        color: '#fff',
+                        fontSize: '1rem',
+                        minWidth: '200px',
+                        cursor: 'pointer'
+                    }}
+                >
+                    <option value="all">📁 Tüm Kategoriler ({connections.length})</option>
+                    <option value="uncategorized">📂 Gruplandırılmamış ({connections.filter(c => !c.category).length})</option>
+                    {categories.map(cat => (
+                        <option key={cat.id} value={cat.id}>
+                            {cat.icon} {cat.name} ({connections.filter(c => c.category?.id === cat.id).length})
+                        </option>
+                    ))}
+                </select>
+
+                {/* Search */}
                 <input
                     type="text"
                     placeholder="🔍 İsim, email, etiket veya not ile ara..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     style={{
-                        width: '100%',
+                        flex: 1,
+                        minWidth: '300px',
                         padding: '1rem',
                         background: '#1e293b',
                         border: '1px solid #334155',

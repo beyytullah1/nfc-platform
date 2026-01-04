@@ -12,11 +12,14 @@ export default async function DashboardPage() {
     }
 
     // İstatistikleri al
-    const [cardCount, plantCount, mugCount, pageCount] = await Promise.all([
+    const [cardCount, plantCount, mugCount, pageCount, giftCount, connectionCount, nfcTagCount] = await Promise.all([
         prisma.card.count({ where: { userId: session.user.id } }),
         prisma.plant.count({ where: { ownerId: session.user.id } }),
         prisma.mug.count({ where: { ownerId: session.user.id } }),
         prisma.page.count({ where: { ownerId: session.user.id } }),
+        prisma.gift.count({ where: { giver: { id: session.user.id } } }),
+        prisma.connection.count({ where: { userId: session.user.id } }),
+        prisma.nfcTag.count({ where: { ownerId: session.user.id } }),
     ])
 
     // Son kartvizitleri al
@@ -89,34 +92,55 @@ export default async function DashboardPage() {
             </header>
 
             <div className={styles.stats}>
-                <div className={styles.statCard}>
+                <Link href="/dashboard/cards" className={styles.statCard}>
                     <div className={styles.statIcon}>💳</div>
                     <div className={styles.statInfo}>
                         <span className={styles.statValue}>{cardCount}</span>
                         <span className={styles.statLabel}>Kartvizit</span>
                     </div>
-                </div>
-                <div className={styles.statCard}>
+                </Link>
+                <Link href="/dashboard/connections" className={styles.statCard}>
+                    <div className={styles.statIcon}>👥</div>
+                    <div className={styles.statInfo}>
+                        <span className={styles.statValue}>{connectionCount}</span>
+                        <span className={styles.statLabel}>İletişim</span>
+                    </div>
+                </Link>
+                <Link href="/dashboard/nfc-tags" className={styles.statCard}>
+                    <div className={styles.statIcon}>🏷️</div>
+                    <div className={styles.statInfo}>
+                        <span className={styles.statValue}>{nfcTagCount}</span>
+                        <span className={styles.statLabel}>NFC Tag</span>
+                    </div>
+                </Link>
+                <Link href="/dashboard/plants" className={styles.statCard}>
                     <div className={styles.statIcon}>🌱</div>
                     <div className={styles.statInfo}>
                         <span className={styles.statValue}>{plantCount}</span>
                         <span className={styles.statLabel}>Bitki</span>
                     </div>
-                </div>
-                <div className={styles.statCard}>
+                </Link>
+                <Link href="/dashboard/mugs" className={styles.statCard}>
                     <div className={styles.statIcon}>☕</div>
                     <div className={styles.statInfo}>
                         <span className={styles.statValue}>{mugCount}</span>
                         <span className={styles.statLabel}>Kupa</span>
                     </div>
-                </div>
-                <div className={styles.statCard}>
+                </Link>
+                <Link href="/dashboard/gifts" className={styles.statCard}>
+                    <div className={styles.statIcon}>🎁</div>
+                    <div className={styles.statInfo}>
+                        <span className={styles.statValue}>{giftCount}</span>
+                        <span className={styles.statLabel}>Hediye</span>
+                    </div>
+                </Link>
+                <Link href="/dashboard/pages" className={styles.statCard}>
                     <div className={styles.statIcon}>📄</div>
                     <div className={styles.statInfo}>
                         <span className={styles.statValue}>{pageCount}</span>
                         <span className={styles.statLabel}>Sayfa</span>
                     </div>
-                </div>
+                </Link>
             </div>
 
             {/* Son Aktiviteler */}
