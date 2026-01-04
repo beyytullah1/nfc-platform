@@ -14,7 +14,7 @@ export async function updateProfile(formData: FormData) {
 
     try {
         await prisma.user.update({
-            where: { id: session.user.id },
+            where: { id: session.user!.id },
             data: { name, email: email || undefined }
         })
         revalidatePath("/dashboard")
@@ -42,7 +42,7 @@ export async function changePassword(formData: FormData) {
 
     // Mevcut kullanıcıyı bul
     const user = await prisma.user.findUnique({
-        where: { id: session.user.id }
+        where: { id: session.user!.id }
     })
 
     if (!user || !user.passwordHash) {
@@ -59,7 +59,7 @@ export async function changePassword(formData: FormData) {
     const passwordHash = await bcrypt.hash(newPassword, 12)
 
     await prisma.user.update({
-        where: { id: session.user.id },
+        where: { id: session.user!.id },
         data: { passwordHash }
     })
 

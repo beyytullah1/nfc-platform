@@ -19,7 +19,7 @@ export async function createMug(formData: FormData) {
 
     const mug = await prisma.mug.create({
         data: {
-            ownerId: session.user.id,
+            ownerId: session.user!.id,
             name,
             theme: JSON.stringify({ style: "warm" })
         }
@@ -40,7 +40,7 @@ export async function addMugLog(mugId: string, formData: FormData) {
             where: { id: mugId }
         })
 
-        if (!mug || mug.ownerId !== session.user.id) {
+        if (!mug || mug.ownerId !== session.user!.id) {
             throw new Error("Kupa bulunamadı")
         }
 
@@ -73,7 +73,7 @@ export async function deleteMug(mugId: string) {
         where: { id: mugId }
     })
 
-    if (!mug || mug.ownerId !== session.user.id) {
+    if (!mug || mug.ownerId !== session.user!.id) {
         return { error: "Kupa bulunamadı" }
     }
 
@@ -95,7 +95,7 @@ export async function updateMug(mugId: string, formData: FormData) {
         where: { id: mugId }
     })
 
-    if (!mug || mug.ownerId !== session.user.id) {
+    if (!mug || mug.ownerId !== session.user!.id) {
         return { error: "Kupa bulunamadı" }
     }
 

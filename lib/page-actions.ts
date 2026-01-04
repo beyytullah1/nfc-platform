@@ -19,7 +19,7 @@ export async function createPage(formData: FormData) {
 
     const page = await prisma.page.create({
         data: {
-            ownerId: session.user.id,
+            ownerId: session.user!.id,
             moduleType: "canvas",
             title,
             theme: JSON.stringify({ style: "default" })
@@ -41,7 +41,7 @@ export async function addBlock(pageId: string, formData: FormData) {
         include: { blocks: true }
     })
 
-    if (!page || page.ownerId !== session.user.id) {
+    if (!page || page.ownerId !== session.user!.id) {
         return { error: "Sayfa bulunamadı" }
     }
 
@@ -91,7 +91,7 @@ export async function updateBlock(blockId: string, formData: FormData) {
         include: { page: true }
     })
 
-    if (!block || block.page.ownerId !== session.user.id) {
+    if (!block || block.page.ownerId !== session.user!.id) {
         return { error: "Blok bulunamadı" }
     }
 
@@ -133,7 +133,7 @@ export async function deleteBlock(blockId: string) {
         include: { page: true }
     })
 
-    if (!block || block.page.ownerId !== session.user.id) {
+    if (!block || block.page.ownerId !== session.user!.id) {
         return { error: "Blok bulunamadı" }
     }
 
@@ -155,7 +155,7 @@ export async function deletePage(pageId: string) {
         where: { id: pageId }
     })
 
-    if (!page || page.ownerId !== session.user.id) {
+    if (!page || page.ownerId !== session.user!.id) {
         return { error: "Sayfa bulunamadı" }
     }
 
@@ -177,7 +177,7 @@ export async function updatePage(pageId: string, formData: FormData) {
         where: { id: pageId }
     })
 
-    if (!page || page.ownerId !== session.user.id) {
+    if (!page || page.ownerId !== session.user!.id) {
         return { error: "Sayfa bulunamadı" }
     }
 

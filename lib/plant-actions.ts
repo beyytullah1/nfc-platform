@@ -21,7 +21,7 @@ export async function createPlant(formData: FormData) {
 
     const plant = await prisma.plant.create({
         data: {
-            ownerId: session.user.id,
+            ownerId: session.user!.id,
             name,
             species: species || null,
             birthDate: birthDate ? new Date(birthDate) : null,
@@ -43,7 +43,7 @@ export async function addPlantLog(plantId: string, formData: FormData) {
         where: { id: plantId }
     })
 
-    if (!plant || plant.ownerId !== session.user.id) {
+    if (!plant || plant.ownerId !== session.user!.id) {
         return { error: "Bitki bulunamadı" }
     }
 
@@ -74,7 +74,7 @@ export async function deletePlant(plantId: string) {
         where: { id: plantId }
     })
 
-    if (!plant || plant.ownerId !== session.user.id) {
+    if (!plant || plant.ownerId !== session.user!.id) {
         return { error: "Bitki bulunamadı" }
     }
 
@@ -96,7 +96,7 @@ export async function updatePlant(plantId: string, formData: FormData) {
         where: { id: plantId }
     })
 
-    if (!plant || plant.ownerId !== session.user.id) {
+    if (!plant || plant.ownerId !== session.user!.id) {
         return { error: "Bitki bulunamadı" }
     }
 

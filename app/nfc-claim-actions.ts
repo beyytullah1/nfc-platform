@@ -36,7 +36,7 @@ export async function claimPendingNFC() {
         }
 
         // Tag zaten başkasına ait mi?
-        if (tag.ownerId && tag.ownerId !== session.user.id) {
+        if (tag.ownerId && tag.ownerId !== session.user!.id) {
             const cookieStore = await cookies()
             cookieStore.delete('pending_nfc_code')
             return { error: 'Bu tag başkasına ait' }
@@ -46,7 +46,7 @@ export async function claimPendingNFC() {
         await prisma.nfcTag.update({
             where: { id: tag.id },
             data: {
-                ownerId: session.user.id,
+                ownerId: session.user!.id,
                 claimedAt: new Date(),
                 status: 'claimed'
             }

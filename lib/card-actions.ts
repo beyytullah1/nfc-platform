@@ -31,7 +31,7 @@ export async function createCard(formData: FormData) {
     // Creating minimal card
     const card = await prisma.card.create({
         data: {
-            userId: session.user.id,
+            userId: session.user!.id,
             slug: slug || null,
             logoUrl: logoUrl || null,
             avatarUrl: avatarUrl || null,
@@ -73,7 +73,7 @@ export async function updateCard(cardId: string, formData: FormData) {
         where: { id: cardId }
     })
 
-    if (!card || card.userId !== session.user.id) {
+    if (!card || card.userId !== session.user!.id) {
         return { error: "Kartvizit bulunamadı" }
     }
 
@@ -189,7 +189,7 @@ export async function deleteCard(cardId: string) {
         where: { id: cardId }
     })
 
-    if (!card || card.userId !== session.user.id) {
+    if (!card || card.userId !== session.user!.id) {
         return { error: "Kartvizit bulunamadı" }
     }
 

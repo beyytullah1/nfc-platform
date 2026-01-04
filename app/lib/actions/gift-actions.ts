@@ -27,14 +27,14 @@ export async function createGift(formData: FormData) {
                     tagId: `virtual_${Date.now()}_${publicCode}`, // Virtual physical ID
                     publicCode: publicCode,
                     moduleType: "gift",
-                    ownerId: session.user.id
+                    ownerId: session.user!.id
                 }
             })
 
             // 2. Create Gift linked to Tag
             await (tx as any).gift.create({
                 data: {
-                    senderId: session.user.id,
+                    senderId: session.user!.id,
                     tagId: tag.id,
                     title,
                     message,
@@ -67,7 +67,7 @@ export async function updateGift(id: string, formData: FormData) {
         await (prisma as any).gift.update({
             where: {
                 id,
-                senderId: session.user.id
+                senderId: session.user!.id
             },
             data: {
                 title,
@@ -93,7 +93,7 @@ export async function deleteGift(id: string) {
     try {
         // First get the gift to find the tagId
         const gift = await (prisma as any).gift.findUnique({
-            where: { id, senderId: session.user.id }
+            where: { id, senderId: session.user!.id }
         })
 
         if (!gift) throw new Error("Gift not found")
