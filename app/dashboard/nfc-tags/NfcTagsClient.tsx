@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useToast } from '@/app/components/Toast'
 import { useRouter } from 'next/navigation'
 import styles from '../dashboard.module.css'
 
@@ -20,6 +21,7 @@ interface NfcTag {
 }
 
 export default function NfcTagsClient() {
+    const { showToast } = useToast()
     const router = useRouter()
     const [tags, setTags] = useState<NfcTag[]>([])
     const [loading, setLoading] = useState(true)
@@ -61,11 +63,11 @@ export default function NfcTagsClient() {
                 await fetchTags() // Refresh list
             } else {
                 const data = await res.json()
-                alert(data.error || 'Bağlantı kaldırılamadı')
+                showToast(data.error || 'Bağlantı kaldırılamadı', 'error')
             }
         } catch (error) {
             console.error('Unlink error:', error)
-            alert('Bir hata oluştu')
+            showToast('Bir hata oluştu', 'error')
         } finally {
             setUnlinkingId(null)
         }

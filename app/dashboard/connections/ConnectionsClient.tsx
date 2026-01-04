@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useToast } from '@/app/components/Toast'
 import Link from 'next/link'
 
 interface Connection {
@@ -44,6 +45,7 @@ export function ConnectionsClient({
     connections: Connection[]
     categories: Category[]
 }) {
+    const { showToast } = useToast()
     const [connections, setConnections] = useState(initialConnections)
     const [searchQuery, setSearchQuery] = useState('')
     const [removingId, setRemovingId] = useState<string | null>(null)
@@ -88,7 +90,7 @@ export function ConnectionsClient({
 
     const handleCreateGroup = async () => {
         if (!newGroupName.trim()) {
-            alert('Grup adı boş olamaz')
+            showToast('Grup adı boş olamaz', 'error')
             return
         }
 
@@ -109,11 +111,11 @@ export function ConnectionsClient({
                 window.location.reload()
             } else {
                 const data = await res.json()
-                alert(data.error || 'Grup oluşturulamadı')
+                showToast(data.error || 'Grup oluşturulmadı', 'error')
             }
         } catch (err) {
             console.error('Create group error:', err)
-            alert('Bir hata oluştu')
+            showToast('Bir hata oluştu', 'error')
         }
     }
 
@@ -128,10 +130,10 @@ export function ConnectionsClient({
             if (res.ok) {
                 window.location.reload()
             } else {
-                alert('Grup güncellenemedi')
+                showToast('Grup güncellenemedi', 'error')
             }
         } catch (err) {
-            alert('Bir hata oluştu')
+            showToast('Bir hata oluştu', 'error')
         }
     }
 
@@ -151,11 +153,11 @@ export function ConnectionsClient({
             if (res.ok) {
                 setConnections(prev => prev.filter(c => c.id !== connectionId))
             } else {
-                alert('Silme işlemi başarısız oldu')
+                showToast('Silme işlemi başarısız oldu', 'error')
             }
         } catch (error) {
             console.error('Remove error:', error)
-            alert('Bir hata oluştu')
+            showToast('Bir hata oluştu', 'error')
         } finally {
             setRemovingId(null)
         }

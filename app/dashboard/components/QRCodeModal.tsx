@@ -1,6 +1,7 @@
 "use client"
 
 import { useRef, useEffect } from "react"
+import { useToast } from "@/app/components/Toast"
 import { QRCodeSVG } from "qrcode.react"
 import styles from "./qrcode-modal.module.css"
 
@@ -12,6 +13,7 @@ interface QRCodeModalProps {
 }
 
 export function QRCodeModal({ url, title, isOpen, onClose }: QRCodeModalProps) {
+    const { showToast } = useToast()
     const qrRef = useRef<HTMLDivElement>(null)
 
     // Escape key handler
@@ -60,7 +62,7 @@ export function QRCodeModal({ url, title, isOpen, onClose }: QRCodeModalProps) {
 
     const handleCopyLink = async () => {
         await navigator.clipboard.writeText(url)
-        alert("Link kopyalandı!")
+        showToast("Link kopyalandı!", "success")
     }
 
     if (!isOpen) return null

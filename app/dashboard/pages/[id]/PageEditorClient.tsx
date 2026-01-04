@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useToast } from "@/app/components/Toast"
 import { addBlock, deleteBlock, deletePage, updatePage } from "@/lib/page-actions"
 import { uploadImage } from "@/lib/upload-actions"
 import styles from "../pages.module.css"
@@ -27,6 +28,7 @@ const BLOCK_TYPES = [
 ]
 
 export default function PageEditorClient({ page }: PageEditorClientProps) {
+    const { showToast } = useToast()
     const [showAddForm, setShowAddForm] = useState<string | null>(null)
     const [content, setContent] = useState("")
     const [linkText, setLinkText] = useState("")
@@ -48,7 +50,7 @@ export default function PageEditorClient({ page }: PageEditorClientProps) {
         if (result.success && result.url) {
             setContent(result.url)
         } else {
-            alert("Resim yüklenirken bir hata oluştu")
+            showToast("Resim yüklenirken bir hata oluştu", "error")
         }
         setUploadingFile(false)
     }

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, ChangeEvent } from "react"
+import { useToast } from "@/app/components/Toast"
 import styles from "./cards.module.css"
 
 interface ImageUploadProps {
@@ -12,6 +13,7 @@ interface ImageUploadProps {
 }
 
 export default function ImageUpload({ label, icon, value, onChange, type }: ImageUploadProps) {
+    const { showToast } = useToast()
     const [uploading, setUploading] = useState(false)
     const [previewUrl, setPreviewUrl] = useState(value)
     const inputRef = useRef<HTMLInputElement>(null)
@@ -44,11 +46,11 @@ export default function ImageUpload({ label, icon, value, onChange, type }: Imag
                 onChange(data.url)
                 setPreviewUrl(data.url)
             } else {
-                alert(data.error || "Yükleme hatası")
+                showToast(data.error || "Yükleme hatası", "error")
             }
         } catch (error) {
             console.error("Upload error:", error)
-            alert("Dosya yüklenemedi")
+            showToast("Dosya yüklenemedi", "error")
         } finally {
             setUploading(false)
         }
