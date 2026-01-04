@@ -1,0 +1,94 @@
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(to right, #fff, #94a3b8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.header p {
+    color: var(--color-text-muted);
+    font-size: 1.1rem;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.templateCard {
+    background: #1e293b;
+    border: 2px solid #334155;
+    border-radius: 1rem;
+    padding: 2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.templateCard:hover {
+    transform: translateY(-4px);
+    border-color: #3b82f6;
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.2);
+}
+
+.blankCard {
+    border-style: dashed;
+    border-color: #475569;
+}
+
+.blankCard:hover {
+    border-color: #8b5cf6;
+    box-shadow: 0 8px 24px rgba(139, 92, 246, 0.2);
+}
+
+.templateIcon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.templateCard h3 {
+    color: #fff;
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.templateCard p {
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+}
+
+.fieldPreview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.fieldTag {
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    color: #93c5fd;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.85rem;
+}
+
+.moreFields {
+    color: #64748b;
+    font-size: 0.85rem;
+    font-style: italic;
+}

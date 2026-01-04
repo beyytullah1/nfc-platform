@@ -12,12 +12,11 @@ export default async function DashboardPage() {
     }
 
     // İstatistikleri al
-    const [cardCount, plantCount, mugCount, pageCount, giftCount, connectionCount, nfcTagCount] = await Promise.all([
+    const [cardCount, plantCount, mugCount, pageCount, connectionCount, nfcTagCount] = await Promise.all([
         prisma.card.count({ where: { userId: session.user.id } }),
         prisma.plant.count({ where: { ownerId: session.user.id } }),
         prisma.mug.count({ where: { ownerId: session.user.id } }),
         prisma.page.count({ where: { ownerId: session.user.id } }),
-        prisma.gift.count({ where: { giver: { id: session.user.id } } }),
         prisma.connection.count({ where: { userId: session.user.id } }),
         prisma.nfcTag.count({ where: { ownerId: session.user.id } }),
     ])
@@ -125,13 +124,6 @@ export default async function DashboardPage() {
                     <div className={styles.statInfo}>
                         <span className={styles.statValue}>{mugCount}</span>
                         <span className={styles.statLabel}>Kupa</span>
-                    </div>
-                </Link>
-                <Link href="/dashboard/gifts" className={styles.statCard}>
-                    <div className={styles.statIcon}>🎁</div>
-                    <div className={styles.statInfo}>
-                        <span className={styles.statValue}>{giftCount}</span>
-                        <span className={styles.statLabel}>Hediye</span>
                     </div>
                 </Link>
                 <Link href="/dashboard/pages" className={styles.statCard}>

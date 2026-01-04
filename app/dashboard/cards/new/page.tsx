@@ -9,6 +9,8 @@ import previewStyles from "./preview.module.css"
 import CardTypeSelector, { CARD_TYPES } from "../CardTypeSelector"
 import ImageUpload from "../ImageUpload"
 import { QRCodeSVG } from "qrcode.react"
+import TemplateSelector from "../components/TemplateSelector"
+import { CARD_TEMPLATES } from "@/lib/card-templates"
 
 const FIELD_TYPES = [
     { value: "phone", label: "Telefon", icon: "📱", category: "contact" },
@@ -54,7 +56,7 @@ interface LinkGroup {
 }
 
 export default function NewCardPage() {
-    const [step, setStep] = useState<"type" | "form">("type")
+    const [step, setStep] = useState<"type" | "template" | "form">("type")
     const [cardType, setCardType] = useState("personal")
     const [title, setTitle] = useState("")
     const [bio, setBio] = useState("")
@@ -89,7 +91,40 @@ export default function NewCardPage() {
 
     const handleTypeSelect = (typeId: string) => {
         setCardType(typeId)
-        const selectedType = CARD_TYPES.find(t => t.id === typeId)
+        setStep("template")
+    }
+
+    const handleTemplateSelect = (templateId: string) => {
+        const template = CARD_TEMPLATES.find(t => t.id === templateId)
+        if (template) {
+            // Grup template'ına göre ayarla
+            const groupMap: Record<string, any[]> = {}
+            template.fields.forEach(field => {
+                const groupName = field.groupName || "Kişisel Bilgiler"
+                if (!groupMap[groupName]) {
+                    groupMap[groupName] = []
+                }
+                groupMap[groupName].push(field)
+            })
+
+            const newGroups = Object.entries(groupMap).map(([name, fields]) => ({
+                name,
+                icon: fields[0]?.icon || "📁",
+                fields: fields.map(f => ({
+                    type: f.fieldType,
+                    value: f.value,
+                    label: f.label,
+                    privacyLevel: f.privacyLevel
+                }))
+            }))
+
+            setGroups(newGroups)
+        }
+        setStep("form")
+    }
+
+    const handleSkipTemplate = () => {
+        const selectedType = CARD_TYPES.find(t => t.id === cardType)
         if (selectedType) {
             setGroups(selectedType.suggestedGroups.map((name, i) => ({
                 name,
@@ -217,6 +252,20 @@ export default function NewCardPage() {
                     ← Kartvizitlere Dön
                 </Link>
                 <CardTypeSelector onSelect={handleTypeSelect} />
+            </>
+        )
+    }
+
+    if (step === "template") {
+        return (
+            <>
+                <Link href="/dashboard/cards" className={styles.backLink}>
+                    ← Kartvizitlere Dön
+                </Link>
+                <TemplateSelector
+                    onSelect={handleTemplateSelect}
+                    onSkip={handleSkipTemplate}
+                />
             </>
         )
     }
