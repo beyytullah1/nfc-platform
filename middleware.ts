@@ -1,34 +1,15 @@
-import { auth } from "@/lib/auth"
 import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
 
 // Reserved paths that should NOT be treated as card slugs
 const RESERVED_PATHS = [
     '/dashboard', '/api', '/login', '/register', '/logout', '/forgot-password',
     '/plant', '/mug', '/gift', '/c', '/card', '/t', '/p', '/page',
-    '/admin', '/claim', '/actions'
+    '/admin', '/claim', '/actions', '/_next', '/favicon'
 ]
 
-export default auth((req) => {
-    const isLoggedIn = !!req.auth
+export function middleware(req: NextRequest) {
     const { pathname } = req.nextUrl
-
-    // Auth logic - Korumalı sayfalar
-    const protectedPaths = ["/dashboard", "/cards", "/admin"]
-    const isProtected = protectedPaths.some(path => pathname.startsWith(path))
-
-    // Auth sayfaları (login, register)
-    const authPaths = ["/login", "/register"]
-    const isAuthPage = authPaths.some(path => pathname.startsWith(path))
-
-    // Giriş yapmış kullanıcı auth sayfalarına erişmeye çalışırsa
-    if (isLoggedIn && isAuthPage) {
-        return NextResponse.redirect(new URL("/dashboard", req.url))
-    }
-
-    // Giriş yapmamış kullanıcı korumalı sayfaya erişmeye çalışırsa
-    if (!isLoggedIn && isProtected) {
-        return NextResponse.redirect(new URL("/login", req.url))
-    }
 
     // Username rewrite logic - /beytullah → /c/beytullah
     // Skip reserved paths
@@ -46,8 +27,17 @@ export default auth((req) => {
     }
 
     return NextResponse.next()
-})
+}
 
 export const config = {
-    matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"]
+    matcher: [
+        /*
+         * Match all request paths except:
+         * - api routes
+         * - _next/static (static files)
+         * - _next/image (image optimization)
+         * - favicon.ico
+         */
+        "/((?!api|_next/static|_next/image|favicon.ico).*)"
+    ]
 }
