@@ -10,7 +10,8 @@ export default async function GiftsPage() {
     if (!session?.user) redirect("/login")
 
     // Gifts query with error handling
-    let gifts = []
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let gifts: any[] = []
     try {
         gifts = await prisma.gift.findMany({
             where: {

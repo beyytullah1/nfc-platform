@@ -5,11 +5,11 @@ import { useToast } from '@/app/components/Toast'
 
 interface FollowButtonProps {
     tagId: string
-    initialIsFollowing: boolean
+    initialIsFollowing?: boolean
     followerCount?: number
 }
 
-export function FollowButton({ tagId, initialIsFollowing, followerCount = 0 }: FollowButtonProps) {
+export function FollowButton({ tagId, initialIsFollowing = false, followerCount = 0 }: FollowButtonProps) {
     const [isFollowing, setIsFollowing] = useState(initialIsFollowing)
     const [count, setCount] = useState(followerCount)
     const [loading, setLoading] = useState(false)

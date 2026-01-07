@@ -51,12 +51,13 @@ export async function POST(req: NextRequest) {
 
             claimedAsId = plant.id
 
-            // Update tag
+            // Update tag - use ownerId instead of claimedBy
             if (gift.tag) {
                 await prisma.nfcTag.update({
                     where: { id: gift.tag.id },
                     data: {
-                        claimedBy: session.user.id,
+                        ownerId: session.user.id,
+                        status: 'claimed',
                         claimedAt: new Date()
                     }
                 })
@@ -70,21 +71,20 @@ export async function POST(req: NextRequest) {
                 data: {
                     name: itemName,
                     ownerId: session.user.id,
-                    tagId: gift.tagId,
-                    isGift: true,
-                    giftedById: gift.senderId,
-                    giftMessage: gift.message
+                    tagId: gift.tagId
+                    // Note: Mug model doesn't have isGift, giftedById, giftMessage fields
                 }
             })
 
             claimedAsId = mug.id
 
-            // Update tag
+            // Update tag - use ownerId instead of claimedBy
             if (gift.tag) {
                 await prisma.nfcTag.update({
                     where: { id: gift.tag.id },
                     data: {
-                        claimedBy: session.user.id,
+                        ownerId: session.user.id,
+                        status: 'claimed',
                         claimedAt: new Date()
                     }
                 })

@@ -12,7 +12,8 @@ export default async function CardsPage() {
         redirect("/login")
     }
 
-    let cards = []
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let cards: any[] = []
     try {
         cards = await prisma.card.findMany({
             where: { userId: session.user.id },
@@ -84,7 +85,7 @@ export default async function CardsPage() {
                     avatarUrl: c.avatarUrl,
                     viewCount: (c as unknown as { viewCount?: number }).viewCount || 0,
                     createdAt: c.createdAt,
-                    fields: c.fields.map(f => ({ id: f.id }))
+                    fields: c.fields.map((f: { id: string }) => ({ id: f.id }))
                 }))}
                 userName={session.user?.name || null}
             />

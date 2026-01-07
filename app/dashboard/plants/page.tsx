@@ -11,6 +11,7 @@ export default async function PlantsPage() {
         redirect("/login")
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let plants: any[] = []
     try {
         plants = await prisma.plant.findMany({
@@ -35,7 +36,7 @@ export default async function PlantsPage() {
 
     // Calculate statistics
     const totalPlants = plants.length
-    const totalWaterings = plants.reduce((sum, p) => sum + p.logs.filter(l => l.logType === 'water').length, 0)
+    const totalWaterings = plants.reduce((sum, p) => sum + p.logs.filter((l: { logType: string }) => l.logType === 'water').length, 0)
     const giftedPlants = plants.filter(p => p.isGift).length
     const oldestPlant = plants.length > 0 ?
         Math.max(...plants.map(p => Math.floor((Date.now() - new Date(p.createdAt).getTime()) / (1000 * 60 * 60 * 24)))) : 0
@@ -98,7 +99,7 @@ export default async function PlantsPage() {
             ) : (
                 <div className={styles.plantGrid}>
                     {plants.map((plant) => {
-                        const lastWatered = plant.logs.find(l => l.logType === 'water')
+                        const lastWatered = plant.logs.find((l: { logType: string }) => l.logType === 'water')
                         const daysSinceWater = lastWatered
                             ? Math.floor((Date.now() - new Date(lastWatered.createdAt).getTime()) / (1000 * 60 * 60 * 24))
                             : null

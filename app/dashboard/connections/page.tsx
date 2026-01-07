@@ -13,10 +13,13 @@ export default async function ConnectionsPage() {
     }
 
     // Sadece kendi kaydettiğim kişiler (private!)
-    let connections = []
-    let categories = []
-    let follows = []
-    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let connections: any[] = []
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let categories: any[] = []
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let follows: any[] = []
+
     try {
         [connections, categories, follows] = await Promise.all([
             // Bağlantılar

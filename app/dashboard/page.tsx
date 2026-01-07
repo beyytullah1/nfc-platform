@@ -34,7 +34,8 @@ export default async function DashboardPage() {
     }
 
     // Son kartvizitleri al
-    let recentCards = []
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let recentCards: any[] = []
     try {
         recentCards = await prisma.card.findMany({
             where: { userId: session.user.id },
@@ -48,9 +49,11 @@ export default async function DashboardPage() {
     }
 
     // Son aktiviteleri al (bitki sulamaları, kupa içecekleri)
-    let recentPlantLogs = []
-    let recentMugLogs = []
-    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let recentPlantLogs: any[] = []
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let recentMugLogs: any[] = []
+
     try {
         [recentPlantLogs, recentMugLogs] = await Promise.all([
             prisma.plantLog.findMany({

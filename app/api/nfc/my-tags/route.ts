@@ -40,6 +40,12 @@ export async function GET() {
                         id: true,
                         title: true
                     }
+                },
+                gift: {
+                    select: {
+                        id: true,
+                        title: true
+                    }
                 }
             },
             orderBy: {

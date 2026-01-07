@@ -11,7 +11,8 @@ export default async function PagesPage() {
         redirect("/login")
     }
 
-    let pages = []
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let pages: any[] = []
     try {
         pages = await prisma.page.findMany({
             where: {

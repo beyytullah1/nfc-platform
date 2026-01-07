@@ -47,11 +47,16 @@ export async function GET(
         const pagination = getPaginationParams(searchParams)
 
         // All queries in parallel to avoid N+1 problem
-        let cardsData = []
-        let plantsData = []
-        let mugsData = []
-        let giftsData = []
-        let pagesData = []
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let cardsData: any[] = []
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let plantsData: any[] = []
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let mugsData: any[] = []
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let giftsData: any[] = []
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let pagesData: any[] = []
         let cardsCount = 0
         let plantsCount = 0
         let mugsCount = 0
@@ -60,155 +65,155 @@ export async function GET(
 
         try {
             [cardsData, cardsCount, plantsData, plantsCount, mugsData, mugsCount, giftsData, giftsCount, pagesData, pagesCount] = await Promise.all([
-            // Kartlar: Kendi profilindeyse HEPSİ, değilse sadece public
-            prisma.card.findMany({
-                where: {
-                    userId: user.id,
-                    ...(isOwner ? {} : { isPublic: true })
-                },
-                select: {
-                    id: true,
-                    slug: true,
-                    cardType: true,
-                    title: true,
-                    avatarUrl: true,
-                    viewCount: true,
-                    isPublic: true,
-                    createdAt: true
-                },
-                orderBy: { createdAt: 'desc' },
-                take: pagination.limit,
-                skip: (pagination.page - 1) * pagination.limit
-            }),
-            // Count cards
-            prisma.card.count({
-                where: {
-                    userId: user.id,
-                    ...(isOwner ? {} : { isPublic: true })
-                }
-            }),
-            // Bitkiler: Kendi profilindeyse HEPSİ, değilse sadece public
-            prisma.plant.findMany({
-                where: {
-                    ownerId: user.id,
-                    ...(isOwner ? {} : {
-                        tag: {
-                            isPublic: true,
-                            allowFollow: true
-                        }
-                    })
-                },
-                include: {
-                    tag: {
-                        select: {
-                            id: true,
-                            publicCode: true,
-                            isPublic: true,
-                            allowFollow: true
-                        }
+                // Kartlar: Kendi profilindeyse HEPSİ, değilse sadece public
+                prisma.card.findMany({
+                    where: {
+                        userId: user.id,
+                        ...(isOwner ? {} : { isPublic: true })
+                    },
+                    select: {
+                        id: true,
+                        slug: true,
+                        cardType: true,
+                        title: true,
+                        avatarUrl: true,
+                        viewCount: true,
+                        isPublic: true,
+                        createdAt: true
+                    },
+                    orderBy: { createdAt: 'desc' },
+                    take: pagination.limit,
+                    skip: (pagination.page - 1) * pagination.limit
+                }),
+                // Count cards
+                prisma.card.count({
+                    where: {
+                        userId: user.id,
+                        ...(isOwner ? {} : { isPublic: true })
                     }
-                },
-                orderBy: { createdAt: 'desc' },
-                take: pagination.limit,
-                skip: (pagination.page - 1) * pagination.limit
-            }),
-            // Count plants
-            prisma.plant.count({
-                where: {
-                    ownerId: user.id,
-                    ...(isOwner ? {} : {
+                }),
+                // Bitkiler: Kendi profilindeyse HEPSİ, değilse sadece public
+                prisma.plant.findMany({
+                    where: {
+                        ownerId: user.id,
+                        ...(isOwner ? {} : {
+                            tag: {
+                                isPublic: true,
+                                allowFollow: true
+                            }
+                        })
+                    },
+                    include: {
                         tag: {
-                            isPublic: true,
-                            allowFollow: true
+                            select: {
+                                id: true,
+                                publicCode: true,
+                                isPublic: true,
+                                allowFollow: true
+                            }
                         }
-                    })
-                }
-            }),
-            // Kupalar: Kendi profilindeyse HEPSİ, değilse sadece public
-            prisma.mug.findMany({
-                where: {
-                    ownerId: user.id,
-                    ...(isOwner ? {} : {
-                        tag: {
-                            isPublic: true,
-                            allowFollow: true
-                        }
-                    })
-                },
-                include: {
-                    tag: {
-                        select: {
-                            id: true,
-                            publicCode: true,
-                            isPublic: true,
-                            allowFollow: true
-                        }
+                    },
+                    orderBy: { createdAt: 'desc' },
+                    take: pagination.limit,
+                    skip: (pagination.page - 1) * pagination.limit
+                }),
+                // Count plants
+                prisma.plant.count({
+                    where: {
+                        ownerId: user.id,
+                        ...(isOwner ? {} : {
+                            tag: {
+                                isPublic: true,
+                                allowFollow: true
+                            }
+                        })
                     }
-                },
-                orderBy: { createdAt: 'desc' },
-                take: pagination.limit,
-                skip: (pagination.page - 1) * pagination.limit
-            }),
-            // Count mugs
-            prisma.mug.count({
-                where: {
-                    ownerId: user.id,
-                    ...(isOwner ? {} : {
+                }),
+                // Kupalar: Kendi profilindeyse HEPSİ, değilse sadece public
+                prisma.mug.findMany({
+                    where: {
+                        ownerId: user.id,
+                        ...(isOwner ? {} : {
+                            tag: {
+                                isPublic: true,
+                                allowFollow: true
+                            }
+                        })
+                    },
+                    include: {
                         tag: {
-                            isPublic: true,
-                            allowFollow: true
+                            select: {
+                                id: true,
+                                publicCode: true,
+                                isPublic: true,
+                                allowFollow: true
+                            }
                         }
-                    })
-                }
-            }),
-            // Hediyeler: Kendi profilindeyse HEPSİ, değilse hepsi public (Gift'in isPublic yok)
-            prisma.gift.findMany({
-                where: {
-                    receiverId: user.id
-                },
-                select: {
-                    id: true,
-                    title: true,
-                    message: true,
-                    mediaUrl: true,
-                    giftType: true,
-                    isClaimed: true,
-                    createdAt: true,
-                    senderName: true
-                },
-                orderBy: { createdAt: 'desc' },
-                take: pagination.limit,
-                skip: (pagination.page - 1) * pagination.limit
-            }),
-            // Count gifts
-            prisma.gift.count({
-                where: {
-                    receiverId: user.id
-                }
-            }),
-            // Sayfalar: Kendi profilindeyse HEPSİ (Page'in isPublic yok, hepsi public)
-            prisma.page.findMany({
-                where: {
-                    ownerId: user.id
-                },
-                select: {
-                    id: true,
-                    title: true,
-                    moduleType: true,
-                    theme: true,
-                    createdAt: true
-                },
-                orderBy: { createdAt: 'desc' },
-                take: pagination.limit,
-                skip: (pagination.page - 1) * pagination.limit
-            }),
-            // Count pages
-            prisma.page.count({
-                where: {
-                    ownerId: user.id
-                }
-            })
-        ])
+                    },
+                    orderBy: { createdAt: 'desc' },
+                    take: pagination.limit,
+                    skip: (pagination.page - 1) * pagination.limit
+                }),
+                // Count mugs
+                prisma.mug.count({
+                    where: {
+                        ownerId: user.id,
+                        ...(isOwner ? {} : {
+                            tag: {
+                                isPublic: true,
+                                allowFollow: true
+                            }
+                        })
+                    }
+                }),
+                // Hediyeler: Kendi profilindeyse HEPSİ, değilse hepsi public (Gift'in isPublic yok)
+                prisma.gift.findMany({
+                    where: {
+                        receiverId: user.id
+                    },
+                    select: {
+                        id: true,
+                        title: true,
+                        message: true,
+                        mediaUrl: true,
+                        giftType: true,
+                        isClaimed: true,
+                        createdAt: true,
+                        senderName: true
+                    },
+                    orderBy: { createdAt: 'desc' },
+                    take: pagination.limit,
+                    skip: (pagination.page - 1) * pagination.limit
+                }),
+                // Count gifts
+                prisma.gift.count({
+                    where: {
+                        receiverId: user.id
+                    }
+                }),
+                // Sayfalar: Kendi profilindeyse HEPSİ (Page'in isPublic yok, hepsi public)
+                prisma.page.findMany({
+                    where: {
+                        ownerId: user.id
+                    },
+                    select: {
+                        id: true,
+                        title: true,
+                        moduleType: true,
+                        theme: true,
+                        createdAt: true
+                    },
+                    orderBy: { createdAt: 'desc' },
+                    take: pagination.limit,
+                    skip: (pagination.page - 1) * pagination.limit
+                }),
+                // Count pages
+                prisma.page.count({
+                    where: {
+                        ownerId: user.id
+                    }
+                })
+            ])
         } catch (error) {
             console.error('Database error loading user profile data:', error)
             // Continue with empty arrays and 0 counts - API will still respond

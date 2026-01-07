@@ -82,7 +82,7 @@ export default async function PublicGiftPage({ params }: { params: Promise<{ cod
             initialGift={gift}
             isLocked={false}
             publicData={publicData}
-            tagId={tagId}
+            tagId={tagId || undefined}
         />
     )
 }

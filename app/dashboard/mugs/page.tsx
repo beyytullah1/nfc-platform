@@ -11,7 +11,8 @@ export default async function MugsPage() {
         redirect("/login")
     }
 
-    let mugs = []
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let mugs: any[] = []
     try {
         mugs = await prisma.mug.findMany({
             where: { ownerId: session.user.id },
