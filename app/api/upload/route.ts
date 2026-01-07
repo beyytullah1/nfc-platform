@@ -66,40 +66,53 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Geçersiz vCard dosyası" }, { status: 400 })
         }
 
-        // Sanitize filename to prevent path traversal and injection
-        const sanitizeFilename = (name: string): string => {
-            // Remove any path separators and dangerous characters
-            return name
-                .replace(/[^a-zA-Z0-9.-]/g, '_') // Replace non-alphanumeric (except . and -) with _
-                .replace(/^\.+|\.+$/g, '') // Remove leading/trailing dots
-                .substring(0, 255) // Limit length
-        }
-
-        // Benzersiz dosya adı oluştur (sanitized)
         const timestamp = Date.now()
         const originalExt = file.name.split(".").pop()?.toLowerCase() || "jpg"
-        const safeExt = sanitizeFilename(originalExt) || "jpg"
-        
-        // Ensure extension is one of allowed types
-        const ext = FILE_UPLOAD.ALLOWED_EXTENSIONS.includes(safeExt as typeof FILE_UPLOAD.ALLOWED_EXTENSIONS[number]) ? safeExt : 'jpg'
-        
+
+        // Sanitize filename
+        const sanitizeFilename = (name: string): string => {
+            return name
+                .replace(/[^a-zA-Z0-9.-]/g, '_')
+                .replace(/^\.+|\.+$/g, '')
+                .substring(0, 255)
+        }
+
+        const safeExt = sanitizeFilename(originalExt)
+        const ext = FILE_UPLOAD.ALLOWED_EXTENSIONS.includes(safeExt as any) ? safeExt : 'jpg'
+
         const safeFilename = sanitizeFilename(`${session.user.id}-${type}-${timestamp}`)
-        const filename = `${safeFilename}.${ext}`
 
-        // Uploads klasörü oluştur
-        const uploadsDir = path.join(process.cwd(), "public", "uploads", type)
-        await mkdir(uploadsDir, { recursive: true })
+        // HYBRID UPLOAD STRATEGY
+        // Development: Use local filesystem
+        // Production: Use Vercel Blob
 
-        // Dosyayı kaydet
-        const filepath = path.join(uploadsDir, filename)
-        await writeFile(filepath, buffer)
+        if (process.env.NODE_ENV === 'development') {
+            const filename = `${safeFilename}.${ext}`
+            const uploadsDir = path.join(process.cwd(), "public", "uploads", type)
+            await mkdir(uploadsDir, { recursive: true })
 
-        // URL'yi döndür
-        const url = `/uploads/${type}/${filename}`
-        logger.info("File uploaded successfully", { context: "Upload", data: { type, filename, userId: session.user.id } })
-        return NextResponse.json({ url })
+            const filepath = path.join(uploadsDir, filename)
+            await writeFile(filepath, buffer)
+
+            const url = `/uploads/${type}/${filename}`
+            logger.info("File uploaded locally", { context: "Upload", data: { type, filename, userId: session.user.id } })
+            return NextResponse.json({ url })
+        } else {
+            // Production (Vercel Blob)
+            const { put } = await import('@vercel/blob')
+            const filename = `${safeFilename}.${ext}`
+
+            const blob = await put(filename, file, {
+                access: 'public',
+            })
+
+            logger.info("File uploaded to Blob", { context: "Upload", data: { type, url: blob.url, userId: session.user.id } })
+            return NextResponse.json({ url: blob.url })
+        }
+
     } catch (error) {
         logger.error("Upload error", { context: "Upload", error, data: { type, userId: session.user?.id } })
-        return NextResponse.json({ error: "Dosya yüklenemedi" }, { status: 500 })
+        return NextResponse.json({ error: "Dosya yüklenemedi." }, { status: 500 })
     }
 }
+
