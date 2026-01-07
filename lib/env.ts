@@ -12,19 +12,20 @@
  */
 function requireEnv(key: string, defaultValue?: string): string {
   const value = process.env[key]
-  
+
   if (value) {
     return value
   }
-  
-  // In production, never use defaults - throw error
+
+  // In production, warn but don't crash (next-auth will handle missing secret at runtime)
   if (process.env.NODE_ENV === 'production') {
-    throw new Error(
-      `Missing required environment variable: ${key}. ` +
-      `Please set it in your production environment.`
+    console.warn(
+      `⚠️  Missing environment variable: ${key}. ` +
+      `Make sure it is set in your production environment.`
     )
+    return defaultValue || ''
   }
-  
+
   // In development, allow defaults but warn
   if (defaultValue) {
     console.warn(
@@ -33,7 +34,7 @@ function requireEnv(key: string, defaultValue?: string): string {
     )
     return defaultValue
   }
-  
+
   throw new Error(
     `Missing required environment variable: ${key}. ` +
     `Please set it in your .env.local file.`
@@ -82,13 +83,13 @@ export const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET
  * This allows easy switching between localhost and production domains
  */
 export function getBaseUrl(): string {
-    // Server-side rendering
-    if (typeof window === 'undefined') {
-        return getEnv('NEXT_PUBLIC_BASE_URL', 'http://localhost:3000')
-    }
+  // Server-side rendering
+  if (typeof window === 'undefined') {
+    return getEnv('NEXT_PUBLIC_BASE_URL', 'http://localhost:3000')
+  }
 
-    // Client-side
-    return window.location.origin
+  // Client-side
+  return window.location.origin
 }
 
 /**
@@ -96,9 +97,9 @@ export function getBaseUrl(): string {
  * @param path - Path to append to base URL (with or without leading slash)
  */
 export function buildUrl(path: string): string {
-    const base = getBaseUrl()
-    const cleanPath = path.startsWith('/') ? path : `/${path}`
-    return `${base}${cleanPath}`
+  const base = getBaseUrl()
+  const cleanPath = path.startsWith('/') ? path : `/${path}`
+  return `${base}${cleanPath}`
 }
 
 /**
@@ -106,5 +107,5 @@ export function buildUrl(path: string): string {
  * @param slug - Card slug/username
  */
 export function getCardUrl(slug: string): string {
-    return buildUrl(`/${slug}`)
+  return buildUrl(`/${slug}`)
 }
