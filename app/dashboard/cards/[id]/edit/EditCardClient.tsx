@@ -55,6 +55,8 @@ interface Group {
 interface EditCardClientProps {
     card: {
         id: string
+        firstName: string | null
+        lastName: string | null
         title: string | null
         bio: string | null
         slug: string | null
@@ -80,6 +82,8 @@ interface EditCardClientProps {
 }
 
 export default function EditCardClient({ card, userName }: EditCardClientProps) {
+    const [firstName, setFirstName] = useState(card.firstName || "")
+    const [lastName, setLastName] = useState(card.lastName || "")
     const [title, setTitle] = useState(card.title || "")
     const [bio, setBio] = useState(card.bio || "")
     const [slug, setSlug] = useState(card.slug || "")
@@ -266,6 +270,30 @@ export default function EditCardClient({ card, userName }: EditCardClientProps) 
 
                     <div className={styles.formCard}>
                         <h2>👤 Temel Bilgiler</h2>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                            <div className={styles.formGroup}>
+                                <label htmlFor="firstName">İsim</label>
+                                <input
+                                    type="text"
+                                    id="firstName"
+                                    name="firstName"
+                                    value={firstName}
+                                    onChange={(e) => setFirstName(e.target.value)}
+                                    placeholder="Adınız"
+                                />
+                            </div>
+                            <div className={styles.formGroup}>
+                                <label htmlFor="lastName">Soyisim</label>
+                                <input
+                                    type="text"
+                                    id="lastName"
+                                    name="lastName"
+                                    value={lastName}
+                                    onChange={(e) => setLastName(e.target.value)}
+                                    placeholder="Soyadınız"
+                                />
+                            </div>
+                        </div>
                         <div className={styles.formGroup}>
                             <label htmlFor="title">Ünvan / Pozisyon</label>
                             <input

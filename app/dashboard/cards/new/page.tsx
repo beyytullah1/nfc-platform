@@ -65,6 +65,8 @@ export default function NewCardPage() {
     const [logoUrl, setLogoUrl] = useState("")
     const [avatarUrl, setAvatarUrl] = useState("")
     const [userName, setUserName] = useState("Kullanıcı")
+    const [firstName, setFirstName] = useState("")
+    const [lastName, setLastName] = useState("")
     const [groups, setGroups] = useState<LinkGroup[]>([
         { name: "Kişisel Bilgiler", icon: "👤", fields: [{ type: "phone", value: "", privacyLevel: 0 }] },
         { name: "Sosyal Medya", icon: "📱", fields: [{ type: "instagram", value: "", privacyLevel: 0 }] },
@@ -208,6 +210,8 @@ export default function NewCardPage() {
         setLoading(true)
 
         const formData = new FormData()
+        formData.append("firstName", firstName)
+        formData.append("lastName", lastName)
         formData.append("title", title)
         formData.append("bio", bio)
         formData.append("slug", slug)
@@ -348,6 +352,30 @@ export default function NewCardPage() {
                     {/* Temel Bilgiler */}
                     <div className={styles.formCard}>
                         <h2>👤 Temel Bilgiler</h2>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                            <div className={styles.formGroup}>
+                                <label htmlFor="firstName">İsim</label>
+                                <input
+                                    type="text"
+                                    id="firstName"
+                                    name="firstName"
+                                    value={firstName}
+                                    onChange={(e) => setFirstName(e.target.value)}
+                                    placeholder="Adınız"
+                                />
+                            </div>
+                            <div className={styles.formGroup}>
+                                <label htmlFor="lastName">Soyisim</label>
+                                <input
+                                    type="text"
+                                    id="lastName"
+                                    name="lastName"
+                                    value={lastName}
+                                    onChange={(e) => setLastName(e.target.value)}
+                                    placeholder="Soyadınız"
+                                />
+                            </div>
+                        </div>
                         <div className={styles.formGroup}>
                             <label htmlFor="title">Ünvan / Pozisyon</label>
                             <input
