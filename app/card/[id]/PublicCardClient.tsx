@@ -71,15 +71,15 @@ const FIELD_LINKS: Record<string, (value: string) => string> = {
     phone: (v) => `tel:${v.replace(/\s/g, "")}`,
     email: (v) => `mailto:${v}`,
     sms: (v) => `sms:${v.replace(/\s/g, "")}`,
-    whatsapp: (v) => `https://wa.me/${v.replace(/\s/g, "").replace(/^\+/, "")}`,
-    instagram: (v) => `https://instagram.com/${v.replace("@", "")}`,
+    whatsapp: (v) => v.startsWith("http") ? v : `https://wa.me/${v.replace(/\s/g, "").replace(/^\+/, "")}`,
+    instagram: (v) => v.startsWith("http") ? v : `https://instagram.com/${v.replace("@", "")}`,
     linkedin: (v) => v.startsWith("http") ? v : `https://linkedin.com/in/${v}`,
-    twitter: (v) => `https://twitter.com/${v.replace("@", "")}`,
+    twitter: (v) => v.startsWith("http") ? v : `https://twitter.com/${v.replace("@", "")}`,
     facebook: (v) => v.startsWith("http") ? v : `https://facebook.com/${v}`,
-    tiktok: (v) => `https://tiktok.com/@${v.replace("@", "")}`,
+    tiktok: (v) => v.startsWith("http") ? v : `https://tiktok.com/@${v.replace("@", "")}`,
     youtube: (v) => v.startsWith("http") ? v : `https://youtube.com/@${v}`,
     website: (v) => v.startsWith("http") ? v : `https://${v}`,
-    github: (v) => `https://github.com/${v}`,
+    github: (v) => v.startsWith("http") ? v : `https://github.com/${v}`,
     video: (v) => v,
     vcard: (v) => v,
     custom: (v) => v,
@@ -284,7 +284,7 @@ export default function PublicCardClient({ initialCard }: PublicCardClientProps)
                         {/* Quick Social Icons with SVG */}
                         {(() => {
                             // Sadece header'da gösterilecek popüler ikonlar
-                            const HEADER_ICONS = ['phone', 'whatsapp', 'instagram', 'linkedin', 'twitter']
+                            const HEADER_ICONS = ['phone', 'whatsapp', 'instagram', 'linkedin', 'twitter', 'github', 'facebook', 'youtube']
                             const headerFields = initialCard.fields.filter(f =>
                                 HEADER_ICONS.includes(f.fieldType) && f.privacyLevel === 0
                             )

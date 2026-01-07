@@ -1,86 +1,123 @@
-const { PrismaClient } = require('@prisma/client')
-const bcrypt = require('bcryptjs')
+const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcryptjs');
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 async function main() {
-    // Beytullah kullanıcısını oluştur
-    const beytullahUser = await prisma.user.upsert({
-        where: { email: 'beyytullah@gmail.com' },
+    console.log('🌱 Creating beyytullah user and card...');
+
+    // Hash password
+    const passwordHash = await bcrypt.hash('beyytullah123', 10);
+
+    // Create or update user
+    const user = await prisma.user.upsert({
+        where: { username: 'beyytullah' },
         update: {},
         create: {
             email: 'beyytullah@gmail.com',
+            username: 'beyytullah',
             name: 'Beytullah Çiçek',
-            passwordHash: await bcrypt.hash('test123', 10)
-        }
-    })
+            passwordHash: passwordHash,
+            bio: 'Bilişim Teknolojileri Öğretmeni | Eğitim Teknolojileri | Yapay Zekâ',
+        },
+    });
 
-    console.log('✅ Beytullah kullanıcısı oluşturuldu:', beytullahUser.id)
+    console.log('✅ User created:', user.username);
 
-    // Kartvizit oluştur
-    const card = await prisma.card.upsert({
-        where: { slug: 'beytullah' },
-        update: {},
-        create: {
-            slug: 'beytullah',
-            ownerId: beytullahUser.id,
-            name: 'Beytullah Çiçek',
+    // Check if card exists
+    const existingCard = await prisma.card.findFirst({
+        where: { userId: user.id },
+    });
+
+    if (existingCard) {
+        // Delete existing card and related data
+        await prisma.cardField.deleteMany({ where: { cardId: existingCard.id } });
+        await prisma.cardLinkGroup.deleteMany({ where: { cardId: existingCard.id } });
+        await prisma.card.delete({ where: { id: existingCard.id } });
+        console.log('🗑️ Deleted existing card');
+    }
+
+    // Create card
+    const card = await prisma.card.create({
+        data: {
+            userId: user.id,
+            slug: 'beyytullah',
+            cardType: 'personal',
             title: 'Bilişim Teknolojileri Öğretmeni',
-            company: 'Milli Eğitim Bakanlığı',
-            bio: 'Eğitim Teknolojileri | Dijital İçerik Geliştirme | Yapay Zekâ ve Üretken Yapay Zekâ | NFC tabanlı sistemler | 3D üretim ve prototipleme',
-            phone: '+905434675587',
-            email: 'beytullah.cicek@meb.gov.tr',
-            website: 'https://www.linkedin.com/in/beyytullah/',
+            bio: `Eğitim Teknolojileri | Dijital İçerik Geliştirme | Yapay Zekâ ve Üretken Yapay Zekâ | NFC tabanlı sistemler | 3D üretim ve prototipleme`,
+            isPublic: true,
+            theme: JSON.stringify({ color: '#2ecc71', style: 'modern' }),
+        },
+    });
 
-            socialLinks: JSON.stringify({
-                linkedin: 'https://www.linkedin.com/in/beyytullah/',
-                github: 'https://github.com/beyytullah1',
-                instagram: 'https://instagram.com/beyytullah',
-                twitter: 'https://x.com/beyytullah',
-                facebook: 'https://facebook.com/beyytullah',
-                whatsapp: 'https://wa.me/905434675587'
-            }),
+    console.log('✅ Card created:', card.slug);
 
-            customFields: JSON.stringify({
-                emails: ['beytullah.cicek@meb.gov.tr', 'beyytullah@gmail.com', 'beytullah41@gmail.com'],
-                youtube: [
-                    { title: 'Akıllı Çiftlik', url: 'https://www.youtube.com/watch?v=_75Q0Y3wIAw' },
-                    { title: 'Akıllı Çiftlik Konuğu (5T5)', url: 'https://www.youtube.com/watch?v=TOVbMtTtdVc' },
-                    { title: 'Ortaokullarda Akıllı Çiftlik Projesi', url: 'https://www.youtube.com/watch?v=F302yvbg-MI' }
-                ],
-                expertise: [
-                    'Eğitim Teknolojileri',
-                    'Dijital İçerik Geliştirme',
-                    'Yapay Zekâ ve Üretken Yapay Zekâ',
-                    'NFC tabanlı sistemler',
-                    '3D üretim ve prototipleme'
-                ]
-            }),
+    // Create groups
+    const groups = await Promise.all([
+        prisma.cardLinkGroup.create({
+            data: {
+                cardId: card.id,
+                name: 'Sosyal Medya',
+                icon: '🌐',
+                displayOrder: 0,
+            },
+        }),
+        prisma.cardLinkGroup.create({
+            data: {
+                cardId: card.id,
+                name: 'YouTube Videoları',
+                icon: '🎬',
+                displayOrder: 1,
+            },
+        }),
+        prisma.cardLinkGroup.create({
+            data: {
+                cardId: card.id,
+                name: 'İletişim',
+                icon: '📧',
+                displayOrder: 2,
+            },
+        }),
+    ]);
 
-            aiContext: 'Bilişim teknolojileri öğretmeni, eğitim teknolojileri uzmanı, NFC sistemleri ve 3D teknolojileri konusunda deneyimli.',
+    const [socialGroup, youtubeGroup, contactGroup] = groups;
+    console.log('✅ Groups created');
 
-            bgColor: '#1e40af',
-            textColor: '#ffffff',
-            buttonColor: '#3b82f6',
+    // Create fields
+    const fields = [
+        // Sosyal Medya
+        { cardId: card.id, groupId: socialGroup.id, fieldType: 'linkedin', label: 'LinkedIn', value: 'https://www.linkedin.com/in/beyytullah/', displayOrder: 0 },
+        { cardId: card.id, groupId: socialGroup.id, fieldType: 'github', label: 'GitHub', value: 'https://github.com/beyytullah1', displayOrder: 1 },
+        { cardId: card.id, groupId: socialGroup.id, fieldType: 'instagram', label: 'Instagram', value: 'https://instagram.com/beyytullah', displayOrder: 2 },
+        { cardId: card.id, groupId: socialGroup.id, fieldType: 'twitter', label: 'X (Twitter)', value: 'https://x.com/beyytullah', displayOrder: 3 },
+        { cardId: card.id, groupId: socialGroup.id, fieldType: 'facebook', label: 'Facebook', value: 'https://facebook.com/beyytullah', displayOrder: 4 },
 
-            isPublic: true
-        }
-    })
+        // YouTube Videoları
+        { cardId: card.id, groupId: youtubeGroup.id, fieldType: 'youtube', label: 'Akıllı Çiftlik', value: 'https://www.youtube.com/watch?v=_75Q0Y3wIAw', displayOrder: 0 },
+        { cardId: card.id, groupId: youtubeGroup.id, fieldType: 'youtube', label: 'Akıllı Çiftlik Konuğu (5T5)', value: 'https://www.youtube.com/watch?v=TOVbMtTtdVc', displayOrder: 1 },
+        { cardId: card.id, groupId: youtubeGroup.id, fieldType: 'youtube', label: 'Ortaokullarda Akıllı Çiftlik Projesi', value: 'https://www.youtube.com/watch?v=F302yvbg-MI', displayOrder: 2 },
 
-    console.log('✅ Kartvizit oluşturuldu:', card.slug)
-    console.log('')
-    console.log('📌 Giriş Bilgileri:')
-    console.log('   Email: beyytullah@gmail.com')
-    console.log('   Şifre: test123')
-    console.log('')
-    console.log('📌 Kartvizit URL: /beytullah veya /c/beytullah')
+        // İletişim
+        { cardId: card.id, groupId: contactGroup.id, fieldType: 'email', label: 'MEB E-posta', value: 'beytullah.cicek@meb.gov.tr', displayOrder: 0 },
+        { cardId: card.id, groupId: contactGroup.id, fieldType: 'email', label: 'Gmail', value: 'beyytullah@gmail.com', displayOrder: 1 },
+        { cardId: card.id, groupId: contactGroup.id, fieldType: 'email', label: 'Gmail (Alternatif)', value: 'beytullah41@gmail.com', displayOrder: 2 },
+        { cardId: card.id, groupId: contactGroup.id, fieldType: 'whatsapp', label: 'WhatsApp', value: 'https://wa.me/905434675587', displayOrder: 3 },
+    ];
+
+    await prisma.cardField.createMany({ data: fields });
+    console.log('✅ Fields created:', fields.length);
+
+    console.log('\n🎉 Done! Login credentials:');
+    console.log('   Username: beyytullah');
+    console.log('   Password: beyytullah123');
+    console.log('   Card URL: http://localhost:3000/c/beyytullah');
 }
 
 main()
     .catch((e) => {
-        console.error('❌ Hata:', e)
-        process.exit(1)
+        console.error('❌ Error:', e);
+        process.exit(1);
     })
     .finally(async () => {
-        await prisma.$disconnect()
-    })
+        await prisma.$disconnect();
+    });

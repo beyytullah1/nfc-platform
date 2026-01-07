@@ -8,7 +8,7 @@ interface AddToNetworkButtonProps {
     cardId: string
     cardOwnerId: string
     cardOwnerName: string
-    onSuccess: () => void
+    onSuccess?: () => void
 }
 
 interface Category {
