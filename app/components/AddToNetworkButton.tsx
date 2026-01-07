@@ -23,6 +23,9 @@ export function AddToNetworkButton({ cardId, cardOwnerId, cardOwnerName }: AddTo
     const [showModal, setShowModal] = useState(false)
     const [categories, setCategories] = useState<Category[]>([])
     const [selectedCategory, setSelectedCategory] = useState<string>('')
+    const [showNewGroupForm, setShowNewGroupForm] = useState(false)
+    const [newGroupName, setNewGroupName] = useState('')
+    const [newGroupIcon, setNewGroupIcon] = useState('📁')
     const [tags, setTags] = useState('')
     const [note, setNote] = useState('')
     const router = useRouter()
@@ -83,12 +86,41 @@ export function AddToNetworkButton({ cardId, cardOwnerId, cardOwnerName }: AddTo
                 return
             }
 
+            // Yeni grup oluşturma
+            let finalCategoryId = selectedCategory
+            if (selectedCategory === 'new') {
+                if (!newGroupName.trim()) {
+                    showToast('Grup adı boş olamaz', 'error')
+                    setStatus('idle')
+                    return
+                }
+
+                // Yeni grup oluştur
+                const groupRes = await fetch('/api/connections/groups', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: newGroupName,
+                        icon: newGroupIcon || '📁'
+                    })
+                })
+
+                if (!groupRes.ok) {
+                    showToast('Grup oluşturulamadı', 'error')
+                    setStatus('idle')
+                    return
+                }
+
+                const groupData = await groupRes.json()
+                finalCategoryId = groupData.category.id
+            }
+
             const res = await fetch('/api/connections', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     cardId,
-                    categoryId: selectedCategory || null,
+                    categoryId: finalCategoryId && finalCategoryId !== '' ? finalCategoryId : null,
                     myTags: tagsArray.length > 0 ? JSON.stringify(tagsArray) : null,
                     myNote: note || null
                 })
@@ -101,6 +133,8 @@ export function AddToNetworkButton({ cardId, cardOwnerId, cardOwnerName }: AddTo
                 setTags('')
                 setNote('')
                 setSelectedCategory('')
+                setNewGroupName('')
+                setNewGroupIcon('📁')
             } else {
                 const data = await res.json()
                 showToast(data.error || 'İletişim ağına eklenemedi. Lütfen tekrar deneyin.', 'error')
@@ -209,12 +243,77 @@ export function AddToNetworkButton({ cardId, cardOwnerId, cardOwnerName }: AddTo
                                 }}
                             >
                                 <option value="">Grup Seçmeyin</option>
+                                <option value="new" style={{
+                                    background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                                    fontWeight: 'bold'
+                                }}>➕ Yeni Grup Oluştur</option>
                                 {categories.map(cat => (
                                     <option key={cat.id} value={cat.id}>
                                         {cat.icon} {cat.name}
                                     </option>
                                 ))}
                             </select>
+                            {selectedCategory === 'new' && (
+                                <div style={{
+                                    marginTop: '1rem',
+                                    padding: '1rem',
+                                    background: '#0f172a',
+                                    borderRadius: '0.5rem',
+                                    border: '1px solid #334155'
+                                }}>
+                                    <div style={{ marginBottom: '0.75rem' }}>
+                                        <label style={{
+                                            color: '#cbd5e1',
+                                            fontSize: '0.85rem',
+                                            display: 'block',
+                                            marginBottom: '0.5rem'
+                                        }}>
+                                            Grup Adı
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={newGroupName}
+                                            onChange={(e) => setNewGroupName(e.target.value)}
+                                            placeholder="örn: İş Arkadaşları"
+                                            style={{
+                                                width: '100%',
+                                                padding: '0.5rem',
+                                                background: '#1e293b',
+                                                border: '1px solid #334155',
+                                                borderRadius: '0.375rem',
+                                                color: '#fff',
+                                                fontSize: '0.85rem'
+                                            }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{
+                                            color: '#cbd5e1',
+                                            fontSize: '0.85rem',
+                                            display: 'block',
+                                            marginBottom: '0.5rem'
+                                        }}>
+                                            İkon (opsiyonel)
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={newGroupIcon}
+                                            onChange={(e) => setNewGroupIcon(e.target.value)}
+                                            placeholder="📁"
+                                            maxLength={2}
+                                            style={{
+                                                width: '100%',
+                                                padding: '0.5rem',
+                                                background: '#1e293b',
+                                                border: '1px solid #334155',
+                                                borderRadius: '0.375rem',
+                                                color: '#fff',
+                                                fontSize: '0.85rem'
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Etiketler */}

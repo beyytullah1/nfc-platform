@@ -295,7 +295,7 @@ export default function NewCardPage() {
                         <div className={styles.formGroup}>
                             <label>Benzersiz Kullanıcı Adı</label>
                             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                                <span style={{ color: "rgba(255,255,255,0.5)" }}>{baseUrl}/c/</span>
+                                <span style={{ color: "rgba(255,255,255,0.5)" }}>{baseUrl}/</span>
                                 <input
                                     type="text"
                                     value={slug}

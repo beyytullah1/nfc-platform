@@ -16,7 +16,15 @@ export default async function PlantDetailPage({ params }: { params: Promise<{ id
         include: {
             logs: { orderBy: { createdAt: 'desc' }, take: 20 },
             giftedBy: { select: { name: true } },
-            tag: { select: { id: true } }
+            tag: { select: { id: true } },
+            coOwners: {
+                select: {
+                    id: true,
+                    name: true,
+                    username: true,
+                    avatarUrl: true
+                }
+            }
         }
     })
 

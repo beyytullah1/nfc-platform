@@ -2,9 +2,10 @@ import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import styles from "./dashboard.module.css"
-import LogoutButton from "@/app/components/LogoutButton"
 import { MobileMenuWrapper } from "./MobileMenu"
 import { Breadcrumb } from "../components/Breadcrumb"
+import { NotificationBadge } from "@/app/components/NotificationBadge"
+import { ProfileMenu } from "@/app/components/ProfileMenu"
 
 export default async function DashboardLayout({
     children,
@@ -24,7 +25,7 @@ export default async function DashboardLayout({
             </div>
             <nav className={styles.nav}>
                 <Link href="/dashboard" className={styles.navItem}>
-                    🏠 Profil
+                    🏠 Ana Sayfa
                 </Link>
                 <Link href="/dashboard/cards" className={styles.navItem}>
                     <span className={styles.icon}>💳</span>
@@ -46,17 +47,21 @@ export default async function DashboardLayout({
                     <span className={styles.icon}>📄</span>
                     Sayfalar
                 </Link>
-                <Link href="/dashboard/profile" className={styles.navItem}>
-                    <span className={styles.icon}>👤</span>
-                    Profil
-                </Link>
                 <Link href="/dashboard/connections" className={styles.navItem}>
                     <span className={styles.icon}>👥</span>
                     İletişim Ağı
                 </Link>
+                <Link href="/dashboard/nfc-tags" className={styles.navItem}>
+                    <span className={styles.icon}>🏷️</span>
+                    NFC Etiketler
+                </Link>
+                <Link href="/dashboard/notifications" className={styles.navItem}>
+                    <span className={styles.icon}><NotificationBadge /></span>
+                    Bildirimler
+                </Link>
 
-                {/* Logout Button */}
-                <LogoutButton />
+                {/* Profile Menu */}
+                <ProfileMenu />
             </nav>
         </>
     )

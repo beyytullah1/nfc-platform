@@ -73,6 +73,8 @@ interface EditCardClientProps {
             name: string
             displayOrder: number
         }[]
+        level1Password?: string | null
+        level2Password?: string | null
     }
     userName: string
 }
@@ -83,6 +85,8 @@ export default function EditCardClient({ card, userName }: EditCardClientProps) 
     const [slug, setSlug] = useState(card.slug || "")
     const [logoUrl, setLogoUrl] = useState(card.logoUrl || "")
     const [avatarUrl, setAvatarUrl] = useState(card.avatarUrl || "")
+    const [level1Password, setLevel1Password] = useState(card.level1Password || "")
+    const [level2Password, setLevel2Password] = useState(card.level2Password || "")
     const [loading, setLoading] = useState(false)
 
     // Initial State Construction
@@ -228,7 +232,7 @@ export default function EditCardClient({ card, userName }: EditCardClientProps) 
                         <div className={styles.formGroup}>
                             <label>Benzersiz Kullanıcı Adı</label>
                             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                                <span style={{ color: "rgba(255,255,255,0.5)" }}>{baseUrl}/c/</span>
+                                <span style={{ color: "rgba(255,255,255,0.5)" }}>{baseUrl}/</span>
                                 <input
                                     type="text"
                                     value={slug}
@@ -280,6 +284,44 @@ export default function EditCardClient({ card, userName }: EditCardClientProps) 
                                 onChange={(e) => setBio(e.target.value)}
                                 placeholder="Kısa bir tanıtım yazısı..."
                             />
+                        </div>
+
+                        <div style={{ marginTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1.5rem' }}>
+                            <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                🔐 Erişim Şifreleri
+                                <span style={{ fontSize: '0.8rem', color: '#9ca3af', fontWeight: 'normal' }}>(İsteğe bağlı)</span>
+                            </h3>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                <div className={styles.formGroup}>
+                                    <label style={{ color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                        🔓 Seviye 1 Şifresi
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="level1Password"
+                                        placeholder="Şifre belirle"
+                                        value={level1Password}
+                                        onChange={(e) => setLevel1Password(e.target.value)}
+                                        style={{ borderColor: '#f59e0b' }}
+                                    />
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label style={{ color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                        🔐 Seviye 2 Şifresi
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="level2Password"
+                                        placeholder="Şifre belirle"
+                                        value={level2Password}
+                                        onChange={(e) => setLevel2Password(e.target.value)}
+                                        style={{ borderColor: '#ef4444' }}
+                                    />
+                                </div>
+                            </div>
+                            <p style={{ fontSize: '0.8rem', color: '#9ca3af', marginTop: '0.5rem' }}>
+                                Bu şifreler, kartvizitinizdeki "Seviye 1" ve "Seviye 2" gizliliğine sahip alanları görüntülemek için kullanılır.
+                            </p>
                         </div>
                     </div>
 

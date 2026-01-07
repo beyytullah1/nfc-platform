@@ -1,35 +1,56 @@
-import { checkTag } from '@/app/actions'
+import { auth } from '@/lib/auth'
+import { prisma } from '@/lib/db'
 import { redirect } from 'next/navigation'
 
-export default async function NfcRedirectPage({
-    params,
-}: {
+type Props = {
     params: Promise<{ code: string }>
-}) {
-    const { code } = await params
-    const result = await checkTag(code)
+}
 
-    if (result.redirect) {
-        redirect(result.redirect)
+export default async function NfcRedirectPage({ params }: Props) {
+    const { code } = await params
+    const session = await auth()
+
+    // Find tag
+    const tag = await prisma.nfcTag.findUnique({
+        where: { publicCode: code },
+        include: {
+            card: { select: { id: true, slug: true } },
+            plant: { select: { id: true } },
+            mug: { select: { id: true } },
+            gift: { select: { id: true } }
+        }
+    })
+
+    // Tag doesn't exist - redirect to claim page with code in URL
+    if (!tag) {
+        if (!session?.user) {
+            redirect(`/login?callbackUrl=/claim/${code}`)
+        }
+        redirect(`/claim/${code}`)
     }
 
-    // Hata durumu
-    return (
-        <div className="container" style={{
-            display: 'flex',
-            height: '100vh',
-            alignItems: 'center',
-            justifyContent: 'center'
-        }}>
-            <div className="card" style={{ textAlign: 'center', maxWidth: '400px' }}>
-                <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🏷️</div>
-                <h1 className="title-gradient" style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>
-                    Etiket Bulunamadı
-                </h1>
-                <p style={{ color: 'var(--color-text-muted)' }}>
-                    {result.error || 'Bu NFC etiketi sistemde kayıtlı değil.'}
-                </p>
-            </div>
-        </div>
-    )
+    // Tag exists - check if linked
+    if (tag.moduleType && tag.ownerId) {
+        // Linked - redirect to appropriate module
+        switch (tag.moduleType) {
+            case 'card':
+                const cardPath = tag.card?.slug || tag.card?.id
+                redirect(`/${cardPath}`)
+            case 'plant':
+                redirect(`/p/${tag.plant?.id}`)
+            case 'mug':
+                redirect(`/mug/${tag.mug?.id}`)
+            case 'gift':
+            case 'canvas':
+                redirect(`/gift/${code}`)
+            default:
+                redirect(`/claim/${code}`)
+        }
+    }
+
+    // Tag exists but not linked - redirect to claim
+    if (!session?.user) {
+        redirect(`/login?callbackUrl=/claim/${code}`)
+    }
+    redirect(`/claim/${code}`)
 }

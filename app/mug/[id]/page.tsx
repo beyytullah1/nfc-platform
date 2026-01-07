@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db"
+import { auth } from "@/lib/auth"
 import { notFound } from "next/navigation"
 import PublicMugClient from "./PublicMugClient"
 
@@ -21,10 +22,38 @@ export default async function PublicMugPage({ params }: { params: Promise<{ id: 
         notFound()
     }
 
-    // İstatistikler
-    const coffeeCount = await prisma.mugLog.count({ where: { mugId: id, logType: "coffee" } })
-    const teaCount = await prisma.mugLog.count({ where: { mugId: id, logType: "tea" } })
-    const waterCount = await prisma.mugLog.count({ where: { mugId: id, logType: "water" } })
+    // İstatistikler - parallel queries
+    const [coffeeCount, teaCount, waterCount] = await Promise.all([
+        prisma.mugLog.count({ where: { mugId: id, logType: "coffee" } }),
+        prisma.mugLog.count({ where: { mugId: id, logType: "tea" } }),
+        prisma.mugLog.count({ where: { mugId: id, logType: "water" } })
+    ])
+
+    // Follow Logic
+    let isFollowing = false
+    let followerCount = 0
+
+    if (mug.tag) {
+        const session = await auth()
+        
+        // Parallel queries for follow status and count
+        const [followCount, userFollow] = await Promise.all([
+            prisma.follow.count({
+                where: { tagId: mug.tag.id }
+            }),
+            session?.user?.id ? prisma.follow.findUnique({
+                where: {
+                    userId_tagId: {
+                        userId: session.user.id,
+                        tagId: mug.tag.id
+                    }
+                }
+            }) : null
+        ])
+        
+        followerCount = followCount
+        isFollowing = !!userFollow
+    }
 
     return (
         <PublicMugClient
@@ -36,6 +65,8 @@ export default async function PublicMugPage({ params }: { params: Promise<{ id: 
             }}
             tagId={mug.tag?.id || null}
             stats={{ coffeeCount, teaCount, waterCount }}
+            initialIsFollowing={isFollowing}
+            followerCount={followerCount}
         />
     )
 }

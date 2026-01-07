@@ -1,111 +1,90 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useToast } from '@/app/components/Toast'
 
 interface FollowButtonProps {
     tagId: string
-    initialFollowing?: boolean
-    initialCount?: number
+    initialIsFollowing: boolean
+    followerCount?: number
 }
 
-export function FollowButton({ tagId, initialFollowing = false, initialCount = 0 }: FollowButtonProps) {
-    const { showToast } = useToast()
-    const [isFollowing, setIsFollowing] = useState(initialFollowing)
-    const [followerCount, setFollowerCount] = useState(initialCount)
+export function FollowButton({ tagId, initialIsFollowing, followerCount = 0 }: FollowButtonProps) {
+    const [isFollowing, setIsFollowing] = useState(initialIsFollowing)
+    const [count, setCount] = useState(followerCount)
     const [loading, setLoading] = useState(false)
-    const [allowFollow, setAllowFollow] = useState(true)
-    const [isOwner, setIsOwner] = useState(false)
+    const { showToast } = useToast()
 
-    // İlk yüklemede durumu kontrol et
-    useEffect(() => {
-        const checkStatus = async () => {
-            try {
-                const res = await fetch(`/api/follow?tagId=${tagId}`)
-                if (res.ok) {
-                    const data = await res.json()
-                    setIsFollowing(data.isFollowing)
-                    setFollowerCount(data.followerCount)
-                    setAllowFollow(data.allowFollow)
-                    setIsOwner(data.isOwner)
-                }
-            } catch (err) {
-                console.error('Failed to check follow status:', err)
-            }
-        }
-        checkStatus()
-    }, [tagId])
-
-    const handleFollow = async () => {
+    const handleToggle = async () => {
         setLoading(true)
-        try {
-            if (isFollowing) {
-                // Takibi bırak
-                const res = await fetch(`/api/follow?tagId=${tagId}`, {
-                    method: 'DELETE'
-                })
-                if (res.ok) {
-                    setIsFollowing(false)
-                    setFollowerCount(prev => Math.max(0, prev - 1))
-                }
-            } else {
-                // Takip et
-                const res = await fetch('/api/follow', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tagId })
-                })
-                if (res.ok) {
-                    setIsFollowing(true)
-                    setFollowerCount(prev => prev + 1)
-                } else {
-                    const data = await res.json()
-                    showToast(data.error || 'Takip edilemedi', 'error')
-                }
-            }
-        } catch (err) {
-            console.error('Follow action failed:', err)
-        }
-        setLoading(false)
-    }
+        // Optimistic update
+        const newState = !isFollowing
+        setIsFollowing(newState)
+        setCount(prev => newState ? prev + 1 : prev - 1)
 
-    // Sahip veya takip kapalıysa gösterme
-    if (isOwner || !allowFollow) {
-        return null
+        try {
+            const res = await fetch('/api/nfc/follow', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tagId })
+            })
+
+            if (!res.ok) {
+                throw new Error('İşlem başarısız')
+            }
+
+            const data = await res.json()
+            // Server confirmation (optional sync)
+            if (data.isFollowing !== newState) {
+                setIsFollowing(data.isFollowing)
+            }
+            if (newState) {
+                showToast('Takip ediliyor! 🌟', 'success')
+            } else {
+                showToast('Takipten çıkıldı.', 'info')
+            }
+
+        } catch (error) {
+            console.error(error)
+            // Revert on error
+            setIsFollowing(!newState)
+            setCount(prev => !newState ? prev + 1 : prev - 1)
+            showToast('Bir hata oluştu', 'error')
+        } finally {
+            setLoading(false)
+        }
     }
 
     return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <button
-                onClick={handleFollow}
-                disabled={loading}
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '8px 16px',
-                    borderRadius: '20px',
-                    border: isFollowing ? '1px solid var(--color-border)' : 'none',
-                    background: isFollowing ? 'transparent' : 'var(--color-primary)',
-                    color: isFollowing ? 'var(--color-text)' : 'white',
-                    cursor: loading ? 'wait' : 'pointer',
-                    fontWeight: 500,
-                    fontSize: '0.9rem',
-                    transition: 'all 0.2s ease',
-                    opacity: loading ? 0.7 : 1
-                }}
-            >
-                <span>{isFollowing ? '✓' : '+'}</span>
-                {isFollowing ? 'Takip Ediliyor' : 'Takip Et'}
-            </button>
-            {followerCount > 0 && (
+        <button
+            onClick={handleToggle}
+            disabled={loading}
+            style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.5rem 1rem',
+                borderRadius: '9999px',
+                border: 'none',
+                background: isFollowing ? 'var(--color-bg-secondary, #334155)' : 'linear-gradient(135deg, #10b981, #059669)',
+                color: '#fff',
+                fontSize: '0.9rem',
+                fontWeight: '600',
+                cursor: loading ? 'wait' : 'pointer',
+                transition: 'all 0.2s'
+            }}
+        >
+            <span>{isFollowing ? '✓ Takip Ediliyor' : '+ Takip Et'}</span>
+            {count > 0 && (
                 <span style={{
-                    color: 'var(--color-text-muted)',
-                    fontSize: '0.85rem'
+                    background: 'rgba(255,255,255,0.2)',
+                    padding: '0.1rem 0.5rem',
+                    borderRadius: '1rem',
+                    fontSize: '0.8rem'
                 }}>
-                    {followerCount} takipçi
+                    {count}
                 </span>
             )}
-        </div>
+        </button>
     )
 }

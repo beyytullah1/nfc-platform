@@ -76,6 +76,12 @@ export async function GET() {
                     id: tag.page.id,
                     title: tag.page.title || 'Başlıksız Sayfa'
                 }
+            } else if (tag.gift) {
+                linkedTo = {
+                    type: 'gift' as const,
+                    id: tag.gift.id,
+                    title: tag.gift.title || 'Hediye'
+                }
             }
 
             return {
@@ -89,8 +95,32 @@ export async function GET() {
             }
         })
 
+        // Bekleyen Transfer İstekleri
+        const requests = await prisma.transferRequest.findMany({
+            where: {
+                toUserId: session.user.id,
+                status: 'pending'
+            },
+            include: {
+                fromUser: {
+                    select: {
+                        username: true,
+                        name: true
+                    }
+                },
+                tag: {
+                    select: {
+                        publicCode: true,
+                        moduleType: true
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        })
+
         return NextResponse.json({
             tags: formattedTags,
+            requests,
             total: formattedTags.length
         })
 

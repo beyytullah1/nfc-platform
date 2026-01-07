@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { Metadata } from "next"
 import PublicCardClient from "@/app/card/[id]/PublicCardClient"
 
@@ -11,16 +11,22 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { id } = await params
 
-    // Önce slug ile ara, sonra id ile
-    const card = await prisma.card.findFirst({
-        where: {
-            OR: [
-                { slug: id },
-                { id: id }
-            ]
-        },
-        include: { user: true }
-    })
+    let card = null
+    try {
+        // Önce slug ile ara, sonra id ile
+        card = await prisma.card.findFirst({
+            where: {
+                OR: [
+                    { slug: id },
+                    { id: id }
+                ]
+            },
+            include: { user: true }
+        })
+    } catch (error) {
+        console.error('Database error loading card metadata:', error)
+        // Continue with null - will return default metadata
+    }
 
     if (!card) {
         return {
@@ -55,22 +61,33 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function SlugCardPage({ params }: Props) {
     const { id } = await params
 
-    // Önce slug ile ara, sonra id ile
-    const card = await prisma.card.findFirst({
-        where: {
-            OR: [
-                { slug: id },
-                { id: id }
-            ]
-        },
-        include: {
-            user: true,
-            fields: { orderBy: { displayOrder: "asc" } }
-        }
-    })
+    let card = null
+    try {
+        // Önce slug ile ara, sonra id ile
+        card = await prisma.card.findFirst({
+            where: {
+                OR: [
+                    { slug: id },
+                    { id: id }
+                ]
+            },
+            include: {
+                user: true,
+                fields: { orderBy: { displayOrder: "asc" } }
+            }
+        })
+    } catch (error) {
+        console.error('Database error loading card:', error)
+        notFound()
+    }
 
     if (!card) {
         notFound()
+    }
+
+    // If card has slug and was accessed via ID, redirect to slug URL
+    if (card.slug && id !== card.slug) {
+        redirect(`/${card.slug}`)
     }
 
     const cardData = {

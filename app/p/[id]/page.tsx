@@ -1,3 +1,4 @@
+import { auth } from '@/lib/auth'
 import { getPlantWithLogs } from '@/app/actions'
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
@@ -49,12 +50,36 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
 }
 
+
 export default async function PlantPage({ params }: Props) {
     const { id } = await params
+    const session = await auth()
     const plant = await getPlantWithLogs(id)
 
     if (!plant) {
         notFound()
+    }
+
+    // Follow Logic
+    let isFollowing = false
+    let followerCount = 0
+
+    if (plant.tag) {
+        followerCount = await prisma.follow.count({
+            where: { tagId: plant.tag.id }
+        })
+
+        if (session?.user?.id) {
+            const follow = await prisma.follow.findUnique({
+                where: {
+                    userId_tagId: {
+                        userId: session.user.id,
+                        tagId: plant.tag.id
+                    }
+                }
+            })
+            isFollowing = !!follow
+        }
     }
 
     const waterLogs = plant.logs.filter(log => log.logType === 'water')
@@ -113,7 +138,11 @@ export default async function PlantPage({ params }: Props) {
                 {/* Follow Button */}
                 {plant.tag && (
                     <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'center' }}>
-                        <FollowButton tagId={plant.tag.id} />
+                        <FollowButton
+                            tagId={plant.tag.id}
+                            initialIsFollowing={isFollowing}
+                            followerCount={followerCount}
+                        />
                     </div>
                 )}
             </div>

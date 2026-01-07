@@ -67,3 +67,30 @@ export const THEME_PRESETS = {
     nature: { color: '#27ae60', style: 'nature' },
     dark: { color: '#1a1a1a', style: 'dark' },
 } as const;
+
+// Extended user types for NextAuth
+export interface ExtendedUser {
+    id: string
+    email: string | null
+    name: string | null
+    image: string | null
+    username?: string | null
+    bio?: string | null
+}
+
+// Extended session types
+declare module "next-auth" {
+    interface Session {
+        user: ExtendedUser
+    }
+
+    interface User extends ExtendedUser {}
+}
+
+declare module "next-auth/jwt" {
+    interface JWT {
+        id: string
+        username?: string | null
+        bio?: string | null
+    }
+}

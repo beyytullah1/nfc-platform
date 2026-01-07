@@ -11,39 +11,65 @@ export default async function DashboardPage() {
         redirect("/login")
     }
 
-    // İstatistikleri al
-    const [cardCount, plantCount, mugCount, pageCount, connectionCount, nfcTagCount] = await Promise.all([
-        prisma.card.count({ where: { userId: session.user.id } }),
-        prisma.plant.count({ where: { ownerId: session.user.id } }),
-        prisma.mug.count({ where: { ownerId: session.user.id } }),
-        prisma.page.count({ where: { ownerId: session.user.id } }),
-        prisma.connection.count({ where: { userId: session.user.id } }),
-        prisma.nfcTag.count({ where: { ownerId: session.user.id } }),
-    ])
+    // İstatistikleri al - Error handling ile
+    let cardCount = 0
+    let plantCount = 0
+    let mugCount = 0
+    let pageCount = 0
+    let connectionCount = 0
+    let nfcTagCount = 0
+
+    try {
+        [cardCount, plantCount, mugCount, pageCount, connectionCount, nfcTagCount] = await Promise.all([
+            prisma.card.count({ where: { userId: session.user.id } }),
+            prisma.plant.count({ where: { ownerId: session.user.id } }),
+            prisma.mug.count({ where: { ownerId: session.user.id } }),
+            prisma.page.count({ where: { ownerId: session.user.id } }),
+            prisma.connection.count({ where: { userId: session.user.id } }),
+            prisma.nfcTag.count({ where: { ownerId: session.user.id } }),
+        ])
+    } catch (error) {
+        console.error('Database error loading statistics:', error)
+        // Continue with 0 counts - page will still work
+    }
 
     // Son kartvizitleri al
-    const recentCards = await prisma.card.findMany({
-        where: { userId: session.user.id },
-        take: 3,
-        orderBy: { createdAt: 'desc' },
-        include: { fields: true }
-    })
+    let recentCards = []
+    try {
+        recentCards = await prisma.card.findMany({
+            where: { userId: session.user.id },
+            take: 3,
+            orderBy: { createdAt: 'desc' },
+            include: { fields: true }
+        })
+    } catch (error) {
+        console.error('Database error loading recent cards:', error)
+        // Continue with empty array
+    }
 
     // Son aktiviteleri al (bitki sulamaları, kupa içecekleri)
-    const [recentPlantLogs, recentMugLogs] = await Promise.all([
-        prisma.plantLog.findMany({
-            where: { plant: { ownerId: session.user.id } },
-            take: 5,
-            orderBy: { createdAt: 'desc' },
-            include: { plant: true }
-        }),
-        prisma.mugLog.findMany({
-            where: { mug: { ownerId: session.user.id } },
-            take: 5,
-            orderBy: { createdAt: 'desc' },
-            include: { mug: true }
-        })
-    ])
+    let recentPlantLogs = []
+    let recentMugLogs = []
+    
+    try {
+        [recentPlantLogs, recentMugLogs] = await Promise.all([
+            prisma.plantLog.findMany({
+                where: { plant: { ownerId: session.user.id } },
+                take: 5,
+                orderBy: { createdAt: 'desc' },
+                include: { plant: true }
+            }),
+            prisma.mugLog.findMany({
+                where: { mug: { ownerId: session.user.id } },
+                take: 5,
+                orderBy: { createdAt: 'desc' },
+                include: { mug: true }
+            })
+        ])
+    } catch (error) {
+        console.error('Database error loading activities:', error)
+        // Continue with empty arrays
+    }
 
     // Tüm aktiviteleri birleştir ve sırala
     const allActivities = [

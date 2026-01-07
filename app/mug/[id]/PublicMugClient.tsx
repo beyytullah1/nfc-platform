@@ -22,6 +22,8 @@ interface PublicMugClientProps {
         teaCount: number
         waterCount: number
     }
+    initialIsFollowing: boolean
+    followerCount: number
 }
 
 const DRINK_ICONS: Record<string, string> = {
@@ -36,7 +38,7 @@ const DRINK_NAMES: Record<string, string> = {
     water: "Su",
 }
 
-export default function PublicMugClient({ mug, tagId, stats }: PublicMugClientProps) {
+export default function PublicMugClient({ mug, tagId, stats, initialIsFollowing, followerCount }: PublicMugClientProps) {
     const lastDrink = mug.logs[0]
 
     return (
@@ -54,7 +56,11 @@ export default function PublicMugClient({ mug, tagId, stats }: PublicMugClientPr
                 {/* Follow Button */}
                 {tagId && (
                     <div style={{ margin: '1rem 0', display: 'flex', justifyContent: 'center' }}>
-                        <FollowButton tagId={tagId} />
+                        <FollowButton
+                            tagId={tagId}
+                            initialIsFollowing={initialIsFollowing}
+                            followerCount={followerCount}
+                        />
                     </div>
                 )}
 

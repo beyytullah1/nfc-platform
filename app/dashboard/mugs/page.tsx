@@ -11,15 +11,21 @@ export default async function MugsPage() {
         redirect("/login")
     }
 
-    const mugs = await prisma.mug.findMany({
-        where: { ownerId: session.user.id },
-        include: {
-            logs: {
-                orderBy: { createdAt: 'desc' },
-            }
-        },
-        orderBy: { createdAt: 'desc' }
-    })
+    let mugs = []
+    try {
+        mugs = await prisma.mug.findMany({
+            where: { ownerId: session.user.id },
+            include: {
+                logs: {
+                    orderBy: { createdAt: 'desc' },
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        })
+    } catch (error) {
+        console.error('Database error loading mugs:', error)
+        // Continue with empty array - page will still work
+    }
 
     // Calculate statistics
     const totalMugs = mugs.length

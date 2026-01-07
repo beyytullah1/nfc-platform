@@ -4,6 +4,8 @@ import { useState } from "react"
 import Link from "next/link"
 import { addPlantLog, deletePlant } from "@/lib/plant-actions"
 import { TransferModal } from "@/app/components/TransferModal"
+import { PlantPrivacySettings } from "../components/PlantPrivacySettings"
+import { PlantCoOwners } from "../components/PlantCoOwners"
 import styles from "../plants.module.css"
 
 interface PlantDetailClientProps {
@@ -16,6 +18,7 @@ interface PlantDetailClientProps {
         isGift: boolean
         giftMessage: string | null
         createdAt: Date
+        privacyLevel: string // Added privacyLevel
         logs: {
             id: string
             logType: string
@@ -25,6 +28,12 @@ interface PlantDetailClientProps {
         }[]
         giftedBy: { name: string | null } | null
         tag: { id: string } | null
+        coOwners: {
+            id: string
+            name: string | null
+            username: string | null
+            avatarUrl: string | null
+        }[]
     }
     userName: string
 }
@@ -131,6 +140,20 @@ export default function PlantDetailClient({ plant, userName }: PlantDetailClient
                 >
                     ✏️ Düzenle
                 </Link>
+                <Link
+                    href={`/p/${plant.id}/ai`}
+                    style={{
+                        padding: "0.75rem 1.25rem",
+                        background: "linear-gradient(135deg, rgba(52, 152, 219, 0.2), rgba(46, 204, 113, 0.2))",
+                        border: "1px solid rgba(52, 152, 219, 0.3)",
+                        borderRadius: "12px",
+                        color: "#60a5fa",
+                        textDecoration: "none",
+                        fontSize: "0.9rem"
+                    }}
+                >
+                    🤖 AI Asistan
+                </Link>
             </div>
 
             <div className={styles.detailGrid}>
@@ -217,10 +240,27 @@ export default function PlantDetailClient({ plant, userName }: PlantDetailClient
                             </div>
                             <div>
                                 <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.8rem" }}>Public Link</span>
-                                <p style={{ color: "#10b981" }}>/plant/{plant.id}</p>
+                                <p style={{ color: "#10b981" }}>
+                                    <Link href={`/p/${plant.id}`} target="_blank">
+                                        /p/{plant.id}
+                                    </Link>
+                                </p>
                             </div>
                         </div>
                     </div>
+
+                    {/* Privacy Settings */}
+                    <PlantPrivacySettings
+                        plantId={plant.id}
+                        currentPrivacy={plant.privacyLevel || 'public'}
+                    />
+
+                    {/* Co-owners */}
+                    <PlantCoOwners
+                        plantId={plant.id}
+                        coOwners={plant.coOwners}
+                        isOwner={true}
+                    />
 
                     {/* Danger Zone */}
                     <div className={styles.formCard} style={{ borderColor: "rgba(239, 68, 68, 0.3)" }}>

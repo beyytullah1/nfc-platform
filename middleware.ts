@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server"
 // Reserved paths that should NOT be treated as card slugs
 const RESERVED_PATHS = [
     '/dashboard', '/api', '/login', '/register', '/logout', '/forgot-password',
-    '/plant', '/mug', '/gift', '/c', '/card', '/t', '/p', '/page',
+    '/plant', '/mug', '/gift', '/c', '/card', '/t', '/p', '/page', '/u',
     '/admin', '/claim', '/actions', '/_next', '/favicon'
 ]
 

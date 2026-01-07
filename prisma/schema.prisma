@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -33,7 +33,9 @@ model User {
   phone        String?
   passwordHash String?  @map("password_hash")
   name         String?
+  username     String?  @unique // Kullanıcı profil URL: /u/username
   avatarUrl    String?  @map("avatar_url")
+  bio          String?  // Kullanıcı hakkında kısa açıklama
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
@@ -55,6 +57,9 @@ model User {
   sentGifts           Gift[]               @relation("GiftSender")
   receivedGifts       Gift[]               @relation("GiftReceiver")
   follows             Follow[]
+  transferRequestsSent     TransferRequest[] @relation("TransferRequestSender")
+  transferRequestsReceived TransferRequest[] @relation("TransferRequestReceiver")
+  coOwnedPlants       Plant[]              @relation("PlantCoOwners")
 
   @@map("users")
 }
@@ -84,6 +89,7 @@ model NfcTag {
   page      Page?
   gift      Gift?
   transfers OwnershipTransfer[]
+  transferRequests TransferRequest[]
   followers Follow[]
 
   @@map("nfc_tags")
@@ -99,6 +105,8 @@ model Card {
   tagId          String?  @unique @map("tag_id")
   slug           String?  @unique // Benzersiz kullanıcı adı: /c/kullaniciadi
   cardType       String   @default("personal") @map("card_type") // personal, health, child, elderly, pet
+  firstName      String?  @map("first_name") // İsim
+  lastName       String?  @map("last_name") // Soyisim
   title          String? // "CEO @ Company"
   bio            String?
   logoUrl        String?  @map("logo_url") // Kurumsal logo
@@ -221,6 +229,8 @@ model Plant {
   isGift        Boolean   @default(false) @map("is_gift")
   giftedById    String?   @map("gifted_by")
   giftMessage   String?   @map("gift_message")
+  privacyLevel  String    @default("public") @map("privacy_level") // public, followers, private
+  coOwners      User[]    @relation("PlantCoOwners")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
@@ -401,6 +411,10 @@ model Gift {
   
   mediaUrl    String?  @map("media_url") // Video/Fotoğraf
   spotifyUrl  String?  @map("spotify_url") // Şarkı
+  password    String?  // Hediye şifresi (opsiyonel)
+  
+  claimFormat String?  @map("claim_format") // 'plant', 'mug', 'generic'
+  claimedAsId String?  @map("claimed_as_id") // Claimed plant/mug ID
   
   isClaimed   Boolean  @default(false) @map("is_claimed")
   claimedAt   DateTime? @map("claimed_at")
@@ -432,5 +446,27 @@ model Follow {
 
   @@unique([userId, tagId])
   @@map("follows")
+}
+
+// =============================================
+// TRANSFER İSTEKLERİ
+// =============================================
+
+model TransferRequest {
+  id           String   @id @default(cuid())
+  tagId        String   @map("tag_id")
+  fromUserId   String   @map("from_user_id")
+  toUserId     String   @map("to_user_id")
+  status       String   @default("pending") // pending, accepted, rejected, cancelled
+  message      String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // İlişkiler
+  tag      NfcTag @relation(fields: [tagId], references: [id])
+  fromUser User   @relation("TransferRequestSender", fields: [fromUserId], references: [id])
+  toUser   User   @relation("TransferRequestReceiver", fields: [toUserId], references: [id])
+
+  @@map("transfer_requests")
 }
 

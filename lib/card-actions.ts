@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
+import { CARD_THEMES } from "@/lib/constants"
 
 export async function createCard(formData: FormData) {
     const session = await auth()
@@ -28,6 +29,12 @@ export async function createCard(formData: FormData) {
     // For now keeping createCard simple/legacy compatible or minimal.
     // User complaint was about EDIT screen.
 
+    // Get additional fields
+    const firstName = formData.get("firstName") as string
+    const lastName = formData.get("lastName") as string
+    const level1Password = formData.get("level1Password") as string
+    const level2Password = formData.get("level2Password") as string
+
     // Creating minimal card
     const card = await prisma.card.create({
         data: {
@@ -36,10 +43,14 @@ export async function createCard(formData: FormData) {
             logoUrl: logoUrl || null,
             avatarUrl: avatarUrl || null,
             cardType,
+            firstName: firstName || null,
+            lastName: lastName || null,
             title,
             bio,
             isPublic: true,
-            theme: JSON.stringify({ color: "#3b82f6", style: "modern" }),
+            theme: CARD_THEMES.default,
+            level1Password: level1Password || null,
+            level2Password: level2Password || null,
         }
     })
 
@@ -111,14 +122,21 @@ export async function updateCard(cardId: string, formData: FormData) {
         await tx.cardLinkGroup.deleteMany({ where: { cardId } })
 
         // 2. Update Card Basic Info
+        const firstName = formData.get("firstName") as string
+        const lastName = formData.get("lastName") as string
+
         await tx.card.update({
             where: { id: cardId },
             data: {
+                firstName: firstName || null,
+                lastName: lastName || null,
                 title,
                 bio,
                 slug: slug || null,
                 logoUrl: logoUrl || null,
                 avatarUrl: avatarUrl || null,
+                level1Password: formData.get("level1Password") as string || null,
+                level2Password: formData.get("level2Password") as string || null,
             }
         })
 

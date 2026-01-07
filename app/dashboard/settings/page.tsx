@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { updateProfile, changePassword } from '@/lib/user-actions'
 import { useToast } from '@/app/components/Toast'
@@ -10,8 +10,25 @@ export default function ProfilePage() {
     const { showToast } = useToast()
     const [isLoading, setIsLoading] = useState(false)
     const [activeTab, setActiveTab] = useState<'info' | 'security'>('info')
+    const [userData, setUserData] = useState<any>(null)
 
-    const user = session?.user
+    // Fetch fresh user data from database
+    useEffect(() => {
+        async function fetchUserData() {
+            try {
+                const res = await fetch('/api/user/me')
+                if (res.ok) {
+                    const data = await res.json()
+                    setUserData(data.user)
+                }
+            } catch (error) {
+                console.error('Failed to fetch user data:', error)
+            }
+        }
+        fetchUserData()
+    }, [])
+
+    const user = userData || session?.user
 
     const handleProfileUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
@@ -25,6 +42,13 @@ export default function ProfilePage() {
         } else {
             showToast(res.message || 'Profil güncellendi', 'success')
             await update() // Update session
+
+            // Refresh user data to show in form
+            const userRes = await fetch('/api/user/me')
+            if (userRes.ok) {
+                const data = await userRes.json()
+                setUserData(data.user)
+            }
         }
         setIsLoading(false)
     }
@@ -97,6 +121,48 @@ export default function ProfilePage() {
                                     color: 'white'
                                 }}
                             />
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Kullanıcı Adı *</label>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <span style={{ color: '#94a3b8' }}>@</span>
+                                <input
+                                    name="username"
+                                    defaultValue={user?.username || ''}
+                                    placeholder="kullaniciadi"
+                                    pattern="[a-z0-9_]{3,20}"
+                                    required
+                                    style={{
+                                        flex: 1,
+                                        padding: '0.75rem',
+                                        borderRadius: '0.5rem',
+                                        background: '#0f172a',
+                                        border: '1px solid #334155',
+                                        color: 'white'
+                                    }}
+                                />
+                            </div>
+                            <small style={{ color: '#64748b' }}>3-20 karakter, sadece küçük harf, rakam ve _</small>
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Hakkımda</label>
+                            <textarea
+                                name="bio"
+                                defaultValue={user?.bio || ''}
+                                placeholder="Kısa bir tanıtım..."
+                                maxLength={160}
+                                rows={3}
+                                style={{
+                                    width: '100%',
+                                    padding: '0.75rem',
+                                    borderRadius: '0.5rem',
+                                    background: '#0f172a',
+                                    border: '1px solid #334155',
+                                    color: 'white',
+                                    resize: 'vertical'
+                                }}
+                            />
+                            <small style={{ color: '#64748b' }}>Maksimum 160 karakter</small>
                         </div>
                         <div>
                             <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Email</label>

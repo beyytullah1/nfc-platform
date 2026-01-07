@@ -12,11 +12,17 @@ export default async function CardsPage() {
         redirect("/login")
     }
 
-    const cards = await prisma.card.findMany({
-        where: { userId: session.user.id },
-        include: { fields: true },
-        orderBy: { createdAt: 'desc' }
-    })
+    let cards = []
+    try {
+        cards = await prisma.card.findMany({
+            where: { userId: session.user.id },
+            include: { fields: true },
+            orderBy: { createdAt: 'desc' }
+        })
+    } catch (error) {
+        console.error('Database error loading cards:', error)
+        // Continue with empty array - page will still work
+    }
 
     // Calculate statistics
     const totalCards = cards.length

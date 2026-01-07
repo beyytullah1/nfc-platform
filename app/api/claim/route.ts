@@ -2,18 +2,26 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { auth } from '@/lib/auth'
 import { ModuleType } from '@/lib/types'
+import { createRateLimiter, RATE_LIMITS } from '@/lib/rate-limit'
+import { logger } from '@/lib/logger'
+import { validateRequest, claimNFCSchema } from '@/lib/validations'
 
 export async function POST(request: NextRequest) {
-    try {
-        const body = await request.json()
-        const { code, moduleType, name } = body
+    // Rate limiting
+    const rateLimiter = createRateLimiter(RATE_LIMITS.nfc)
+    const rateLimitResponse = await rateLimiter(request)
+    if (rateLimitResponse) {
+        return rateLimitResponse
+    }
 
-        if (!code || !moduleType || !name) {
-            return NextResponse.json(
-                { error: 'Eksik bilgi.' },
-                { status: 400 }
-            )
+    try {
+        // Input validation
+        const validation = await validateRequest(claimNFCSchema, request)
+        if (validation.error) {
+            return validation.error
         }
+
+        const { code, moduleType, name } = validation.data!
 
         // Auth kontrolü
         const session = await auth()
@@ -112,9 +120,10 @@ export async function POST(request: NextRequest) {
                 break
         }
 
+        logger.info("NFC tag claimed successfully", { context: "Claim", data: { code, moduleType, userId: session.user.id } })
         return NextResponse.json({ redirect })
     } catch (error) {
-        console.error('Claim error:', error)
+        logger.error('Claim error', { context: "Claim", error })
         return NextResponse.json(
             { error: 'Bir hata oluştu.' },
             { status: 500 }

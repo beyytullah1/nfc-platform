@@ -11,16 +11,22 @@ export default async function PagesPage() {
         redirect("/login")
     }
 
-    const pages = await prisma.page.findMany({
-        where: {
-            ownerId: session.user.id,
-            moduleType: 'canvas'
-        },
-        include: {
-            blocks: true
-        },
-        orderBy: { createdAt: 'desc' }
-    })
+    let pages = []
+    try {
+        pages = await prisma.page.findMany({
+            where: {
+                ownerId: session.user.id,
+                moduleType: 'canvas'
+            },
+            include: {
+                blocks: true
+            },
+            orderBy: { createdAt: 'desc' }
+        })
+    } catch (error) {
+        console.error('Database error loading pages:', error)
+        // Continue with empty array - page will still work
+    }
 
     return (
         <>

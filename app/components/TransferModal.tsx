@@ -12,7 +12,7 @@ interface TransferModalProps {
 }
 
 export function TransferModal({ isOpen, onClose, tagId, itemName, moduleType }: TransferModalProps) {
-    const [email, setEmail] = useState('')
+    const [username, setUsername] = useState('')
     const [message, setMessage] = useState('')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
@@ -23,8 +23,8 @@ export function TransferModal({ isOpen, onClose, tagId, itemName, moduleType }: 
     const handleTransfer = async (e: React.FormEvent) => {
         e.preventDefault()
 
-        if (!email.trim()) {
-            setError('Lütfen alıcının email adresini girin.')
+        if (!username.trim()) {
+            setError('Lütfen alıcının kullanıcı adını girin.')
             return
         }
 
@@ -32,12 +32,12 @@ export function TransferModal({ isOpen, onClose, tagId, itemName, moduleType }: 
         setError('')
 
         try {
-            const res = await fetch('/api/transfer', {
+            const res = await fetch('/api/transfer/request', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     tagId,
-                    toEmail: email.trim(),
+                    targetUsername: username.trim(),
                     message: message.trim() || null
                 })
             })
@@ -45,7 +45,7 @@ export function TransferModal({ isOpen, onClose, tagId, itemName, moduleType }: 
             const data = await res.json()
 
             if (!res.ok) {
-                setError(data.error || 'Transfer başarısız.')
+                setError(data.error || 'Transfer isteği gönderilemedi.')
                 setLoading(false)
                 return
             }
@@ -53,7 +53,7 @@ export function TransferModal({ isOpen, onClose, tagId, itemName, moduleType }: 
             setSuccess(true)
             setTimeout(() => {
                 onClose()
-                window.location.reload()
+                // window.location.reload() // Gerek yok, sadece modal kapansın
             }, 2000)
         } catch (err) {
             setError('Bir hata oluştu. Lütfen tekrar deneyin.')
@@ -78,8 +78,8 @@ export function TransferModal({ isOpen, onClose, tagId, itemName, moduleType }: 
                 {success ? (
                     <div className={styles.success}>
                         <div className={styles.successIcon}>✅</div>
-                        <h2>Transfer Başarılı!</h2>
-                        <p>{itemName} yeni sahibine gönderildi.</p>
+                        <h2>İstek Gönderildi!</h2>
+                        <p>{itemName} için transfer isteği iletildi. Kullanıcı kabul edince işlem tamamlanacak.</p>
                     </div>
                 ) : (
                     <>
@@ -94,12 +94,12 @@ export function TransferModal({ isOpen, onClose, tagId, itemName, moduleType }: 
 
                         <form onSubmit={handleTransfer}>
                             <div className={styles.field}>
-                                <label>Alıcının Email Adresi *</label>
+                                <label>Alıcının Kullanıcı Adı *</label>
                                 <input
-                                    type="email"
-                                    value={email}
-                                    onChange={e => setEmail(e.target.value)}
-                                    placeholder="ornek@email.com"
+                                    type="text"
+                                    value={username}
+                                    onChange={e => setUsername(e.target.value)}
+                                    placeholder="@kullaniciadi"
                                     className={styles.input}
                                     disabled={loading}
                                     autoFocus
@@ -124,8 +124,8 @@ export function TransferModal({ isOpen, onClose, tagId, itemName, moduleType }: 
                                 </div>
                             )}
 
-                            <div className={styles.warning}>
-                                ⚠️ Bu işlem geri alınamaz. Sahiplik tamamen yeni kullanıcıya geçecektir.
+                            <div className={styles.warning} style={{ background: '#e0f2fe', color: '#0369a1', borderColor: '#bae6fd' }}>
+                                ℹ️ Bu bir transfer <strong>isteğidir</strong>. Alıcı kabul edene kadar etiket sizde kalmaya devam eder.
                             </div>
 
                             <div className={styles.actions}>
@@ -142,7 +142,7 @@ export function TransferModal({ isOpen, onClose, tagId, itemName, moduleType }: 
                                     className={styles.submitBtn}
                                     disabled={loading}
                                 >
-                                    {loading ? 'Gönderiliyor...' : 'Sahipliği Devret 🎁'}
+                                    {loading ? 'Gönderiliyor...' : 'İstek Gönder 🎁'}
                                 </button>
                             </div>
                         </form>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { getBaseUrl } from '@/lib/env'
 
 interface LinkNfcSectionProps {
     cardId: string
@@ -120,7 +121,7 @@ export function LinkNfcSection({ cardId, currentTagCode }: LinkNfcSectionProps) 
                             {currentTagCode}
                         </div>
                         <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.5rem' }}>
-                            URL: localhost:3000/t/{currentTagCode}
+                            URL: {getBaseUrl()}/t/{currentTagCode}
                         </div>
                     </div>
 

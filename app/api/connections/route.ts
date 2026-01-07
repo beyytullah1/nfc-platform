@@ -78,16 +78,20 @@ export async function POST(request: NextRequest) {
             }
         })
 
-        // KARŞILIKLI EKLEME BİLDİRİMİ GÖNDER
+        // BİLDİRİM GÖNDER: Kart sahibine "Seni ağına ekledi" bildirimi
         try {
             await prisma.notification.create({
                 data: {
                     userId: friendId,
-                    type: 'mutual_add_suggestion',
-                    title: 'İletişim Ağı Önerisi',
-                    body: `${session.user.name} sizin kartınızı kaydetti. Siz de ${session.user.name} kişisini eklemek ister misiniz?`,
-                    data: JSON.stringify({ link: `/c/${session.user.id}` }),
-                    // senderId: session.user.id // Schema'da senderId varsa ekleyebiliriz ama şimdilik data ile idare edelim
+                    senderId: session.user.id,
+                    type: 'connection_added',
+                    title: 'Yeni Bağlantı! 🤝',
+                    body: `${session.user.name || 'Biri'} seni ağına ekledi.`,
+                    data: JSON.stringify({
+                        cardId: cardId,
+                        connectionId: connection.id,
+                        senderUsername: (session.user as any).username
+                    })
                 }
             })
         } catch (notifError) {

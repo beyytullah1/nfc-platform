@@ -11,10 +11,16 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { id } = await params
 
-    const card = await prisma.card.findUnique({
+    let card = null
+    try {
+        card = await prisma.card.findUnique({
         where: { id },
         include: { user: true }
-    })
+        })
+    } catch (error) {
+        console.error('Database error loading card metadata:', error)
+        // Continue with null - will return default metadata
+    }
 
     if (!card) {
         return {
@@ -49,13 +55,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function PublicCardPage({ params }: Props) {
     const { id } = await params
 
-    const card = await prisma.card.findUnique({
+    let card = null
+    try {
+        card = await prisma.card.findUnique({
         where: { id },
         include: {
             user: true,
             fields: { orderBy: { displayOrder: "asc" } }
         }
-    })
+        })
+    } catch (error) {
+        console.error('Database error loading card:', error)
+        notFound()
+    }
 
     if (!card) {
         notFound()

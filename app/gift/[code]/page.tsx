@@ -1,26 +1,45 @@
 import { prisma } from "@/lib/db"
 import { notFound } from "next/navigation"
-import { GiftReveal } from "../components/GiftReveal"
 import { Metadata } from "next"
+import { GiftAccessControl } from "../components/GiftAccessControl"
 
 export async function generateMetadata({ params }: { params: Promise<{ code: string }> }): Promise<Metadata> {
     const { code } = await params
-    const tag = await (prisma as any).nfcTag.findUnique({
+
+    // Try finding by NFC tag code first, then by gift ID
+    let gift = null
+
+    const tag = await prisma.nfcTag.findUnique({
         where: { publicCode: code },
         include: { gift: { include: { sender: true } } }
     })
 
-    if (!tag?.gift) return { title: 'Hediye Bulunamadı' }
+    if (tag?.gift) {
+        gift = tag.gift
+    } else {
+        // Try finding directly by gift ID
+        gift = await prisma.gift.findUnique({
+            where: { id: code },
+            include: { sender: true }
+        })
+    }
+
+    if (!gift) return { title: 'Hediye Bulunamadı' }
 
     return {
-        title: tag.gift.title || 'Sana Bir Hediye Var! 🎁',
-        description: `${tag.gift.sender?.name || 'Biri'} sana özel bir dijital hediye gönderdi.`,
+        title: gift.title || 'Sana Bir Hediye Var! 🎁',
+        description: `${gift.sender?.name || gift.senderName || 'Biri'} sana özel bir dijital hediye gönderdi.`,
     }
 }
 
 export default async function PublicGiftPage({ params }: { params: Promise<{ code: string }> }) {
     const { code } = await params
-    const tag = await (prisma as any).nfcTag.findUnique({
+
+    let gift = null
+    let tagId: string | null = null
+
+    // Try finding by NFC tag code first
+    const tag = await prisma.nfcTag.findUnique({
         where: { publicCode: code },
         include: {
             gift: {
@@ -31,11 +50,39 @@ export default async function PublicGiftPage({ params }: { params: Promise<{ cod
         }
     })
 
-    if (!tag || !tag.gift) {
+    if (tag?.gift) {
+        gift = tag.gift
+        tagId = tag.id
+    } else {
+        // Try finding directly by gift ID
+        gift = await prisma.gift.findUnique({
+            where: { id: code },
+            include: { sender: true, tag: true }
+        })
+        if (gift?.tag) {
+            tagId = gift.tag.id
+        }
+    }
+
+    if (!gift) {
         return notFound()
     }
 
+    // Safe data to show
+    const publicData = {
+        title: gift.title,
+        senderName: gift.senderName || gift.sender?.name || null,
+        giftType: gift.giftType
+    }
+
     return (
-        <GiftReveal gift={tag.gift} tagId={tag.id} />
+        <GiftAccessControl
+            publicCode={code}
+            giftId={gift.id}
+            initialGift={gift}
+            isLocked={false}
+            publicData={publicData}
+            tagId={tagId}
+        />
     )
 }

@@ -45,6 +45,19 @@ BİTKİ BİLGİLERİ:
                 ? `${daysSinceWatering} gün önce${lastWatering.amountMl ? `, ${lastWatering.amountMl}ml` : ''}`
                 : 'Kayıt yok'}
 - Toplam Sulama: ${plant.logs.filter((l: { logType: string }) => l.logType === 'water').length} kez
+
+SON 5 AKTİVİTE:
+${plant.logs.slice(0, 5).map(log => {
+                    const date = log.createdAt.toLocaleDateString('tr-TR');
+                    const type = log.logType === 'water' ? 'Sulama' :
+                        log.logType === 'fertilize' ? 'Gübreleme' :
+                            log.logType === 'note' ? 'Not' :
+                                log.logType === 'photo' ? 'Fotoğraf' : log.logType;
+                    const content = log.content ? `(${log.content})` : '';
+                    const amount = log.amountMl ? `(${log.amountMl}ml)` : '';
+                    return `- ${date}: ${type} ${amount} ${content}`;
+                }).join('\n')}
+
 ${imageUrl ? '- Kullanıcı bir fotoğraf paylaştı, lütfen görsel olarak analiz et.' : ''}
 
 KURALLAR:

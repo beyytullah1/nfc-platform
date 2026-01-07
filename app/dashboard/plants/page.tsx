@@ -11,15 +11,27 @@ export default async function PlantsPage() {
         redirect("/login")
     }
 
-    const plants = await prisma.plant.findMany({
-        where: { ownerId: session.user.id },
-        include: {
-            logs: {
-                orderBy: { createdAt: 'desc' },
-            }
-        },
-        orderBy: { createdAt: 'desc' }
-    })
+    let plants: any[] = []
+    try {
+        plants = await prisma.plant.findMany({
+            where: {
+                OR: [
+                    { ownerId: session.user.id },
+                    { coOwners: { some: { id: session.user.id } } }
+                ]
+            },
+            include: {
+                logs: {
+                    orderBy: { createdAt: 'desc' },
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        })
+    } catch (error) {
+        console.error('Database error loading plants:', error)
+        // Return empty array if database error - user can still see page
+        plants = []
+    }
 
     // Calculate statistics
     const totalPlants = plants.length

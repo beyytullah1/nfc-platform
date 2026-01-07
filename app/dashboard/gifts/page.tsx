@@ -9,23 +9,29 @@ export default async function GiftsPage() {
     const session = await auth()
     if (!session?.user) redirect("/login")
 
-    // TODO: Remove 'as any' after prisma generate
-    const gifts = await (prisma as any).gift.findMany({
-        where: {
-            senderId: session.user.id
-        },
-        include: {
-            tag: true
-        },
-        orderBy: {
-            createdAt: 'desc'
-        }
-    })
+    // Gifts query with error handling
+    let gifts = []
+    try {
+        gifts = await prisma.gift.findMany({
+            where: {
+                senderId: session.user.id
+            },
+            include: {
+                tag: true
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        })
+    } catch (error) {
+        console.error('Database error loading gifts:', error)
+        // Continue with empty array - page will still work
+    }
 
     const stats = {
         total: gifts.length,
-        claimed: gifts.filter((g: any) => g.isClaimed).length,
-        pending: gifts.filter((g: any) => !g.isClaimed).length
+        claimed: gifts.filter((g) => g.isClaimed).length,
+        pending: gifts.filter((g) => !g.isClaimed).length
     }
 
     return (

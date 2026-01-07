@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useToast } from '@/app/components/Toast'
 import { useRouter } from 'next/navigation'
-import styles from '../dashboard.module.css'
+import { getBaseUrl } from '@/lib/env'
+import { TransferModal } from '@/app/components/TransferModal'
+import styles from './nfc-tags.module.css'
 
 interface NfcTag {
     id: string
@@ -28,6 +30,17 @@ export default function NfcTagsClient() {
     const [filter, setFilter] = useState<'all' | 'linked' | 'unlinked'>('all')
     const [unlinkingId, setUnlinkingId] = useState<string | null>(null)
 
+    // Modals
+    const [showClaimModal, setShowClaimModal] = useState(false)
+    const [showTransferModal, setShowTransferModal] = useState(false)
+    const [selectedTagForTransfer, setSelectedTagForTransfer] = useState<NfcTag | null>(null)
+
+    // Claim Form
+    const [claimCode, setClaimCode] = useState('')
+    const [claimModuleType, setClaimModuleType] = useState('generic')
+    const [claimLoading, setClaimLoading] = useState(false)
+    const [claimError, setClaimError] = useState('')
+
     useEffect(() => {
         fetchTags()
     }, [])
@@ -46,6 +59,41 @@ export default function NfcTagsClient() {
         }
     }
 
+    const handleClaim = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!claimCode.trim()) return
+
+        setClaimLoading(true)
+        setClaimError('')
+
+        try {
+            const res = await fetch('/api/nfc/claim', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    code: claimCode.trim(),
+                    moduleType: claimModuleType !== 'generic' ? claimModuleType : undefined
+                })
+            })
+
+            const data = await res.json()
+
+            if (res.ok) {
+                showToast('Etiket başarıyla eklendi!', 'success')
+                setShowClaimModal(false)
+                setClaimCode('')
+                setClaimModuleType('generic')
+                fetchTags() // Refresh
+            } else {
+                setClaimError(data.error || 'Etiket eklenemedi.')
+            }
+        } catch (error) {
+            setClaimError('Bir hata oluştu.')
+        } finally {
+            setClaimLoading(false)
+        }
+    }
+
     const handleUnlink = async (tagId: string) => {
         if (!confirm('Bu NFC bağlantısını kaldırmak istediğinizden emin misiniz?')) {
             return
@@ -61,6 +109,7 @@ export default function NfcTagsClient() {
 
             if (res.ok) {
                 await fetchTags() // Refresh list
+                showToast('Bağlantı kaldırıldı', 'success')
             } else {
                 const data = await res.json()
                 showToast(data.error || 'Bağlantı kaldırılamadı', 'error')
@@ -73,6 +122,11 @@ export default function NfcTagsClient() {
         }
     }
 
+    const openTransferModal = (tag: NfcTag) => {
+        setSelectedTagForTransfer(tag)
+        setShowTransferModal(true)
+    }
+
     const filteredTags = tags.filter(tag => {
         if (filter === 'linked') return tag.linkedTo
         if (filter === 'unlinked') return !tag.linkedTo
@@ -81,19 +135,13 @@ export default function NfcTagsClient() {
 
     const getModuleIcon = (type?: string) => {
         switch (type) {
-            case 'card': return '📇'
+            case 'card': return '💳'
             case 'plant': return '🪴'
             case 'mug': return '☕'
-            case 'page': return '🎁'
+            case 'page': return '📄'
+            case 'gift': return '🎁'
             default: return '🏷️'
         }
-    }
-
-    const getStatusBadge = (tag: NfcTag) => {
-        if (tag.linkedTo) {
-            return <span className="badge badge-success">Eşleşmiş</span>
-        }
-        return <span className="badge badge-warning">Eşleşmemiş</span>
     }
 
     if (loading) {
@@ -107,12 +155,14 @@ export default function NfcTagsClient() {
     return (
         <div className={styles.container}>
             <div className={styles.header}>
-                <h1 className="title">🏷️ NFC Etiketlerim</h1>
-                <p className="subtitle">Sahip olduğunuz {tags.length} NFC etiketi</p>
+                <h1 className={styles.title}>🏷️ NFC Etiketlerim</h1>
+                <p className={styles.subtitle}>Sahip olduğunuz {tags.length} NFC etiketi</p>
+
+                {/* Mobile Add Button if needed, or just rely on grid card */}
             </div>
 
-            {/* Filter */}
-            <div className={styles.filters} style={{ marginBottom: '2rem' }}>
+            {/* Filters */}
+            <div className={styles.filters}>
                 <button
                     className={`btn ${filter === 'all' ? 'btn-primary' : 'btn-secondary'}`}
                     onClick={() => setFilter('all')}
@@ -133,86 +183,167 @@ export default function NfcTagsClient() {
                 </button>
             </div>
 
-            {/* Tags Grid */}
-            {filteredTags.length === 0 ? (
-                <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
-                    <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🏷️</div>
-                    <h3>NFC etiketi bulunamadı</h3>
-                    <p style={{ color: 'var(--color-text-muted)' }}>
-                        {filter === 'all'
-                            ? 'Henüz NFC etiketiniz yok'
-                            : `${filter === 'linked' ? 'Eşleşmiş' : 'Eşleşmemiş'} etiket bulunamadı`
-                        }
-                    </p>
+            {/* Grid */}
+            <div className={styles.grid}>
+
+                {/* Add Tag Card - Always visible first */}
+                <div
+                    className={`${styles.card} ${styles.addCard}`}
+                    onClick={() => setShowClaimModal(true)}
+                >
+                    <div className={styles.addContent}>
+                        <span className={styles.addIcon}>➕</span>
+                        <h3>Etiket Ekle</h3>
+                        <p style={{ fontSize: '0.875rem' }}>Elinizdeki yeni bir etiketi sisteme tanımlayın</p>
+                    </div>
                 </div>
-            ) : (
-                <div className={styles.grid}>
-                    {filteredTags.map(tag => (
-                        <div key={tag.id} className="card">
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
-                                <div style={{ fontSize: '2rem' }}>
-                                    {getModuleIcon(tag.moduleType)}
-                                </div>
-                                {getStatusBadge(tag)}
+
+                {filteredTags.map(tag => (
+                    <div key={tag.id} className={styles.card}>
+                        <div className={styles.cardHeader}>
+                            <div className={styles.iconWrapper}>
+                                {getModuleIcon(tag.moduleType)}
+                            </div>
+                            <span className={`${styles.badge} ${tag.linkedTo ? styles.badgeSuccess : styles.badgeWarning}`}>
+                                {tag.linkedTo ? 'Aktif' : 'Boşta'}
+                            </span>
+                        </div>
+
+                        <div className={styles.code}>{tag.publicCode}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginBottom: '1rem' }}>
+                            {new Date(tag.claimedAt || tag.createdAt).toLocaleDateString('tr-TR')}
+                        </div>
+
+                        {tag.linkedTo ? (
+                            <div className={styles.linkedInfo}>
+                                <div className={styles.linkedLabel}>BAĞLI OLDUĞU</div>
+                                <div className={styles.linkedTitle}>{tag.linkedTo.title}</div>
+                            </div>
+                        ) : (
+                            <div className={styles.linkedInfo} style={{ background: 'transparent', border: '1px dashed var(--color-border)' }}>
+                                <div className={styles.linkedLabel}>DURUM</div>
+                                <div className={styles.linkedTitle} style={{ color: 'var(--color-text-muted)' }}>Henüz eşleşmemiş</div>
+                            </div>
+                        )}
+
+                        <div className={styles.actions}>
+                            {tag.linkedTo ? (
+                                <>
+                                    <button
+                                        className={`${styles.actionBtn} ${styles.primaryBtn}`}
+                                        onClick={() => {
+                                            const path = tag.linkedTo?.type === 'card'
+                                                ? `/${tag.linkedTo.slug || tag.linkedTo.id}`
+                                                : `/${tag.linkedTo?.type === 'page' ? 'page' : tag.linkedTo?.type === 'mug' ? 'mug' : 'plant'}/${tag.linkedTo?.id}`
+                                            window.open(path, '_blank')
+                                        }}
+                                    >
+                                        Görüntüle
+                                    </button>
+                                    <button
+                                        className={`${styles.actionBtn} ${styles.dangerBtn}`}
+                                        onClick={() => handleUnlink(tag.id)}
+                                        disabled={unlinkingId === tag.id}
+                                    >
+                                        Kaldır
+                                    </button>
+                                </>
+                            ) : (
+                                <button
+                                    className={`${styles.actionBtn} ${styles.primaryBtn} ${styles.fullWidth}`}
+                                    onClick={() => router.push(`/claim?code=${tag.publicCode}`)}
+                                >
+                                    🔗 Eşleştir
+                                </button>
+                            )}
+
+                            <button
+                                className={`${styles.actionBtn} ${styles.fullWidth}`}
+                                style={{ marginTop: '0' }}
+                                onClick={() => openTransferModal(tag)}
+                            >
+                                🎁 Hediye Et
+                            </button>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Claim Modal */}
+            {showClaimModal && (
+                <div className="modal-overlay" onClick={() => setShowClaimModal(false)}>
+                    <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+                        <div className="modal-header">
+                            <h2>🏷️ Etiket Ekle</h2>
+                            <button className="close-btn" onClick={() => setShowClaimModal(false)}>×</button>
+                        </div>
+                        <form onSubmit={handleClaim}>
+                            <div className={styles.inputGroup}>
+                                <label>Etiket Kodu (ID)</label>
+                                <input
+                                    type="text"
+                                    className={styles.input}
+                                    placeholder="Örn: nfc-12345"
+                                    value={claimCode}
+                                    onChange={e => setClaimCode(e.target.value)}
+                                    autoFocus
+                                />
+                                <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '0.5rem' }}>
+                                    Etiketin üzerinde yazan benzersiz kodu giriniz.
+                                </p>
                             </div>
 
-                            <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>
-                                {tag.publicCode}
-                            </h3>
+                            <div className={styles.inputGroup} style={{ marginTop: '1rem' }}>
+                                <label>Etiket Türü (İsteğe Bağlı)</label>
+                                <select
+                                    className={styles.input}
+                                    value={claimModuleType}
+                                    onChange={e => setClaimModuleType(e.target.value)}
+                                >
+                                    <option value="generic">🏷️ Genel / Belirsiz</option>
+                                    <option value="plant">🪴 Akıllı Saksı / Bitki</option>
+                                    <option value="mug">☕ Akıllı Kupa</option>
+                                    <option value="card">💳 Dijital Kartvizit</option>
+                                    <option value="page">📄 Özel Sayfa / Hediye</option>
+                                </select>
+                                <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '0.5rem' }}>
+                                    Bu etiketi ne amaçla kullanacağınızı seçin.
+                                </p>
+                            </div>
 
-                            {tag.linkedTo && (
-                                <div style={{ marginBottom: '1rem' }}>
-                                    <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', marginBottom: '0.25rem' }}>
-                                        Bağlı Olduğu:
-                                    </p>
-                                    <p style={{ fontWeight: '500' }}>
-                                        {tag.linkedTo.title}
-                                    </p>
+                            {claimError && (
+                                <div style={{ color: '#ef4444', marginBottom: '1rem', padding: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '8px' }}>
+                                    {claimError}
                                 </div>
                             )}
 
-                            <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>
-                                {tag.linkedTo ? (
-                                    <>
-                                        <button
-                                            className="btn btn-secondary"
-                                            style={{ flex: 1 }}
-                                            onClick={() => {
-                                                const path = tag.linkedTo?.type === 'card'
-                                                    ? `/c/${tag.linkedTo.slug || tag.linkedTo.id}`
-                                                    : `/${tag.linkedTo?.type?.charAt(0)}/${tag.linkedTo?.id}`
-                                                router.push(path)
-                                            }}
-                                        >
-                                            Görüntüle
-                                        </button>
-                                        <button
-                                            className="btn btn-danger"
-                                            style={{ flex: 1 }}
-                                            onClick={() => handleUnlink(tag.id)}
-                                            disabled={unlinkingId === tag.id}
-                                        >
-                                            {unlinkingId === tag.id ? 'Kaldırılıyor...' : 'Bağlantıyı Kaldır'}
-                                        </button>
-                                    </>
-                                ) : (
-                                    <button
-                                        className="btn btn-primary"
-                                        style={{ width: '100%' }}
-                                        onClick={() => router.push(`/claim?code=${tag.publicCode}`)}
-                                    >
-                                        Eşleştir
-                                    </button>
-                                )}
+                            <div className="modal-actions">
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowClaimModal(false)}>
+                                    İptal
+                                </button>
+                                <button type="submit" className="btn btn-primary" disabled={claimLoading}>
+                                    {claimLoading ? 'Ekleniyor...' : 'Ekle'}
+                                </button>
                             </div>
-
-                            <div style={{ marginTop: '1rem', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
-                                URL: localhost:3000/t/{tag.publicCode}
-                            </div>
-                        </div>
-                    ))}
+                        </form>
+                    </div>
                 </div>
+            )}
+
+            {/* Transfer Modal */}
+            {selectedTagForTransfer && (
+                <TransferModal
+                    isOpen={showTransferModal}
+                    onClose={() => {
+                        setShowTransferModal(false)
+                        setSelectedTagForTransfer(null)
+                    }}
+                    tagId={selectedTagForTransfer.id}
+                    itemName={`NFC Etiketi (${selectedTagForTransfer.publicCode})`}
+                    moduleType={selectedTagForTransfer.moduleType || 'tag'}
+                />
             )}
         </div>
     )
 }
+

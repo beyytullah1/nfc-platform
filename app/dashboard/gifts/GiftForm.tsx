@@ -16,6 +16,7 @@ interface GiftFormProps {
         mediaUrl: string | null
         spotifyUrl: string | null
         senderName: string | null
+        password?: string | null
     }
 }
 

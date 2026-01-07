@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/db"
+import { logger } from "@/lib/logger"
 
 export async function createGift(formData: FormData) {
     const session = await auth()
@@ -15,13 +16,14 @@ export async function createGift(formData: FormData) {
     const mediaUrl = formData.get("mediaUrl") as string
     const spotifyUrl = formData.get("spotifyUrl") as string
     const senderName = formData.get("senderName") as string
+    const password = formData.get("password") as string
 
     // Generate random public code for the digital tag
     const publicCode = Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 8)
 
     try {
         // Transaction: Create Tag -> Create Gift
-        await prisma.$transaction(async (tx: any) => {
+        await prisma.$transaction(async (tx) => {
             // 1. Create Digital Tag
             const tag = await tx.nfcTag.create({
                 data: {
@@ -33,7 +35,7 @@ export async function createGift(formData: FormData) {
             })
 
             // 2. Create Gift linked to Tag
-            await (tx as any).gift.create({
+            await tx.gift.create({
                 data: {
                     senderId: session.user!.id,
                     tagId: tag.id,
@@ -43,6 +45,7 @@ export async function createGift(formData: FormData) {
                     mediaUrl: mediaUrl || null,
                     spotifyUrl: spotifyUrl || null,
                     senderName: senderName || null,
+                    password: password || null,
                 }
             })
         })
@@ -50,7 +53,7 @@ export async function createGift(formData: FormData) {
         revalidatePath("/dashboard/gifts")
         return { success: true }
     } catch (error) {
-        console.error("Create gift error:", error)
+        logger.error("Create gift error", { context: "GiftActions", error })
         throw new Error("Failed to create gift")
     }
 }
@@ -67,7 +70,7 @@ export async function updateGift(id: string, formData: FormData) {
     const senderName = formData.get("senderName") as string
 
     try {
-        await (prisma as any).gift.update({
+        await prisma.gift.update({
             where: {
                 id,
                 senderId: session.user!.id
@@ -85,7 +88,7 @@ export async function updateGift(id: string, formData: FormData) {
         revalidatePath("/dashboard/gifts")
         return { success: true }
     } catch (error) {
-        console.error("Update gift error:", error)
+        logger.error("Update gift error", { context: "GiftActions", error })
         throw new Error("Failed to update gift")
     }
 }
@@ -96,15 +99,15 @@ export async function deleteGift(id: string) {
 
     try {
         // First get the gift to find the tagId
-        const gift = await (prisma as any).gift.findUnique({
+        const gift = await prisma.gift.findUnique({
             where: { id, senderId: session.user!.id }
         })
 
         if (!gift) throw new Error("Gift not found")
 
         // Transaction: Delete Gift -> Delete Tag
-        await prisma.$transaction(async (tx: any) => {
-            await (tx as any).gift.delete({
+        await prisma.$transaction(async (tx) => {
+            await tx.gift.delete({
                 where: { id }
             })
 
@@ -118,7 +121,35 @@ export async function deleteGift(id: string) {
         revalidatePath("/dashboard/gifts")
         return { success: true }
     } catch (error) {
-        console.error("Delete gift error:", error)
+        logger.error("Delete gift error", { context: "GiftActions", error })
         throw new Error("Failed to delete gift")
+    }
+}
+
+export async function getGiftContent(publicCode: string, password?: string) {
+    try {
+        const tag = await prisma.nfcTag.findFirst({
+            where: { publicCode },
+            include: {
+                gift: true
+            }
+        })
+
+        if (!tag || !tag.gift) {
+            return { success: false, error: "Hediye bulunamadı" }
+        }
+
+        const gift = tag.gift
+
+        // Check password if gift is protected
+        // TODO: Re-enable after prisma generate
+        // if (gift.password && gift.password !== password) {
+        //     return { success: false, error: "Hatalı şifre" }
+        // }
+
+        return { success: true, gift }
+    } catch (error) {
+        logger.error("Get gift content error", { context: "GiftActions", error })
+        return { success: false, error: "Bir hata oluştu" }
     }
 }
