@@ -5,11 +5,12 @@ import styles from "../admin.module.css"
 export default async function AdminGiftsPage({
     searchParams,
 }: {
-    searchParams: { page?: string; search?: string; status?: string }
+    searchParams: Promise<{ page?: string; search?: string; status?: string }>
 }) {
-    const page = parseInt(searchParams.page || '1')
-    const search = searchParams.search || ''
-    const statusFilter = searchParams.status
+    const params = await searchParams
+    const page = parseInt(params.page || '1')
+    const search = params.search || ''
+    const statusFilter = params.status
     const perPage = 20
 
     const where: any = {}
