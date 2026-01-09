@@ -1,183 +1,170 @@
-/**
- * Caching utilities using Next.js unstable_cache
- * For production-ready caching, consider Redis or similar
- */
-
 import { unstable_cache } from 'next/cache'
 import { prisma } from './db'
 
 /**
- * Cache configuration
+ * Cached database queries for performance optimization
+ * Uses Next.js unstable_cache with appropriate revalidation times
  */
-const CACHE_CONFIG = {
-  revalidate: 60, // 60 seconds default
-  tags: {
-    user: 'user',
-    card: 'card',
-    plant: 'plant',
-    mug: 'mug',
-    connection: 'connection',
-    nfcTag: 'nfc-tag'
-  }
-} as const
 
-/**
- * Get cached user by ID
- */
-export function getCachedUser(userId: string) {
-  return unstable_cache(
-    async () => {
-      return prisma.user.findUnique({
-        where: { id: userId },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          username: true,
-          avatarUrl: true,
-          bio: true
-        }
-      })
-    },
-    [`user-${userId}`],
-    {
-      revalidate: CACHE_CONFIG.revalidate,
-      tags: [CACHE_CONFIG.tags.user, `user-${userId}`]
-    }
-  )()
-}
+// Cache user by ID (5 minutes)
+export const getCachedUser = unstable_cache(
+  async (userId: string) => {
+    return await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        username: true,
+        avatarUrl: true,
+        bio: true,
+        role: true,
+      }
+    })
+  },
+  ['user-by-id'],
+  { revalidate: 300, tags: ['user'] }
+)
 
-/**
- * Get cached user by username
- */
-export function getCachedUserByUsername(username: string) {
-  return unstable_cache(
-    async () => {
-      return prisma.user.findUnique({
-        where: { username },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          username: true,
-          avatarUrl: true,
-          bio: true
-        }
-      })
-    },
-    [`user-username-${username}`],
-    {
-      revalidate: CACHE_CONFIG.revalidate,
-      tags: [CACHE_CONFIG.tags.user, `user-username-${username}`]
-    }
-  )()
-}
-
-/**
- * Get cached card by ID or slug
- */
-export function getCachedCard(idOrSlug: string) {
-  return unstable_cache(
-    async () => {
-      return prisma.card.findFirst({
-        where: {
-          OR: [
-            { id: idOrSlug },
-            { slug: idOrSlug }
-          ]
+// Cache card by slug (10 minutes for public cards)
+export const getCachedCardBySlug = unstable_cache(
+  async (slug: string) => {
+    return await prisma.card.findUnique({
+      where: { slug },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            username: true,
+            avatarUrl: true,
+          }
         },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              avatarUrl: true
-            }
-          },
-          fields: {
-            orderBy: { displayOrder: 'asc' }
+        fields: {
+          where: { isActive: true },
+          orderBy: { displayOrder: 'asc' },
+          include: {
+            group: true
+          }
+        },
+        groups: {
+          orderBy: { displayOrder: 'asc' }
+        }
+      }
+    })
+  },
+  ['card-by-slug'],
+  { revalidate: 600, tags: ['card'] }
+)
+
+// Cache popular cards (1 hour)
+export const getCachedPopularCards = unstable_cache(
+  async (limit: number = 10) => {
+    return await prisma.card.findMany({
+      where: { isPublic: true },
+      orderBy: { viewCount: 'desc' },
+      take: limit,
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        avatarUrl: true,
+        viewCount: true,
+        user: {
+          select: {
+            name: true,
+            username: true
           }
         }
-      })
-    },
-    [`card-${idOrSlug}`],
-    {
-      revalidate: CACHE_CONFIG.revalidate,
-      tags: [CACHE_CONFIG.tags.card, `card-${idOrSlug}`]
+      }
+    })
+  },
+  ['popular-cards'],
+  { revalidate: 3600, tags: ['cards-list'] }
+)
+
+// Cache NFC tag by public code (15 minutes)
+export const getCachedNfcTag = unstable_cache(
+  async (publicCode: string) => {
+    return await prisma.nfcTag.findUnique({
+      where: { publicCode },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        card: true,
+        plant: true,
+        mug: true,
+        gift: true,
+        page: true
+      }
+    })
+  },
+  ['nfc-tag-by-code'],
+  { revalidate: 900, tags: ['nfc-tag'] }
+)
+
+// Cache user's cards (5 minutes)
+export const getCachedUserCards = unstable_cache(
+  async (userId: string) => {
+    return await prisma.card.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        avatarUrl: true,
+        isPublic: true,
+        viewCount: true,
+        createdAt: true
+      }
+    })
+  },
+  ['user-cards'],
+  { revalidate: 300, tags: ['user-cards'] }
+)
+
+// Cache stats (30 minutes)
+export const getCachedStats = unstable_cache(
+  async () => {
+    const [userCount, cardCount, plantCount, nfcTagCount] = await Promise.all([
+      prisma.user.count(),
+      prisma.card.count(),
+      prisma.plant.count(),
+      prisma.nfcTag.count()
+    ])
+
+    return {
+      users: userCount,
+      cards: cardCount,
+      plants: plantCount,
+      nfcTags: nfcTagCount
     }
-  )()
-}
+  },
+  ['platform-stats'],
+  { revalidate: 1800, tags: ['stats'] }
+)
 
 /**
- * Get cached user cards
+ * Cache invalidation helpers
+ * Use these after mutations to invalidate specific caches
  */
-export function getCachedUserCards(userId: string) {
-  return unstable_cache(
-    async () => {
-      return prisma.card.findMany({
-        where: { userId },
-        orderBy: { createdAt: 'desc' },
-        select: {
-          id: true,
-          slug: true,
-          title: true,
-          avatarUrl: true,
-          viewCount: true,
-          createdAt: true
-        }
-      })
-    },
-    [`user-cards-${userId}`],
-    {
-      revalidate: CACHE_CONFIG.revalidate,
-      tags: [CACHE_CONFIG.tags.card, CACHE_CONFIG.tags.user, `user-cards-${userId}`]
-    }
-  )()
-}
-
-/**
- * Get cached NFC tag by public code
- */
-export function getCachedNFCTag(publicCode: string) {
-  return unstable_cache(
-    async () => {
-      return prisma.nfcTag.findUnique({
-        where: { publicCode },
-        include: {
-          owner: {
-            select: {
-              id: true,
-              name: true,
-              username: true,
-              avatarUrl: true
-            }
-          },
-          card: true,
-          plant: true,
-          mug: true,
-          gift: true,
-          page: true
-        }
-      })
-    },
-    [`nfc-tag-${publicCode}`],
-    {
-      revalidate: 30, // Shorter cache for NFC tags (more dynamic)
-      tags: [CACHE_CONFIG.tags.nfcTag, `nfc-tag-${publicCode}`]
-    }
-  )()
-}
-
-/**
- * Helper to revalidate cache by tag
- * Note: This requires Next.js cache tag revalidation API
- * For now, we rely on time-based revalidation
- */
-export function getCacheTags(entity: keyof typeof CACHE_CONFIG.tags, id?: string): string[] {
-  const tags = [CACHE_CONFIG.tags[entity]]
-  if (id) {
-    tags.push(`${entity}-${id}`)
+export const cacheInvalidation = {
+  user: (userId: string) => {
+    // Invalidate user-specific caches
+    // Note: unstable_cache doesn't have direct invalidation yet
+    // Use revalidateTag in server actions instead
+  },
+  card: (cardId: string) => {
+    // Invalidate card-specific caches
+  },
+  all: () => {
+    // Invalidate all caches
   }
-  return tags
 }

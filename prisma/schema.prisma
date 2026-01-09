@@ -63,6 +63,10 @@ model User {
   coOwnedPlants       Plant[]              @relation("PlantCoOwners")
   adminLogs           AdminLog[]           @relation("AdminActions")
 
+  @@index([email])
+  @@index([username])
+  @@index([role])
+  @@index([createdAt])
   @@map("users")
 }
 
@@ -94,6 +98,11 @@ model NfcTag {
   transferRequests TransferRequest[]
   followers Follow[]
 
+  @@index([publicCode])
+  @@index([ownerId])
+  @@index([status])
+  @@index([moduleType])
+  @@index([createdAt])
   @@map("nfc_tags")
 }
 
@@ -128,6 +137,11 @@ model Card {
   groups         CardLinkGroup[]
   connections    Connection[]    // Bu kartı kaydedenler
 
+  @@index([userId])
+  @@index([slug])
+  @@index([viewCount])
+  @@index([createdAt])
+  @@index([isPublic])
   @@map("cards")
 }
 
@@ -197,6 +211,10 @@ model Connection {
   category ConnectionCategory? @relation(fields: [categoryId], references: [id])
 
   @@unique([userId, cardId])  // AYNI KART SADECE 1 KEZ KAYDEDİLEBİLİR (Kişi bazlı değil, kart bazlı)
+  @@index([userId])
+  @@index([friendId])
+  @@index([cardId])
+  @@index([createdAt])
   @@map("connections")
 }
 
@@ -243,6 +261,9 @@ model Plant {
   logs     PlantLog[]
   chats    PlantAiChat[]
 
+  @@index([ownerId])
+  @@index([tagId])
+  @@index([createdAt])
   @@map("plants")
 }
 
