@@ -388,7 +388,7 @@ export default function PublicCardClient({ initialCard }: PublicCardClientProps)
 
                         {/* Footer */}
                         <div className={styles.footer}>
-                            <span>🏷️ NFC Platform</span>
+                            <span>🏷️ Temasal</span>
                             {initialCard.user?.email && (
                                 <>
                                     <span style={{ margin: '0 0.5rem', color: 'rgba(255,255,255,0.3)' }}>•</span>

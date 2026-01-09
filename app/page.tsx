@@ -2,11 +2,11 @@ import Link from "next/link"
 import { auth } from "@/lib/auth"
 import styles from "./landing.module.css"
 import MobileLandingMenu from "./MobileLandingMenu"
-import ProfileDropdown from "./components/ProfileDropdown"
+import { ProfileDropdown } from "@/app/components/ProfileDropdown"
 
 export const metadata = {
-  title: "NFC Platform - Dijital Kartvizit Sistemi",
-  description: "NFC etiketleriyle kartvizitler, bitkiler ve daha fazlasını akıllı dijital deneyimlere çevirin",
+  title: "Temasal - Bir temas, bir anlam",
+  description: "Temasal, temasla anlam kazanan nesneler için kurulmuş dijital bir platformdur.",
   viewport: "width=device-width, initial-scale=1, maximum-scale=5",
 }
 
@@ -19,11 +19,11 @@ export default async function Home() {
       <nav className={styles.nav}>
         <div className={styles.logo}>
           <span className={styles.logoIcon}>🏷️</span>
-          <span className={styles.logoText}>NFC<span>Platform</span></span>
+          <span className={styles.logoText}>Temasal</span>
         </div>
         <div className={styles.navLinks}>
           {session?.user ? (
-            <ProfileDropdown userName={session.user.name || 'Kullanıcı'} />
+            <ProfileDropdown />
           ) : (
             <>
               <Link href="/login" className={styles.navLink}>Giriş</Link>
@@ -37,14 +37,14 @@ export default async function Home() {
       {/* Hero Section */}
       <section className={styles.hero}>
         <div className={styles.heroContent}>
-          <div className={styles.badge}>🚀 Yeni Nesil NFC Teknolojisi</div>
+          <div className={styles.badge}>🚀 Bir temas, bir anlam.</div>
           <h1 className={styles.heroTitle}>
             Fiziksel Nesnelerinizi
             <span className={styles.gradientText}> Dijitale </span>
             Dönüştürün
           </h1>
           <p className={styles.heroDesc}>
-            NFC etiketleriyle kartvizitler, bitkiler, kupalar ve daha fazlasını
+            Temasal ile kartvizitler, bitkiler, kupalar ve daha fazlasını
             akıllı dijital deneyimlere çevirin.
           </p>
           <div className={styles.heroCta}>
@@ -143,14 +143,14 @@ export default async function Home() {
       <footer className={styles.footer}>
         <div className={styles.footerContent}>
           <div className={styles.footerLogo}>
-            <span>🏷️</span> NFC Platform
+            <span>🏷️</span> Temasal
           </div>
           <div className={styles.footerLinks}>
             <Link href="/login">Giriş</Link>
             <Link href="/register">Kayıt</Link>
             <Link href="#features">Özellikler</Link>
           </div>
-          <p className={styles.footerCopy}>© 2024 NFC Platform. Tüm hakları saklıdır.</p>
+          <p className={styles.footerCopy}>© 2024 Temasal. Tüm hakları saklıdır.</p>
         </div>
       </footer>
     </div>

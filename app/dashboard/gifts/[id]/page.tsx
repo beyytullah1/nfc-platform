@@ -14,25 +14,18 @@ export default async function GiftDetailPage({ params }: { params: Promise<{ id:
         redirect("/login")
     }
 
-    const gift = await prisma.page.findUnique({
+    const gift = await prisma.gift.findUnique({
         where: { id },
         include: {
-            blocks: { orderBy: { displayOrder: 'asc' } },
-            tag: { select: { id: true } }
+            tag: true
         }
     })
 
-    if (!gift || gift.ownerId !== session.user.id || gift.moduleType !== 'gift') {
+    if (!gift || gift.senderId !== session.user.id) {
         redirect("/dashboard/gifts")
     }
 
-    const textBlock = gift.blocks.find(b => b.blockType === "text")
-    const musicBlock = gift.blocks.find(b => b.blockType === "music")
-    const videoBlock = gift.blocks.find(b => b.blockType === "video")
-
-    const message = textBlock ? JSON.parse(textBlock.content).text : ""
-    const musicUrl = musicBlock ? JSON.parse(musicBlock.content).url : ""
-    const videoUrl = videoBlock ? JSON.parse(videoBlock.content).url : ""
+    const publicLink = gift.tag?.publicCode ? `/gift/${gift.tag.publicCode}` : `/gift/${gift.id}`
 
     return (
         <>
@@ -54,9 +47,9 @@ export default async function GiftDetailPage({ params }: { params: Promise<{ id:
                     🎁
                 </div>
                 <div>
-                    <h1 style={{ color: "#fff", fontSize: "1.75rem", marginBottom: "0.25rem" }}>{gift.title}</h1>
+                    <h1 style={{ color: "#fff", fontSize: "1.75rem", marginBottom: "0.25rem" }}>{gift.title || "İsimsiz Hediye"}</h1>
                     <p style={{ color: "rgba(255,255,255,0.6)" }}>
-                        {gift.isSurprise ? "🔒 Kilitli" : "🔓 Açık"} • {new Date(gift.createdAt).toLocaleDateString('tr-TR')}
+                        {gift.isClaimed ? "✅ Açıldı" : "⏳ Bekliyor"} • {new Date(gift.createdAt).toLocaleDateString('tr-TR')}
                     </p>
                 </div>
             </div>
@@ -67,37 +60,41 @@ export default async function GiftDetailPage({ params }: { params: Promise<{ id:
                     <div className={styles.formCard}>
                         <h2>💌 İçerik</h2>
 
-                        {message && (
+                        {gift.message && (
                             <div className={styles.mediaBlock}>
                                 <span className={styles.mediaIcon}>💬</span>
                                 <div className={styles.mediaInfo}>
                                     <span>Mesaj</span>
-                                    <small>{message.substring(0, 50)}...</small>
+                                    <p style={{ marginTop: '0.2rem', color: 'rgba(255,255,255,0.8)' }}>{gift.message}</p>
                                 </div>
                             </div>
                         )}
 
-                        {musicUrl && (
+                        {gift.spotifyUrl && (
                             <div className={styles.mediaBlock} style={{ marginTop: "0.75rem" }}>
                                 <span className={styles.mediaIcon}>🎵</span>
                                 <div className={styles.mediaInfo}>
-                                    <span>Müzik</span>
-                                    <small>{musicUrl.substring(0, 40)}...</small>
+                                    <span>Spotify</span>
+                                    <small>{gift.spotifyUrl}</small>
                                 </div>
                             </div>
                         )}
 
-                        {videoUrl && (
+                        {gift.mediaUrl && (
                             <div className={styles.mediaBlock} style={{ marginTop: "0.75rem" }}>
-                                <span className={styles.mediaIcon}>🎬</span>
+                                <span className={styles.mediaIcon}>🖼️</span>
                                 <div className={styles.mediaInfo}>
-                                    <span>Video</span>
-                                    <small>{videoUrl.substring(0, 40)}...</small>
+                                    <span>Medya</span>
+                                    {gift.mediaUrl.startsWith('data:') ? (
+                                        <small>Görsel Yüklü</small>
+                                    ) : (
+                                        <a href={gift.mediaUrl} target="_blank" rel="noreferrer" style={{ color: '#ec4899' }}>Görüntüle</a>
+                                    )}
                                 </div>
                             </div>
                         )}
 
-                        {!message && !musicUrl && !videoUrl && (
+                        {!gift.message && !gift.spotifyUrl && !gift.mediaUrl && (
                             <p style={{ color: "rgba(255,255,255,0.5)", textAlign: "center", padding: "1rem" }}>
                                 Henüz içerik eklenmedi
                             </p>
@@ -111,18 +108,18 @@ export default async function GiftDetailPage({ params }: { params: Promise<{ id:
 
                     <div style={{ marginBottom: "1rem" }}>
                         <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.8rem" }}>Public Link</span>
-                        <p style={{ color: "#ec4899", fontWeight: "500" }}>/gift/{gift.id}</p>
+                        <p style={{ color: "#ec4899", fontWeight: "500" }}>{publicLink}</p>
                     </div>
 
-                    {gift.isSurprise && (
+                    {gift.password && (
                         <div style={{ marginBottom: "1rem" }}>
-                            <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.8rem" }}>Kilit Kodu</span>
-                            <p style={{ color: "#fff", fontWeight: "500" }}>••••</p>
+                            <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.8rem" }}>Şifre</span>
+                            <p style={{ color: "#fff", fontWeight: "500" }}>{gift.password}</p>
                         </div>
                     )}
 
                     <Link
-                        href={`/gift/${gift.id}`}
+                        href={publicLink}
                         target="_blank"
                         className={styles.createBtn}
                         style={{ display: "flex", justifyContent: "center", marginTop: "1rem" }}

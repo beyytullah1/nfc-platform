@@ -1,32 +1,22 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { signOut } from 'next-auth/react'
 import { useToast } from '@/app/components/Toast'
+import { logout } from '@/lib/auth-actions'
 
 export default function LogoutButton() {
     const { showToast } = useToast()
     const [loading, setLoading] = useState(false)
-    const router = useRouter()
+
+    // router gerekmez çünkü server action redirect yapar
 
     const handleLogout = async () => {
         setLoading(true)
         try {
-            const res = await fetch('/api/auth/signout', {
-                method: 'POST',
-            })
-
-            if (res.ok) {
-                router.push('/login')
-                router.refresh()
-            } else {
-                throw new Error('Logout failed')
-            }
+            await logout()
         } catch (error) {
             console.error('Logout error:', error)
             showToast('Çıkış yapılırken bir hata oluştu', 'error')
-        } finally {
             setLoading(false)
         }
     }

@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import NfcTagsClient from './NfcTagsClient'
 
 export const metadata = {
-    title: 'NFC Etiketlerim - NFC Platform',
+    title: 'NFC Etiketlerim - Temasal',
     description: 'Sahip olduğunuz NFC etiketlerini görüntüleyin ve yönetin'
 }
 

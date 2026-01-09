@@ -68,6 +68,7 @@ export async function updateGift(id: string, formData: FormData) {
     const mediaUrl = formData.get("mediaUrl") as string
     const spotifyUrl = formData.get("spotifyUrl") as string
     const senderName = formData.get("senderName") as string
+    const password = formData.get("password") as string
 
     try {
         await prisma.gift.update({
@@ -82,6 +83,7 @@ export async function updateGift(id: string, formData: FormData) {
                 mediaUrl: mediaUrl || null,
                 spotifyUrl: spotifyUrl || null,
                 senderName: senderName || null,
+                password: password || null,
             }
         })
 
@@ -142,10 +144,9 @@ export async function getGiftContent(publicCode: string, password?: string) {
         const gift = tag.gift
 
         // Check password if gift is protected
-        // TODO: Re-enable after prisma generate
-        // if (gift.password && gift.password !== password) {
-        //     return { success: false, error: "Hatalı şifre" }
-        // }
+        if (gift.password && gift.password !== password) {
+            return { success: false, error: "Hatalı şifre" }
+        }
 
         return { success: true, gift }
     } catch (error) {

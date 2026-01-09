@@ -14,52 +14,68 @@ interface ContentCardProps {
 export function ContentCard({ type, item, isOwner, onVisibilityToggle }: ContentCardProps) {
     const [isTogglingVisibility, setIsTogglingVisibility] = useState(false)
 
+    interface GenericItem {
+        id: string
+        slug?: string
+        title?: string
+        name?: string
+        species?: string
+        viewCount?: number
+        isPublic?: boolean
+        isClaimed?: boolean
+        moduleType?: string
+        tag?: {
+            isPublic: boolean
+        }
+        createdAt: string | Date
+    }
+
     // Type-specific configuration
     const config = {
         card: {
             icon: '💳',
             label: 'Kartvizit',
             color: '#3b82f6',
-            getLink: (item: any) => item.slug ? `/${item.slug}` : `/c/${item.id}`,
-            getTitle: (item: any) => item.title || 'Kartvizit',
-            getSubtitle: (item: any) => `👁️ ${item.viewCount || 0} görüntülenme`,
-            isPublic: item.isPublic
+            getLink: (item: GenericItem) => item.slug ? `/${item.slug}` : `/c/${item.id}`,
+            getTitle: (item: GenericItem) => item.title || 'Kartvizit',
+            getSubtitle: (item: GenericItem) => `👁️ ${item.viewCount || 0} görüntülenme`,
+            isPublic: (item: GenericItem) => item.isPublic
         },
         plant: {
             icon: '🌱',
             label: 'Bitki',
             color: '#10b981',
-            getLink: (item: any) => `/p/${item.id}`,
-            getTitle: (item: any) => item.name,
-            getSubtitle: (item: any) => item.species || 'Bitki',
-            isPublic: item.tag?.isPublic ?? false
+            getLink: (item: GenericItem) => `/p/${item.id}`,
+            getTitle: (item: GenericItem) => item.name || 'Bitki',
+            getSubtitle: (item: GenericItem) => item.species || 'Bitki',
+            isPublic: (item: GenericItem) => item.tag?.isPublic ?? false
         },
         mug: {
             icon: '☕',
             label: 'Kupa',
             color: '#f59e0b',
-            getLink: (item: any) => `/mug/${item.id}`,
-            getTitle: (item: any) => item.name,
-            getSubtitle: (item: any) => 'Kahve Kupası',
-            isPublic: item.tag?.isPublic ?? false
+            getLink: (item: GenericItem) => `/mug/${item.id}`,
+            getTitle: (item: GenericItem) => item.name || 'Kupa',
+            getSubtitle: (item: GenericItem) => 'Kahve Kupası',
+            isPublic: (item: GenericItem) => item.tag?.isPublic ?? false
         },
         gift: {
             icon: '🎁',
             label: 'Hediye',
             color: '#ec4899',
-            getLink: (item: any) => `/gift/${item.id}`,
-            getTitle: (item: any) => item.title || 'Hediye',
-            getSubtitle: (item: any) => item.isClaimed ? 'Açıldı' : 'Henüz açılmadı',
-            isPublic: true // Gifts don't have isPublic field yet
+            getLink: (item: GenericItem) => `/gift/${item.id}`,
+            getTitle: (item: GenericItem) => item.title || 'Hediye',
+            getSubtitle: (item: GenericItem) => item.isClaimed ? 'Açıldı' : 'Henüz açılmadı',
+            isPublic: (item: GenericItem) => true
         },
         page: {
             icon: '📄',
             label: 'Sayfa',
             color: '#8b5cf6',
-            getLink: (item: any) => `/page/${item.id}`,
-            getTitle: (item: any) => item.title || 'Sayfa',
-            getSubtitle: (item: any) => item.moduleType === 'gift' ? 'Hediye Sayfası' : 'Canvas',
-            isPublic: true // Pages don't have isPublic field yet
+            getLink: (item: GenericItem) => `/page/${item.id}`,
+            getTitle: (item: GenericItem) => item.title || 'Sayfa',
+            getSubtitle: (item: GenericItem) => item.moduleType === 'gift' ? 'Hediye Sayfası' : 'Canvas',
+            isPublic: (item: GenericItem) => true
         }
     }
 

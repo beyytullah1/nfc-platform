@@ -74,7 +74,7 @@ export default async function AdminPage() {
             </aside>
 
             <main className={styles.main}>
-                <h1 className={styles.title}>Admin Panel</h1>
+                <h1 className={styles.title}>Temasal Admin</h1>
 
                 {/* Stats */}
                 <div className={styles.statsGrid}>

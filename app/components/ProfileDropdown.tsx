@@ -1,146 +1,101 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useToast } from '@/app/components/Toast'
+import { logout } from '@/lib/auth-actions'
+import styles from './ProfileDropdown.module.css'
 
-export default function ProfileDropdown({ userName }: { userName: string }) {
+export function ProfileDropdown() {
+    const { data: session } = useSession()
     const [isOpen, setIsOpen] = useState(false)
-    const { showToast } = useToast()
-    const [loading, setLoading] = useState(false)
     const dropdownRef = useRef<HTMLDivElement>(null)
-    const router = useRouter()
 
+    // Click outside to close
     useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
+        function handleClickOutside(event: MouseEvent) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
                 setIsOpen(false)
             }
         }
-
         document.addEventListener('mousedown', handleClickOutside)
         return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [])
 
+    if (!session?.user) return null
+
     const handleLogout = async () => {
-        if (loading) return
-
-        setLoading(true)
         try {
-            const res = await fetch('/api/auth/signout', {
-                method: 'POST',
-            })
-
-            if (res.ok) {
-                router.push('/login')
-                router.refresh()
-            } else {
-                throw new Error('Logout failed')
-            }
+            await logout()
         } catch (error) {
             console.error('Logout error:', error)
-            showToast('Çıkış yapılırken bir hata oluştu', 'error')
-            setLoading(false)
         }
     }
 
+    // İlk ismi al (Mobil dostu)
+    const firstName = session.user.name?.split(' ')[0] || 'Hesabım'
+    const username = (session.user as any)?.username
+
     return (
-        <div ref={dropdownRef} style={{ position: 'relative' }}>
+        <div className={styles.container} ref={dropdownRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.5rem 1rem',
-                    background: 'var(--color-bg-card, #1a1a1a)',
-                    border: '1px solid var(--color-border, rgba(255,255,255,0.1))',
-                    borderRadius: '8px',
-                    color: 'var(--color-text, #fff)',
-                    cursor: 'pointer',
-                    fontSize: '0.9rem',
-                    transition: 'all 0.2s'
-                }}
-                onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = '#3b82f6'
-                }}
-                onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--color-border, rgba(255,255,255,0.1))'
-                }}
+                className={`${styles.userPill} ${isOpen ? styles.active : ''}`}
+                aria-label="Kullanıcı Menüsü"
+                aria-expanded={isOpen}
             >
-                <span>👤</span>
-                <span>{userName}</span>
-                <span style={{
-                    transform: isOpen ? 'rotate(180deg)' : 'rotate(0)',
-                    transition: 'transform 0.2s',
-                    fontSize: '0.7rem'
-                }}>▼</span>
+                <div className={styles.avatarWrapper}>
+                    {session.user.image ? (
+                        <img src={session.user.image} alt={session.user.name || 'User'} className={styles.avatar} />
+                    ) : (
+                        <div className={styles.avatarPlaceholder}>
+                            {(session.user.name || session.user.email || 'U').charAt(0).toUpperCase()}
+                        </div>
+                    )}
+                </div>
+                <span className={styles.pillName}>{firstName}</span>
+                <span className={styles.chevron}>▾</span>
             </button>
 
             {isOpen && (
-                <div style={{
-                    position: 'absolute',
-                    top: 'calc(100% + 0.5rem)',
-                    right: 0,
-                    background: 'var(--color-bg-card, #1a1a1a)',
-                    border: '1px solid var(--color-border, rgba(255,255,255,0.1))',
-                    borderRadius: '8px',
-                    minWidth: '180px',
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-                    zIndex: 1000,
-                    overflow: 'hidden'
-                }}>
-                    <Link
-                        href="/dashboard"
-                        onClick={() => setIsOpen(false)}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            padding: '0.75rem 1rem',
-                            color: 'var(--color-text, #fff)',
-                            textDecoration: 'none',
-                            borderBottom: '1px solid var(--color-border, rgba(255,255,255,0.1))',
-                            transition: 'background 0.2s'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)'
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'transparent'
-                        }}
-                    >
-                        🏠 Dashboard
-                    </Link>
-                    <button
-                        onClick={handleLogout}
-                        disabled={loading}
-                        style={{
-                            width: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            textAlign: 'left',
-                            padding: '0.75rem 1rem',
-                            background: 'transparent',
-                            border: 'none',
-                            color: loading ? '#94a3b8' : '#ef4444',
-                            cursor: loading ? 'not-allowed' : 'pointer',
-                            fontSize: '0.9rem',
-                            transition: 'background 0.2s'
-                        }}
-                        onMouseEnter={(e) => {
-                            if (!loading) {
-                                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'
-                            }
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'transparent'
-                        }}
-                    >
-                        {loading ? '⏳ Çıkış yapılıyor...' : '🚪 Çıkış Yap'}
-                    </button>
+                <div className={styles.dropdown}>
+                    <div className={styles.header}>
+                        <div className={styles.name}>{session.user.name || 'Misafir'}</div>
+                        <div className={styles.email}>{session.user.email}</div>
+                    </div>
+
+                    <div className={styles.divider}></div>
+
+                    <div className={styles.menu}>
+                        <Link href="/dashboard" className={styles.menuItem} onClick={() => setIsOpen(false)}>
+                            <span className={styles.icon}>🏠</span>
+                            Dashboard
+                        </Link>
+
+                        {username && (
+                            <Link href={`/u/${username}`} className={styles.menuItem} onClick={() => setIsOpen(false)}>
+                                <span className={styles.icon}>👤</span>
+                                Profilim
+                            </Link>
+                        )}
+
+                        <Link href="/dashboard/connections" className={styles.menuItem} onClick={() => setIsOpen(false)}>
+                            <span className={styles.icon}>👥</span>
+                            İletişim Ağı
+                        </Link>
+
+                        <div className={styles.divider}></div>
+
+                        <Link href="/dashboard/settings" className={styles.menuItem} onClick={() => setIsOpen(false)}>
+                            <span className={styles.icon}>⚙️</span>
+                            Ayarlar
+                        </Link>
+
+                        <button onClick={handleLogout} className={`${styles.menuItem} ${styles.logoutBtn}`}>
+                            <span className={styles.icon}>🚪</span>
+                            Çıkış Yap
+                        </button>
+                    </div>
                 </div>
             )}
         </div>

@@ -6,6 +6,7 @@ import { MobileMenuWrapper } from "./MobileMenu"
 import { Breadcrumb } from "../components/Breadcrumb"
 import { NotificationBadge } from "@/app/components/NotificationBadge"
 import { ProfileMenu } from "@/app/components/ProfileMenu"
+import { ProfileDropdown } from "@/app/components/ProfileDropdown"
 
 export default async function DashboardLayout({
     children,
@@ -21,7 +22,7 @@ export default async function DashboardLayout({
     const sidebarContent = (
         <>
             <div className={styles.logo}>
-                <span>NFC</span>Platform
+                <span>Temasal</span>
             </div>
             <nav className={styles.nav}>
                 <Link href="/dashboard" className={styles.navItem}>
@@ -79,8 +80,18 @@ export default async function DashboardLayout({
             </MobileMenuWrapper>
 
             <main className={styles.main}>
-                <Breadcrumb />
-                {children}
+                <header className={styles.topBar}>
+                    <Breadcrumb />
+                    <div className={styles.topRightContainer}>
+                        <Link href="/dashboard/notifications" className={styles.actionButton} aria-label="Bildirimler">
+                            <NotificationBadge />
+                        </Link>
+                        <ProfileDropdown />
+                    </div>
+                </header>
+                <div className={styles.content}>
+                    {children}
+                </div>
             </main>
         </div>
     )

@@ -14,7 +14,7 @@ export function GiftActions({ giftId, giftTitle, tagId }: GiftActionsProps) {
 
     return (
         <>
-            {tagId && (
+            {tagId ? (
                 <>
                     <button
                         onClick={() => setShowTransfer(true)}
@@ -41,6 +41,28 @@ export function GiftActions({ giftId, giftTitle, tagId }: GiftActionsProps) {
                         moduleType="gift"
                     />
                 </>
+            ) : (
+                <a
+                    href="/dashboard/nfc-tags"
+                    style={{
+                        padding: "0.875rem 1.5rem",
+                        background: "rgba(59, 130, 246, 0.15)",
+                        border: "1px solid rgba(59, 130, 246, 0.3)",
+                        borderRadius: "12px",
+                        color: "#60a5fa",
+                        cursor: "pointer",
+                        fontSize: "0.9rem",
+                        width: "100%",
+                        marginTop: "1rem",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        textDecoration: "none",
+                        fontWeight: 500
+                    }}
+                >
+                    🔗 NFC Etiketi Eşleştir
+                </a>
             )}
         </>
     )

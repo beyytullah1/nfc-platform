@@ -106,7 +106,7 @@ export default function PublicPlantClient({ plant, tagId }: PublicPlantClientPro
 
                 {/* Footer */}
                 <div className={styles.footer}>
-                    <span>🌿 NFC Platform</span>
+                    <span>🌿 Temasal</span>
                 </div>
             </div>
         </div>

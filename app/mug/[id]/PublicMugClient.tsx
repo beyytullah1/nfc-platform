@@ -126,7 +126,7 @@ export default function PublicMugClient({ mug, tagId, stats, initialIsFollowing,
 
                 {/* Footer */}
                 <div className={styles.footer}>
-                    <span>☕ NFC Platform</span>
+                    <span>☕ Temasal</span>
                 </div>
             </div>
         </div>

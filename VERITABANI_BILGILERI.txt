@@ -1,0 +1,36 @@
+================================================================
+   NFC PLATFORMU - KALICI VERITABANI BILGILERI
+================================================================
+
+Tarih: 09.01.2026
+Durum: Kalıcı Kurulum (Docker Compose)
+
+[VERITABANI]
+Sistem:      PostgreSQL 15
+Host:        localhost
+Port:        5432
+Kullanıcı:   postgres
+Şifre:       mysecretpassword
+DB Adı:      nfc_platform
+
+Bağlantı URL'si (.env dosyası için):
+postgresql://postgres:mysecretpassword@localhost:5432/nfc_platform?schema=public
+
+----------------------------------------------------------------
+
+[ADMIN KULLANICISI]
+Email:       admin@nfc.com
+Şifre:       123123
+
+----------------------------------------------------------------
+
+[NASIL BASLATILIR?]
+1. Docker Desktop uygulamasını açın.
+2. Veritabanı 'nfc-postgres-permanent' ismiyle otomatik çalışacaktır.
+3. Projeyi başlatmak için terminalde: npm run dev
+
+[SORUN OLURSA]
+Eğer veritabanı bağlanmazsa terminale şunu yazın:
+docker-compose up -d
+
+================================================================

@@ -90,7 +90,8 @@ export async function POST(request: Request) {
 
         // Karta yönlendir
         return NextResponse.json({
-            redirect: `/c/${card.slug || card.id}`
+            success: true,
+            redirect: `/${card.slug || card.id}`
         })
 
     } catch (error) {

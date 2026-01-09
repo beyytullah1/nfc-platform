@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "NFC Platform",
-  description: "Dijital kartvizit ve NFC yönetim platformu",
+  title: "Temasal",
+  description: "Temasal, temasla anlam kazanan nesneler için kurulmuş dijital bir platformdur.",
 }
 
 export default function RootLayout({

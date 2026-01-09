@@ -59,7 +59,7 @@ export function AddToNetworkButton({ cardId, cardOwnerId, cardOwnerName }: AddTo
 
     const handleAddClick = () => {
         if (status === 'added') {
-            // Profil git
+            // Navigate to card profile (middleware will handle slug lookup)
             router.push(`/c/${cardId}`)
         } else {
             // Modal aç

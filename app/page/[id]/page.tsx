@@ -91,7 +91,7 @@ export default async function PublicPagePage({ params }: { params: Promise<{ id:
                 </div>
 
                 <footer className={styles.footer}>
-                    ✨ NFC Platform ile oluşturuldu
+                    ✨ Temasal ile oluşturuldu
                 </footer>
             </div>
         </div>

@@ -94,6 +94,19 @@ export function GiftForm({ gift }: GiftFormProps) {
                 </div>
 
                 <div className={styles.formGroup}>
+                    <label>Şifre (İsteğe Bağlı)</label>
+                    <input
+                        type="text"
+                        name="password"
+                        placeholder="Hediyeyi kilitlemek için bir şifre belirleyin"
+                        defaultValue={gift?.password || ''}
+                    />
+                    <small style={{ color: 'rgba(255,255,255,0.4)', marginTop: '0.5rem', display: 'block' }}>
+                        Şifre belirlerseniz, kişi hediyeyi açmadan önce bu şifreyi girmek zorunda kalır.
+                    </small>
+                </div>
+
+                <div className={styles.formGroup}>
                     <label>Özel Mesajın</label>
                     <textarea
                         name="message"

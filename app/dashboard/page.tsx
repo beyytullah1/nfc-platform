@@ -112,10 +112,7 @@ export default async function DashboardPage() {
             <header className={styles.header}>
                 <div>
                     <h1>Hoş Geldin, {session.user.name || "Kullanıcı"}! 👋</h1>
-                    <p>NFC platformuna hoş geldiniz</p>
-                </div>
-                <div className={styles.userInfo}>
-                    <span>{session.user.email}</span>
+                    <p>Temasal'a hoş geldiniz</p>
                 </div>
             </header>
 

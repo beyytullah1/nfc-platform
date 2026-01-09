@@ -33,30 +33,30 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         try {
           const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string },
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            passwordHash: true,
-            avatarUrl: true,
-            username: true,
-            bio: true
+            where: { email: credentials.email as string },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              passwordHash: true, // Şemada bu alan var
+              avatarUrl: true,
+              username: true,
+              bio: true
+            }
+          })
+
+          if (!user || !user.passwordHash) {
+            return null
           }
-        })
 
-        if (!user || !user.passwordHash) {
-          return null
-        }
+          const isValid = await bcrypt.compare(
+            credentials.password as string,
+            user.passwordHash
+          )
 
-        const isValid = await bcrypt.compare(
-          credentials.password as string,
-          user.passwordHash
-        )
-
-        if (!isValid) {
-          return null
-        }
+          if (!isValid) {
+            return null
+          }
 
           return {
             id: user.id,
@@ -74,11 +74,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     })
   ],
   callbacks: {
-      async jwt({ token, user, trigger, session }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id
         token.username = user.username
         token.bio = user.bio
+
+        // Raw SQL query to get role (bypass Prisma Client type issues)
+        // Use standard Prisma findUnique
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: user.id },
+            select: { role: true }
+          })
+          token.role = dbUser?.role || 'user'
+        } catch (error) {
+          console.error('Failed to fetch user role:', error)
+          token.role = 'user'
+        }
       }
 
       // Session update trigger (when updateProfile is called)
@@ -86,23 +99,25 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         try {
           // Fetch fresh user data from database
           const freshUser = await prisma.user.findUnique({
-          where: { id: token.id as string },
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            avatarUrl: true,
-            username: true,
-            bio: true
-          }
-        })
+            where: { id: token.id as string },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              avatarUrl: true,
+              username: true,
+              bio: true,
+              role: true
+            }
+          })
 
-        if (freshUser) {
-          token.name = freshUser.name
-          token.email = freshUser.email
-          token.picture = freshUser.avatarUrl
+          if (freshUser) {
+            token.name = freshUser.name
+            token.email = freshUser.email
+            token.picture = freshUser.avatarUrl
             token.username = freshUser.username
             token.bio = freshUser.bio
+            token.role = (freshUser as any).role || 'user'
           }
         } catch (error) {
           console.error('Database error during session update:', error)
@@ -119,27 +134,30 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.email = token.email as string
         session.user.image = token.picture as string || null
 
-        // Fetch username from database if not in token (for Google login or old sessions)
-        if (!token.username && token.id) {
+        // Fetch username and role from database if not in token (for Google login or old sessions)
+        if ((!token.username || !token.role) && token.id) {
           try {
             const user = await prisma.user.findUnique({
-            where: { id: token.id as string },
-            select: { username: true, bio: true }
-          })
+              where: { id: token.id as string },
+              select: { username: true, bio: true, role: true }
+            })
 
-          if (user) {
+            if (user) {
               session.user.username = user.username;
               session.user.bio = user.bio
+                ; (session.user as any).role = (user as any).role || 'user'
             }
           } catch (error) {
             console.error('Database error during session fetch:', error)
             // Use token data as fallback
             session.user.username = token.username || undefined;
             session.user.bio = token.bio || undefined
+              ; (session.user as any).role = token.role || 'user'
           }
         } else {
           session.user.username = token.username;
           session.user.bio = token.bio
+            ; (session.user as any).role = token.role || 'user'
         }
       }
       return session

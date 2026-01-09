@@ -8,8 +8,11 @@ const RESERVED_PATHS = [
     '/admin', '/claim', '/actions', '/_next', '/favicon'
 ]
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
     const { pathname } = req.nextUrl
+
+    // Admin check moved to Layout to prevent Edge Runtime hangs
+    // path rewriting logic below...
 
     // Username rewrite logic - /beytullah → /c/beytullah
     // Skip reserved paths

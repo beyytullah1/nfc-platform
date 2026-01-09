@@ -8,7 +8,6 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
 }
 
 // =============================================
@@ -37,6 +36,7 @@ model User {
   username     String?  @unique // Kullanıcı profil URL: /u/username
   avatarUrl    String?  @map("avatar_url")
   bio          String?  // Kullanıcı hakkında kısa açıklama
+  role         String   @default("user") // "user" veya "admin"
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
@@ -61,6 +61,7 @@ model User {
   transferRequestsSent     TransferRequest[] @relation("TransferRequestSender")
   transferRequestsReceived TransferRequest[] @relation("TransferRequestReceiver")
   coOwnedPlants       Plant[]              @relation("PlantCoOwners")
+  adminLogs           AdminLog[]           @relation("AdminActions")
 
   @@map("users")
 }
@@ -471,3 +472,21 @@ model TransferRequest {
   @@map("transfer_requests")
 }
 
+// =============================================
+// ADMIN LOG SYSTEM
+// =============================================
+
+model AdminLog {
+  id         String   @id @default(cuid())
+  adminId    String   @map("admin_id")
+  action     String   // "user_deleted", "password_reset", "user_edited", "role_changed" vb.
+  targetType String?  @map("target_type") // "user", "card", "nfc_tag", "plant", "mug", "gift"
+  targetId   String?  @map("target_id")
+  details    String?  // JSON formatında ek bilgi
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // İlişkiler
+  admin User @relation("AdminActions", fields: [adminId], references: [id])
+
+  @@map("admin_logs")
+}

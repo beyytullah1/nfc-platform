@@ -61,7 +61,7 @@ export async function checkTag(publicCode: string) {
         case 'card':
             // Slug varsa kullan, yoksa ID kullan
             const cardPath = tag.card?.slug || tag.card?.id
-            return { redirect: `/c/${cardPath}` }
+            return { redirect: `/${cardPath}` }
         case 'plant':
             return { redirect: `/p/${tag.plant?.id}` }
         case 'mug':
