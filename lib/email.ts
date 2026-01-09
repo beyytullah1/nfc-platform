@@ -13,29 +13,29 @@ import nodemailer from 'nodemailer'
  */
 
 // Create transporter
-const transporter = nodemailer.createTransporter({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-    },
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
 })
 
 /**
  * Send password reset email
  */
 export async function sendPasswordResetEmail(
-    email: string,
-    token: string,
-    userName?: string
+  email: string,
+  token: string,
+  userName?: string
 ) {
-    const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${token}`
+  const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${token}`
 
-    const mailOptions = {
-        from: `"Temasal" <${process.env.EMAIL_USER}>`,
-        to: email,
-        subject: 'Şifre Sıfırlama Talebi - Temasal',
-        html: `
+  const mailOptions = {
+    from: `"Temasal" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: 'Şifre Sıfırlama Talebi - Temasal',
+    html: `
       <!DOCTYPE html>
       <html>
       <head>
@@ -145,7 +145,7 @@ export async function sendPasswordResetEmail(
       </body>
       </html>
     `,
-        text: `
+    text: `
 Merhaba${userName ? ` ${userName}` : ''},
 
 Hesabınız için şifre sıfırlama talebinde bulundunuz.
@@ -160,26 +160,26 @@ Eğer bu talebi siz yapmadıysanız, bu e-postayı görmezden gelebilirsiniz.
 ---
 Temasal - Bir temas, bir anlam.
     `.trim(),
-    }
+  }
 
-    try {
-        await transporter.sendMail(mailOptions)
-        return { success: true }
-    } catch (error) {
-        console.error('Email send error:', error)
-        return { success: false, error }
-    }
+  try {
+    await transporter.sendMail(mailOptions)
+    return { success: true }
+  } catch (error) {
+    console.error('Email send error:', error)
+    return { success: false, error }
+  }
 }
 
 /**
  * Verify email configuration
  */
 export async function verifyEmailConfig() {
-    try {
-        await transporter.verify()
-        return true
-    } catch (error) {
-        console.error('Email config error:', error)
-        return false
-    }
+  try {
+    await transporter.verify()
+    return true
+  } catch (error) {
+    console.error('Email config error:', error)
+    return false
+  }
 }
