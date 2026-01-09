@@ -1,23 +1,56 @@
-import { auth } from "@/lib/auth"
-import { redirect } from "next/navigation"
+'use client'
+
+import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 import Link from "next/link"
 import styles from "./admin.module.css"
 
-export default async function AdminLayout({
+export default function AdminLayout({
     children,
 }: {
     children: React.ReactNode
 }) {
-    console.log('[AdminLayout] Starting auth check...')
-    const session = await auth()
-    console.log('[AdminLayout] Session:', session?.user?.email, 'Role:', (session?.user as any)?.role)
+    const { data: session, status } = useSession()
+    const router = useRouter()
 
-    // Double-check auth (Middleware zaten kontrol etti ama guarantee için)
-    if (!session?.user || (session.user as any).role !== 'admin') {
-        console.log('[AdminLayout] Redirecting to dashboard - Not admin')
-        redirect("/dashboard")
+    useEffect(() => {
+        if (status === 'loading') return
+
+        if (!session?.user) {
+            router.push('/login')
+            return
+        }
+
+        // @ts-ignore - role field
+        if (session.user.role !== 'admin') {
+            router.push('/dashboard')
+        }
+    }, [session, status, router])
+
+    // Show loading while checking auth
+    if (status === 'loading') {
+        return (
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: '100vh',
+                background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+                color: '#fff'
+            }}>
+                <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
+                    <div>Yetki kontrol ediliyor...</div>
+                </div>
+            </div>
+        )
     }
-    console.log('[AdminLayout] Auth OK, rendering children')
+
+    // Don't render if not authenticated or not admin
+    if (!session?.user || (session.user as any).role !== 'admin') {
+        return null
+    }
 
     return (
         <div className={styles.adminContainer}>

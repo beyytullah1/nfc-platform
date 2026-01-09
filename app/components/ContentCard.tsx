@@ -89,7 +89,7 @@ export function ContentCard({ type, item, isOwner, onVisibilityToggle }: Content
 
         setIsTogglingVisibility(true)
         try {
-            await onVisibilityToggle(item.id, type, cfg.isPublic)
+            await onVisibilityToggle(item.id, type, cfg.isPublic(item) ?? false)
         } catch (error) {
             console.error('Visibility toggle error:', error)
         } finally {
@@ -110,13 +110,13 @@ export function ContentCard({ type, item, isOwner, onVisibilityToggle }: Content
                         onClick={handleVisibilityToggle}
                         disabled={isTogglingVisibility}
                         className={styles.visibilityToggle}
-                        title={cfg.isPublic ? 'Profilden Gizle' : 'Profilde Göster'}
+                        title={cfg.isPublic(item) ? 'Profilden Gizle' : 'Profilde Göster'}
                         style={{
-                            background: cfg.isPublic ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                            border: `1px solid ${cfg.isPublic ? 'rgba(16, 185, 129, 0.5)' : 'rgba(239, 68, 68, 0.5)'}`
+                            background: cfg.isPublic(item) ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                            border: `1px solid ${cfg.isPublic(item) ? 'rgba(16, 185, 129, 0.5)' : 'rgba(239, 68, 68, 0.5)'}`
                         }}
                     >
-                        {isTogglingVisibility ? '⏳' : cfg.isPublic ? '✅' : '🚫'}
+                        {isTogglingVisibility ? '⏳' : cfg.isPublic(item) ? '✅' : '🚫'}
                     </button>
                 )}
             </div>
