@@ -61,6 +61,7 @@ model User {
   transferRequestsSent     TransferRequest[] @relation("TransferRequestSender")
   transferRequestsReceived TransferRequest[] @relation("TransferRequestReceiver")
   coOwnedPlants       Plant[]              @relation("PlantCoOwners")
+  passwordResetTokens PasswordResetToken[]
   adminLogs           AdminLog[]           @relation("AdminActions")
 
   @@index([email])
@@ -509,5 +510,27 @@ model AdminLog {
   // İlişkiler
   admin User @relation("AdminActions", fields: [adminId], references: [id])
 
+  @@index([userId])
+  @@index([createdAt])
   @@map("admin_logs")
+}
+
+// =============================================
+// PASSWORD RESET
+// =============================================
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
 }

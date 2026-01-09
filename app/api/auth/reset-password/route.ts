@@ -2,46 +2,78 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import bcrypt from 'bcryptjs'
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
     try {
-        const { email, newPassword } = await request.json()
+        const { token, password } = await req.json()
 
-        if (!email || !newPassword) {
+        if (!token || !password) {
             return NextResponse.json(
-                { error: 'Email ve şifre gerekli' },
+                { error: 'Token ve şifre gerekli' },
                 { status: 400 }
             )
         }
 
-        // Kullanıcıyı bul
-        const user = await prisma.user.findUnique({
-            where: { email }
-        })
-
-        if (!user) {
+        // Validate password strength
+        if (password.length < 6) {
             return NextResponse.json(
-                { error: 'Bu email ile kayıtlı kullanıcı bulunamadı' },
-                { status: 404 }
+                { error: 'Şifre en az 6 karakter olmalıdır' },
+                { status: 400 }
             )
         }
 
-        // Yeni şifreyi hashle
-        const hashedPassword = await bcrypt.hash(newPassword, 10)
-
-        // Şifreyi güncelle
-        await prisma.user.update({
-            where: { email },
-            data: { passwordHash: hashedPassword }
+        // Find token
+        const resetToken = await prisma.passwordResetToken.findUnique({
+            where: { token },
+            include: { user: true }
         })
+
+        if (!resetToken) {
+            return NextResponse.json(
+                { error: 'Geçersiz veya süresi dolmuş token' },
+                { status: 400 }
+            )
+        }
+
+        // Check if token is expired
+        if (resetToken.expiresAt < new Date()) {
+            return NextResponse.json(
+                { error: 'Token süresi dolmuş. Lütfen yeni bir şifre sıfırlama talebi oluşturun.' },
+                { status: 400 }
+            )
+        }
+
+        // Check if token is already used
+        if (resetToken.used) {
+            return NextResponse.json(
+                { error: 'Bu token zaten kullanılmış' },
+                { status: 400 }
+            )
+        }
+
+        // Hash new password
+        const passwordHash = await bcrypt.hash(password, 10)
+
+        // Update user password and mark token as used
+        await prisma.$transaction([
+            prisma.user.update({
+                where: { id: resetToken.userId },
+                data: { passwordHash }
+            }),
+            prisma.passwordResetToken.update({
+                where: { id: resetToken.id },
+                data: { used: true }
+            })
+        ])
 
         return NextResponse.json({
             success: true,
-            message: 'Şifre başarıyla güncellendi'
+            message: 'Şifreniz başarıyla güncellendi. Şimdi giriş yapabilirsiniz.'
         })
+
     } catch (error) {
         console.error('Reset password error:', error)
         return NextResponse.json(
-            { error: 'Şifre güncellenirken hata oluştu' },
+            { error: 'Bir hata oluştu' },
             { status: 500 }
         )
     }
