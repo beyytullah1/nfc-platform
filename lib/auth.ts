@@ -89,17 +89,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (account?.provider === 'google') {
         // Check if user with this email already exists
         const existingUser = await prisma.user.findUnique({
-          where: { email: user.email! },
-          include: { accounts: true }
+          where: { email: user.email! }
         })
 
         if (existingUser) {
           // Check if this Google account is already linked
-          const accountExists = existingUser.accounts.some(
-            acc => acc.provider === 'google' && acc.providerAccountId === account.providerAccountId
-          )
+          const existingAccount = await prisma.account.findFirst({
+            where: {
+              userId: existingUser.id,
+              provider: 'google',
+              providerAccountId: account.providerAccountId
+            }
+          })
 
-          if (!accountExists) {
+          if (!existingAccount) {
             // Link the Google account to existing user
             await prisma.account.create({
               data: {
