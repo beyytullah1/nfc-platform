@@ -50,6 +50,7 @@ export default function PlantDetailClient({ plant, userName, isOwner, availableT
     const [amountMl, setAmountMl] = useState("")
     const [content, setContent] = useState("")
     const [showTransfer, setShowTransfer] = useState(false)
+    const [deleting, setDeleting] = useState(false) // Added back
 
     const { showToast } = useToast()
 
