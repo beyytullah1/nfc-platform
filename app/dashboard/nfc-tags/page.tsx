@@ -15,32 +15,30 @@ export default async function NfcTagsPage() {
         redirect('/login')
     }
 
-    // Fetch pending transfers (sent and received)
-    const sentGifts = await prisma.ownershipTransfer.findMany({
+    // Fetch pending transfer requests (sent and received)
+    const sentRequests = await prisma.transferRequest.findMany({
         where: {
             fromUserId: session.user.id,
-            transferType: 'gift'
+            status: 'pending'
         },
         include: {
             toUser: { select: { name: true, username: true, email: true } },
             tag: { select: { publicCode: true, moduleType: true } }
         },
-        orderBy: { transferredAt: 'desc' },
-        take: 10
+        orderBy: { createdAt: 'desc' }
     })
 
-    const receivedGifts = await prisma.ownershipTransfer.findMany({
+    const receivedRequests = await prisma.transferRequest.findMany({
         where: {
             toUserId: session.user.id,
-            transferType: 'gift'
+            status: 'pending'
         },
         include: {
             fromUser: { select: { name: true, username: true, email: true } },
             tag: { select: { publicCode: true, moduleType: true } }
         },
-        orderBy: { transferredAt: 'desc' },
-        take: 10
+        orderBy: { createdAt: 'desc' }
     })
 
-    return <NfcTagsClient sentGifts={sentGifts} receivedGifts={receivedGifts} />
+    return <NfcTagsClient sentRequests={sentRequests} receivedRequests={receivedRequests} />
 }

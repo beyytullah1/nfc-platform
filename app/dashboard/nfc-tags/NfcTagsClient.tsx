@@ -22,14 +22,15 @@ interface NfcTag {
     claimedAt?: string
 }
 
-interface GiftTransfer {
+interface TransferRequest {
     id: string
     tagId: string
-    fromUserId: string | null
+    fromUserId: string
     toUserId: string
-    transferType: string
+    status: string
     message: string | null
-    transferredAt: Date
+    createdAt: Date
+    updatedAt: Date
     fromUser?: {
         name: string | null
         username: string | null
@@ -47,11 +48,11 @@ interface GiftTransfer {
 }
 
 interface NfcTagsClientProps {
-    sentGifts: GiftTransfer[]
-    receivedGifts: GiftTransfer[]
+    sentRequests: TransferRequest[]
+    receivedRequests: TransferRequest[]
 }
 
-export default function NfcTagsClient({ sentGifts: initialSentGifts, receivedGifts: initialReceivedGifts }: NfcTagsClientProps) {
+export default function NfcTagsClient({ sentRequests, receivedRequests }: NfcTagsClientProps) {
     const { showToast } = useToast()
     const router = useRouter()
     const [tags, setTags] = useState<NfcTag[]>([])
