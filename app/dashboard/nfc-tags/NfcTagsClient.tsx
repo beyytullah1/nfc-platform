@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useToast } from '@/app/components/Toast'
 import { useRouter } from 'next/navigation'
-import { getBaseUrl } from '@/lib/env'
 import { TransferModal } from '@/app/components/TransferModal'
 import styles from './nfc-tags.module.css'
 
@@ -11,8 +10,22 @@ interface NfcTag {
     id: string
     publicCode: string
     status: string
+    moduleType: string | null
     createdAt: string
     claimedAt?: string
+    card?: { id: string; title: string | null } | null
+    plant?: { id: string; name: string } | null
+    mug?: { id: string; name: string } | null
+    gift?: { id: string; title: string | null } | null
+    page?: { id: string; title: string | null } | null
+}
+
+interface UserModules {
+    plants: { id: string; name: string }[]
+    mugs: { id: string; name: string }[]
+    cards: { id: string; title: string | null }[]
+    gifts: { id: string; title: string | null }[]
+    pages: { id: string; title: string | null }[]
 }
 
 interface TransferRequest {
@@ -41,246 +54,306 @@ interface TransferRequest {
 }
 
 interface NfcTagsClientProps {
+    userTags: NfcTag[]
+    userModules: UserModules
     sentRequests: TransferRequest[]
     receivedRequests: TransferRequest[]
 }
 
-export default function NfcTagsClient({ sentRequests, receivedRequests }: NfcTagsClientProps) {
+export default function NfcTagsClient({ userTags: initialTags, userModules, sentRequests, receivedRequests }: NfcTagsClientProps) {
     const { showToast } = useToast()
     const router = useRouter()
-    const [tags, setTags] = useState<NfcTag[]>([])
-    const [loading, setLoading] = useState(true)
-    const [filter, setFilter] = useState<'all' | 'linked' | 'unlinked'>('all')
-    const [unlinkingId, setUnlinkingId] = useState<string | null>(null)
+    const [tags, setTags] = useState<NfcTag[]>(initialTags)
+    const [loading, setLoading] = useState(false)
 
     // Modals
-    const [showClaimModal, setShowClaimModal] = useState(false)
+    const [showLinkModal, setShowLinkModal] = useState(false)
     const [showTransferModal, setShowTransferModal] = useState(false)
-    const [selectedTagForTransfer, setSelectedTagForTransfer] = useState<NfcTag | null>(null)
+    const [selectedTag, setSelectedTag] = useState<NfcTag | null>(null)
+    const [selectedModuleType, setSelectedModuleType] = useState<string>('')
+    const [selectedModuleId, setSelectedModuleId] = useState<string>('')
 
-    // Claim Form
-    const [claimCode, setClaimCode] = useState('')
-    const [claimModuleType, setClaimModuleType] = useState('generic')
-    const [claimLoading, setClaimLoading] = useState(false)
-    const [claimError, setClaimError] = useState('')
+    const getLinkedModule = (tag: NfcTag) => {
+        if (tag.card) return { type: '💳 Kartvizit', name: tag.card.title || 'İsimsiz', id: tag.card.id }
+        if (tag.plant) return { type: '🪴 Bitki', name: tag.plant.name, id: tag.plant.id }
+        if (tag.mug) return { type: '☕ Kupa', name: tag.mug.name, id: tag.mug.id }
+        if (tag.gift) return { type: '🎁 Hediye', name: tag.gift.title || 'İsimsiz', id: tag.gift.id }
+        if (tag.page) return { type: '📄 Sayfa', name: tag.page.title || 'İsimsiz', id: tag.page.id }
+        return null
+    }
 
-    useEffect(() => {
-        fetchTags()
-    }, [])
+    const handleLink = async () => {
+        if (!selectedTag || !selectedModuleType || !selectedModuleId) {
+            showToast('Lütfen modül seçin', 'error')
+            return
+        }
 
-    const fetchTags = async () => {
+        setLoading(true)
         try {
-            const res = await fetch('/api/nfc/my-tags')
+            const res = await fetch('/api/nfc/link', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    tagId: selectedTag.id,
+                    moduleType: selectedModuleType,
+                    moduleId: selectedModuleId
+                })
+            })
+
             if (res.ok) {
-                const data = await res.json()
-                setTags(data.tags)
+                showToast('Etiket başarıyla eşleştirildi', 'success')
+                setShowLinkModal(false)
+                setSelectedTag(null)
+                setSelectedModuleType('')
+                setSelectedModuleId('')
+                router.refresh()
+            } else {
+                showToast('Eşleştirme başarısız', 'error')
             }
         } catch (error) {
-            console.error('Failed to fetch tags:', error)
+            showToast('Bir hata oluştu', 'error')
         } finally {
             setLoading(false)
         }
     }
 
-    const handleClaim = async (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!claimCode.trim()) return
+    const handleUnlink = async (tag: NfcTag) => {
+        if (!confirm('Bu etiketi modülden ayırmak istediğinizden emin misiniz?')) return
 
-        setClaimLoading(true)
-        setClaimError('')
-
-        try {
-            const res = await fetch('/api/nfc/claim', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    code: claimCode.trim(),
-                    moduleType: claimModuleType !== 'generic' ? claimModuleType : undefined
-                })
-            })
-
-            const data = await res.json()
-
-            if (res.ok) {
-                showToast('Etiket başarıyla eklendi!', 'success')
-                setShowClaimModal(false)
-                setClaimCode('')
-                setClaimModuleType('generic')
-                fetchTags() // Refresh
-            } else {
-                setClaimError(data.error || 'Etiket eklenemedi.')
-            }
-        } catch (error) {
-            setClaimError('Bir hata oluştu.')
-        } finally {
-            setClaimLoading(false)
-        }
-    }
-
-    const handleUnlink = async (tagId: string) => {
-        if (!confirm('Bu NFC bağlantısını kaldırmak istediğinizden emin misiniz?')) {
-            return
-        }
-
-        setUnlinkingId(tagId)
+        setLoading(true)
         try {
             const res = await fetch('/api/nfc/unlink', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ tagId })
+                body: JSON.stringify({ tagId: tag.id })
             })
 
             if (res.ok) {
-                await fetchTags() // Refresh list
-                showToast('Bağlantı kaldırıldı', 'success')
+                showToast('Etiket modülden ayrıldı', 'success')
+                router.refresh()
             } else {
-                const data = await res.json()
-                showToast(data.error || 'Bağlantı kaldırılamadı', 'error')
+                showToast('İşlem başarısız', 'error')
             }
         } catch (error) {
-            console.error('Unlink error:', error)
             showToast('Bir hata oluştu', 'error')
         } finally {
-            setUnlinkingId(null)
+            setLoading(false)
         }
     }
 
+    const handleDelete = async (tag: NfcTag) => {
+        if (!confirm('Bu etiketi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.')) return
+
+        setLoading(true)
+        try {
+            const res = await fetch('/api/nfc/delete', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tagId: tag.id })
+            })
+
+            if (res.ok) {
+                showToast('Etiket silindi', 'success')
+                router.refresh()
+            } else {
+                showToast('Silme başarısız', 'error')
+            }
+        } catch (error) {
+            showToast('Bir hata oluştu', 'error')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const openLinkModal = (tag: NfcTag) => {
+        setSelectedTag(tag)
+        setSelectedModuleType('')
+        setSelectedModuleId('')
+        setShowLinkModal(true)
+    }
+
     const openTransferModal = (tag: NfcTag) => {
-        setSelectedTagForTransfer(tag)
+        setSelectedTag(tag)
         setShowTransferModal(true)
     }
 
-    if (loading) {
-        return (
-            <div className={styles.container}>
-                <div className="loading">Yükleniyor...</div>
-            </div>
-        )
+    const getAvailableModules = () => {
+        if (!selectedModuleType) return []
+
+        switch (selectedModuleType) {
+            case 'plant': return userModules.plants
+            case 'mug': return userModules.mugs
+            case 'card': return userModules.cards
+            case 'gift': return userModules.gifts
+            case 'page': return userModules.pages
+            default: return []
+        }
     }
 
     return (
         <div className={styles.container}>
             <div className={styles.header}>
-                <h1 className={styles.title}>🏷️ NFC Etiketlerim</h1>
-                <p className={styles.subtitle}>Sahip olduğunuz {tags.length} NFC etiketi</p>
-
-                {/* Mobile Add Button if needed, or just rely on grid card */}
-            </div>
-
-            {/* Grid */}
-            <div className={styles.grid}>
-
-                {/* Add Tag Card - Always visible first */}
-                <div
-                    className={`${styles.card} ${styles.addCard}`}
-                    onClick={() => setShowClaimModal(true)}
-                >
-                    <div className={styles.addContent}>
-                        <span className={styles.addIcon}>➕</span>
-                        <h3>Etiket Ekle</h3>
-                        <p style={{ fontSize: '0.875rem' }}>Elinizdeki yeni bir etiketi sisteme tanımlayın</p>
-                    </div>
+                <div>
+                    <h1>NFC Etiketlerim</h1>
+                    <p>Sahip olduğunuz NFC etiketlerini yönetin</p>
                 </div>
-
-                {tags.map(tag => (
-                    <div key={tag.id} className={styles.card}>
-                        <div className={styles.cardHeader}>
-                            <div className={styles.iconWrapper}>
-                                🏷️
-                            </div>
-                            <span className={`${styles.badge} ${styles.badgeSuccess}`}>
-                                {tag.status === 'claimed' ? 'Aktif' : 'Boşta'}
-                            </span>
-                        </div>
-
-                        <div className={styles.code}>{tag.publicCode}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginBottom: '1rem' }}>
-                            {new Date(tag.claimedAt || tag.createdAt).toLocaleDateString('tr-TR')}
-                        </div>
-
-                        <div className={styles.actions}>
-                            <button
-                                className={`${styles.actionBtn} ${styles.primaryBtn} ${styles.fullWidth}`}
-                                onClick={() => openTransferModal(tag)}
-                            >
-                                🎁 Transfer Et
-                            </button>
-                        </div>
-                    </div>
-                ))}
             </div>
 
-            {/* Claim Modal */}
-            {showClaimModal && (
-                <div className="modal-overlay" onClick={() => setShowClaimModal(false)}>
-                    <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
-                        <div className="modal-header">
-                            <h2>🏷️ Etiket Ekle</h2>
-                            <button className="close-btn" onClick={() => setShowClaimModal(false)}>×</button>
-                        </div>
-                        <form onSubmit={handleClaim}>
-                            <div className={styles.inputGroup}>
-                                <label>Etiket Kodu (ID)</label>
-                                <input
-                                    type="text"
-                                    className={styles.input}
-                                    placeholder="Örn: nfc-12345"
-                                    value={claimCode}
-                                    onChange={e => setClaimCode(e.target.value)}
-                                    autoFocus
-                                />
-                                <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '0.5rem' }}>
-                                    Etiketin üzerinde yazan benzersiz kodu giriniz.
-                                </p>
-                            </div>
+            {/* Tags List */}
+            <div className={styles.tagsGrid}>
+                {tags.length === 0 ? (
+                    <div className={styles.emptyState}>
+                        <p>Henüz NFC etiketiniz yok</p>
+                    </div>
+                ) : (
+                    tags.map(tag => {
+                        const linkedModule = getLinkedModule(tag)
 
-                            <div className={styles.inputGroup} style={{ marginTop: '1rem' }}>
-                                <label>Etiket Türü (İsteğe Bağlı)</label>
+                        return (
+                            <div key={tag.id} className={styles.tagCard}>
+                                <div className={styles.tagHeader}>
+                                    <div>
+                                        <h3>{tag.publicCode}</h3>
+                                        <small>
+                                            {tag.claimedAt
+                                                ? new Date(tag.claimedAt).toLocaleDateString('tr-TR')
+                                                : 'Tarih yok'
+                                            }
+                                        </small>
+                                    </div>
+                                </div>
+
+                                {linkedModule && (
+                                    <div className={styles.linkedInfo}>
+                                        <span className={styles.moduleType}>{linkedModule.type}</span>
+                                        <span className={styles.moduleName}>{linkedModule.name}</span>
+                                    </div>
+                                )}
+
+                                <div className={styles.actions}>
+                                    {linkedModule ? (
+                                        <button
+                                            className={`${styles.actionBtn} ${styles.warningBtn}`}
+                                            onClick={() => handleUnlink(tag)}
+                                            disabled={loading}
+                                        >
+                                            🔗 Eşleştirmeyi Kaldır
+                                        </button>
+                                    ) : (
+                                        <button
+                                            className={`${styles.actionBtn} ${styles.primaryBtn}`}
+                                            onClick={() => openLinkModal(tag)}
+                                            disabled={loading}
+                                        >
+                                            🔗 Eşleştir
+                                        </button>
+                                    )}
+
+                                    <button
+                                        className={`${styles.actionBtn} ${styles.secondaryBtn}`}
+                                        onClick={() => openTransferModal(tag)}
+                                        disabled={loading}
+                                    >
+                                        🎁 Transfer Et
+                                    </button>
+
+                                    <button
+                                        className={`${styles.actionBtn} ${styles.dangerBtn}`}
+                                        onClick={() => handleDelete(tag)}
+                                        disabled={loading}
+                                    >
+                                        🗑️ Kaldır
+                                    </button>
+                                </div>
+                            </div>
+                        )
+                    })
+                )}
+            </div>
+
+            {/* Link Modal */}
+            {showLinkModal && selectedTag && (
+                <div className="modal-overlay" onClick={() => setShowLinkModal(false)}>
+                    <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+                        <div className="modal-header">
+                            <h2>🔗 Etiket Eşleştir</h2>
+                            <button className="close-btn" onClick={() => setShowLinkModal(false)}>×</button>
+                        </div>
+
+                        <div style={{ padding: '1.5rem' }}>
+                            <p style={{ marginBottom: '1rem', color: 'var(--color-text-muted)' }}>
+                                <strong>{selectedTag.publicCode}</strong> etiketini hangi modüle bağlamak istersiniz?
+                            </p>
+
+                            <div className={styles.inputGroup}>
+                                <label>Modül Türü</label>
                                 <select
                                     className={styles.input}
-                                    value={claimModuleType}
-                                    onChange={e => setClaimModuleType(e.target.value)}
+                                    value={selectedModuleType}
+                                    onChange={e => {
+                                        setSelectedModuleType(e.target.value)
+                                        setSelectedModuleId('')
+                                    }}
                                 >
-                                    <option value="generic">🏷️ Genel / Belirsiz</option>
-                                    <option value="plant">🪴 Akıllı Saksı / Bitki</option>
-                                    <option value="mug">☕ Akıllı Kupa</option>
-                                    <option value="card">💳 Dijital Kartvizit</option>
-                                    <option value="page">📄 Özel Sayfa / Hediye</option>
+                                    <option value="">Seçin...</option>
+                                    {userModules.plants.length > 0 && <option value="plant">🪴 Bitki</option>}
+                                    {userModules.mugs.length > 0 && <option value="mug">☕ Kupa</option>}
+                                    {userModules.cards.length > 0 && <option value="card">💳 Kartvizit</option>}
+                                    {userModules.gifts.length > 0 && <option value="gift">🎁 Hediye</option>}
+                                    {userModules.pages.length > 0 && <option value="page">📄 Sayfa</option>}
                                 </select>
-                                <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '0.5rem' }}>
-                                    Bu etiketi ne amaçla kullanacağınızı seçin.
-                                </p>
                             </div>
 
-                            {claimError && (
-                                <div style={{ color: '#ef4444', marginBottom: '1rem', padding: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '8px' }}>
-                                    {claimError}
+                            {selectedModuleType && (
+                                <div className={styles.inputGroup} style={{ marginTop: '1rem' }}>
+                                    <label>Modül Seçin</label>
+                                    <select
+                                        className={styles.input}
+                                        value={selectedModuleId}
+                                        onChange={e => setSelectedModuleId(e.target.value)}
+                                    >
+                                        <option value="">Seçin...</option>
+                                        {getAvailableModules().map((module: any) => (
+                                            <option key={module.id} value={module.id}>
+                                                {module.name || module.title || 'İsimsiz'}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                             )}
+                        </div>
 
-                            <div className="modal-actions">
-                                <button type="button" className="btn btn-secondary" onClick={() => setShowClaimModal(false)}>
-                                    İptal
-                                </button>
-                                <button type="submit" className="btn btn-primary" disabled={claimLoading}>
-                                    {claimLoading ? 'Ekleniyor...' : 'Ekle'}
-                                </button>
-                            </div>
-                        </form>
+                        <div className="modal-actions">
+                            <button
+                                type="button"
+                                className="btn btn-secondary"
+                                onClick={() => setShowLinkModal(false)}
+                            >
+                                İptal
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-primary"
+                                onClick={handleLink}
+                                disabled={loading || !selectedModuleId}
+                            >
+                                {loading ? 'Eşleştiriliyor...' : 'Eşleştir'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
 
             {/* Transfer Modal */}
-            {selectedTagForTransfer && (
+            {selectedTag && (
                 <TransferModal
                     isOpen={showTransferModal}
                     onClose={() => {
                         setShowTransferModal(false)
-                        setSelectedTagForTransfer(null)
+                        setSelectedTag(null)
                     }}
-                    tagId={selectedTagForTransfer.id}
-                    itemName={`NFC Etiketi (${selectedTagForTransfer.publicCode})`}
+                    tagId={selectedTag.id}
+                    itemName={`NFC Etiketi (${selectedTag.publicCode})`}
                 />
             )}
         </div>

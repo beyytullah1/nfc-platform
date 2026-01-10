@@ -15,6 +15,43 @@ export default async function NfcTagsPage() {
         redirect('/login')
     }
 
+    // Fetch user's NFC tags with module information
+    const userTags = await prisma.nfcTag.findMany({
+        where: { ownerId: session.user.id },
+        include: {
+            card: { select: { id: true, title: true } },
+            plant: { select: { id: true, name: true } },
+            mug: { select: { id: true, name: true } },
+            gift: { select: { id: true, title: true } },
+            page: { select: { id: true, title: true } }
+        },
+        orderBy: { claimedAt: 'desc' }
+    })
+
+    // Fetch user's modules (for linking)
+    const userModules = {
+        plants: await prisma.plant.findMany({
+            where: { ownerId: session.user.id, tagId: null },
+            select: { id: true, name: true }
+        }),
+        mugs: await prisma.mug.findMany({
+            where: { ownerId: session.user.id, tagId: null },
+            select: { id: true, name: true }
+        }),
+        cards: await prisma.card.findMany({
+            where: { userId: session.user.id, tagId: null },
+            select: { id: true, title: true }
+        }),
+        gifts: await prisma.gift.findMany({
+            where: { senderId: session.user.id, tagId: null },
+            select: { id: true, title: true }
+        }),
+        pages: await prisma.page.findMany({
+            where: { ownerId: session.user.id, tagId: null },
+            select: { id: true, title: true }
+        })
+    }
+
     // Fetch pending transfer requests (sent and received)
     const sentRequests = await prisma.transferRequest.findMany({
         where: {
@@ -40,5 +77,10 @@ export default async function NfcTagsPage() {
         orderBy: { createdAt: 'desc' }
     })
 
-    return <NfcTagsClient sentRequests={sentRequests} receivedRequests={receivedRequests} />
+    return <NfcTagsClient
+        userTags={userTags}
+        userModules={userModules}
+        sentRequests={sentRequests}
+        receivedRequests={receivedRequests}
+    />
 }
