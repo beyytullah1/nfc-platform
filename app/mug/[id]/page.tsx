@@ -74,9 +74,9 @@ export default async function PublicMugPage({ params }: Props) {
 
     // İstatistikler - parallel queries
     const [coffeeCount, teaCount, waterCount] = await Promise.all([
-        prisma.mugLog.count({ where: { mugId: id, logType: "coffee" } }),
-        prisma.mugLog.count({ where: { mugId: id, logType: "tea" } }),
-        prisma.mugLog.count({ where: { mugId: id, logType: "water" } })
+        prisma.mugLog.count({ where: { mugId: mug.id, logType: "coffee" } }),
+        prisma.mugLog.count({ where: { mugId: mug.id, logType: "tea" } }),
+        prisma.mugLog.count({ where: { mugId: mug.id, logType: "water" } })
     ])
 
     // Follow Logic
