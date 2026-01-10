@@ -79,22 +79,38 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       // Allow all sign-ins (both new registrations and existing logins)
       return true
     },
-    async jwt({ token, user, trigger, session }) {
+    async jwt({ token, user, trigger, session, account }) {
       if (user) {
+        // For new sign-ins, user object is provided
         token.id = user.id
-        token.username = user.username
-        token.bio = user.bio
+        token.email = user.email
+        token.name = user.name
+        token.picture = user.image
 
-        // Raw SQL query to get role (bypass Prisma Client type issues)
-        // Use standard Prisma findUnique
+        // Fetch additional user data from database
         try {
           const dbUser = await prisma.user.findUnique({
-            where: { id: user.id },
-            select: { role: true }
+            where: {
+              id: user.id,
+            },
+            select: {
+              id: true,
+              username: true,
+              bio: true,
+              role: true
+            }
           })
-          token.role = dbUser?.role || 'user'
+
+          if (dbUser) {
+            token.id = dbUser.id
+            token.username = dbUser.username
+            token.bio = dbUser.bio
+            token.role = dbUser.role || 'user'
+          } else {
+            token.role = 'user'
+          }
         } catch (error) {
-          console.error('Failed to fetch user role:', error)
+          console.error('Failed to fetch user data in jwt callback:', error)
           token.role = 'user'
         }
       }
