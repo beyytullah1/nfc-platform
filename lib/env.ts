@@ -53,13 +53,16 @@ function getEnv(key: string, defaultValue: string): string {
 
 // Required environment variables
 // In development, allow a fallback secret (NOT for production!)
-export const AUTH_SECRET = requireEnv(
-  'AUTH_SECRET',
-  // Development fallback - MUST be set in production
-  process.env.NODE_ENV === 'development'
-    ? 'dev-fallback-secret-change-in-production-please-generate-with-openssl-rand-base64-32'
-    : undefined
-)
+export const AUTH_SECRET =
+  process.env.AUTH_SECRET ||
+  process.env.NEXTAUTH_SECRET ||
+  requireEnv(
+    'AUTH_SECRET',
+    // Development fallback - MUST be set in production
+    process.env.NODE_ENV === 'development'
+      ? 'dev-fallback-secret-change-in-production-please-generate-with-openssl-rand-base64-32'
+      : undefined
+  )
 
 // Optional environment variables
 export const DATABASE_URL = getEnv(

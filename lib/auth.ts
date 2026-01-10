@@ -19,6 +19,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Google({
       clientId: GOOGLE_CLIENT_ID,
       clientSecret: GOOGLE_CLIENT_SECRET,
+      allowDangerousEmailAccountLinking: true,
     }),
     Credentials({
       name: "credentials",
@@ -74,6 +75,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     })
   ],
   callbacks: {
+    async signIn({ user, account, profile }) {
+      // Allow all sign-ins (both new registrations and existing logins)
+      return true
+    },
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id
