@@ -182,31 +182,6 @@ export default async function PlantPage({ params }: Props) {
                 </div>
             </div>
 
-            {/* AI Assistant CTA */}
-            <a
-                href={`/p/${plant.id}/ai`}
-                className="card"
-                style={{
-                    display: 'block',
-                    marginBottom: '2rem',
-                    background: 'linear-gradient(135deg, rgba(52, 152, 219, 0.15), rgba(46, 204, 113, 0.15))',
-                    border: '1px solid var(--color-accent)',
-                    textDecoration: 'none',
-                }}
-            >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <span style={{ fontSize: '2.5rem' }}>🤖</span>
-                    <div>
-                        <div style={{ fontWeight: 600, color: 'var(--color-text)' }}>
-                            AI Bitki Asistanı
-                        </div>
-                        <div style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
-                            Sorular sor, fotoğraf analizi yap
-                        </div>
-                    </div>
-                    <span style={{ marginLeft: 'auto', color: 'var(--color-accent)' }}>→</span>
-                </div>
-            </a>
 
             {/* Timeline */}
             {plant.logs.length > 0 && (
