@@ -64,9 +64,24 @@ export default function NewPlantPage() {
                         </div>
 
                         <div className={styles.formGroup}>
+                            <label htmlFor="slug">Özel URL (İsteğe Bağlı)</label>
+                            <input
+                                type="text"
+                                id="slug"
+                                name="slug"
+                                placeholder="ornek: minnosun-hikayesi"
+                                pattern="[a-z0-9-]*"
+                            />
+                            <small style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem' }}>
+                                Boş bırakılırsa otomatik oluşturulur. Sadece küçük harf ve tire kullanın.
+                            </small>
+                        </div>
+
+                        <div className={styles.formGroup}>
                             <label htmlFor="species">Tür</label>
                             <select
                                 id="species"
+                                name="species" // Added name attribute for FormData
                                 value={species}
                                 onChange={(e) => setSpecies(e.target.value)}
                             >
