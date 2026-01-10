@@ -11,13 +11,6 @@ interface NfcTag {
     id: string
     publicCode: string
     status: string
-    moduleType?: string
-    linkedTo?: {
-        type: 'card' | 'plant' | 'mug' | 'page'
-        id: string
-        title: string
-        slug?: string
-    }
     createdAt: string
     claimedAt?: string
 }
@@ -157,23 +150,6 @@ export default function NfcTagsClient({ sentRequests, receivedRequests }: NfcTag
         setShowTransferModal(true)
     }
 
-    const filteredTags = tags.filter(tag => {
-        if (filter === 'linked') return tag.linkedTo
-        if (filter === 'unlinked') return !tag.linkedTo
-        return true
-    })
-
-    const getModuleIcon = (type?: string) => {
-        switch (type) {
-            case 'card': return '💳'
-            case 'plant': return '🪴'
-            case 'mug': return '☕'
-            case 'page': return '📄'
-            case 'gift': return '🎁'
-            default: return '🏷️'
-        }
-    }
-
     if (loading) {
         return (
             <div className={styles.container}>
@@ -191,28 +167,6 @@ export default function NfcTagsClient({ sentRequests, receivedRequests }: NfcTag
                 {/* Mobile Add Button if needed, or just rely on grid card */}
             </div>
 
-            {/* Filters */}
-            <div className={styles.filters}>
-                <button
-                    className={`btn ${filter === 'all' ? 'btn-primary' : 'btn-secondary'}`}
-                    onClick={() => setFilter('all')}
-                >
-                    Tümü ({tags.length})
-                </button>
-                <button
-                    className={`btn ${filter === 'linked' ? 'btn-primary' : 'btn-secondary'}`}
-                    onClick={() => setFilter('linked')}
-                >
-                    Eşleşmiş ({tags.filter(t => t.linkedTo).length})
-                </button>
-                <button
-                    className={`btn ${filter === 'unlinked' ? 'btn-primary' : 'btn-secondary'}`}
-                    onClick={() => setFilter('unlinked')}
-                >
-                    Eşleşmemiş ({tags.filter(t => !t.linkedTo).length})
-                </button>
-            </div>
-
             {/* Grid */}
             <div className={styles.grid}>
 
@@ -228,14 +182,14 @@ export default function NfcTagsClient({ sentRequests, receivedRequests }: NfcTag
                     </div>
                 </div>
 
-                {filteredTags.map(tag => (
+                {tags.map(tag => (
                     <div key={tag.id} className={styles.card}>
                         <div className={styles.cardHeader}>
                             <div className={styles.iconWrapper}>
-                                {getModuleIcon(tag.moduleType)}
+                                🏷️
                             </div>
-                            <span className={`${styles.badge} ${tag.linkedTo ? styles.badgeSuccess : styles.badgeWarning}`}>
-                                {tag.linkedTo ? 'Aktif' : 'Boşta'}
+                            <span className={`${styles.badge} ${styles.badgeSuccess}`}>
+                                {tag.status === 'claimed' ? 'Aktif' : 'Boşta'}
                             </span>
                         </div>
 
@@ -244,55 +198,12 @@ export default function NfcTagsClient({ sentRequests, receivedRequests }: NfcTag
                             {new Date(tag.claimedAt || tag.createdAt).toLocaleDateString('tr-TR')}
                         </div>
 
-                        {tag.linkedTo ? (
-                            <div className={styles.linkedInfo}>
-                                <div className={styles.linkedLabel}>BAĞLI OLDUĞU</div>
-                                <div className={styles.linkedTitle}>{tag.linkedTo.title}</div>
-                            </div>
-                        ) : (
-                            <div className={styles.linkedInfo} style={{ background: 'transparent', border: '1px dashed var(--color-border)' }}>
-                                <div className={styles.linkedLabel}>DURUM</div>
-                                <div className={styles.linkedTitle} style={{ color: 'var(--color-text-muted)' }}>Henüz eşleşmemiş</div>
-                            </div>
-                        )}
-
                         <div className={styles.actions}>
-                            {tag.linkedTo ? (
-                                <>
-                                    <button
-                                        className={`${styles.actionBtn} ${styles.primaryBtn}`}
-                                        onClick={() => {
-                                            const path = tag.linkedTo?.type === 'card'
-                                                ? `/${tag.linkedTo.slug || tag.linkedTo.id}`
-                                                : `/${tag.linkedTo?.type === 'page' ? 'page' : tag.linkedTo?.type === 'mug' ? 'mug' : 'plant'}/${tag.linkedTo?.id}`
-                                            window.open(path, '_blank')
-                                        }}
-                                    >
-                                        Görüntüle
-                                    </button>
-                                    <button
-                                        className={`${styles.actionBtn} ${styles.dangerBtn}`}
-                                        onClick={() => handleUnlink(tag.id)}
-                                        disabled={unlinkingId === tag.id}
-                                    >
-                                        Kaldır
-                                    </button>
-                                </>
-                            ) : (
-                                <button
-                                    className={`${styles.actionBtn} ${styles.primaryBtn} ${styles.fullWidth}`}
-                                    onClick={() => router.push(`/claim?code=${tag.publicCode}`)}
-                                >
-                                    🔗 Eşleştir
-                                </button>
-                            )}
-
                             <button
-                                className={`${styles.actionBtn} ${styles.fullWidth}`}
-                                style={{ marginTop: '0' }}
+                                className={`${styles.actionBtn} ${styles.primaryBtn} ${styles.fullWidth}`}
                                 onClick={() => openTransferModal(tag)}
                             >
-                                🎁 Hediye Et
+                                🎁 Transfer Et
                             </button>
                         </div>
                     </div>
@@ -370,10 +281,8 @@ export default function NfcTagsClient({ sentRequests, receivedRequests }: NfcTag
                     }}
                     tagId={selectedTagForTransfer.id}
                     itemName={`NFC Etiketi (${selectedTagForTransfer.publicCode})`}
-                    moduleType={selectedTagForTransfer.moduleType || 'tag'}
                 />
             )}
         </div>
     )
 }
-

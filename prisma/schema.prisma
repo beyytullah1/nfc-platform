@@ -285,6 +285,7 @@ model Plant {
   tagId         String?   @unique @map("tag_id")
   ownerId       String    @map("owner_id")
   name          String
+  slug          String?   @unique // Custom URL slug
   species       String? // Bitki türü
   birthDate     DateTime? @map("birth_date")
   coverImageUrl String?   @map("cover_image_url")
@@ -306,6 +307,7 @@ model Plant {
 
   @@index([ownerId])
   @@index([tagId])
+  @@index([slug])
   @@index([createdAt])
   @@map("plants")
 }
@@ -369,6 +371,7 @@ model Mug {
   tagId     String?  @unique @map("tag_id")
   ownerId   String   @map("owner_id")
   name      String   @default("Kupam")
+  slug      String?  @unique // Custom URL slug
   theme     String?
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -377,6 +380,7 @@ model Mug {
   owner User     @relation(fields: [ownerId], references: [id])
   logs  MugLog[]
 
+  @@index([slug])
   @@map("mugs")
 }
 
@@ -405,6 +409,7 @@ model Page {
   ownerId          String   @map("owner_id")
   moduleType       String   @map("module_type") // 'gift', 'canvas'
   title            String?
+  slug             String?  @unique // Custom URL slug
   isSurprise       Boolean  @default(false) @map("is_surprise")
   surpriseRevealed Boolean  @default(false) @map("surprise_revealed")
   isLocked         Boolean  @default(false) @map("is_locked") // Hediye için kilit
@@ -419,6 +424,7 @@ model Page {
   owner  User        @relation(fields: [ownerId], references: [id])
   blocks PageBlock[]
 
+  @@index([slug])
   @@map("pages")
 }
 
@@ -470,6 +476,7 @@ model Gift {
   senderName  String?  @map("sender_name")
   receiverId  String?  @map("receiver_id")
   tagId       String?  @unique @map("tag_id")
+  slug        String?  @unique // Custom URL slug
   
   title       String?  // Hediye Başlığı
   message     String?  // Hediye Notu

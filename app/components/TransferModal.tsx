@@ -8,7 +8,7 @@ interface TransferModalProps {
     onClose: () => void
     tagId: string
     itemName: string
-    moduleType: string
+    moduleType?: string
 }
 
 export function TransferModal({ isOpen, onClose, tagId, itemName, moduleType }: TransferModalProps) {
