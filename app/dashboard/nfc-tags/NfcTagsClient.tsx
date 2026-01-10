@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useToast } from '@/app/components/Toast'
 import { useRouter } from 'next/navigation'
 import { TransferModal } from '@/app/components/TransferModal'
@@ -67,11 +67,8 @@ export default function NfcTagsClient({ userTags: initialTags, userModules, sent
     const [loading, setLoading] = useState(false)
 
     // Modals
-    const [showLinkModal, setShowLinkModal] = useState(false)
     const [showTransferModal, setShowTransferModal] = useState(false)
     const [selectedTag, setSelectedTag] = useState<NfcTag | null>(null)
-    const [selectedModuleType, setSelectedModuleType] = useState<string>('')
-    const [selectedModuleId, setSelectedModuleId] = useState<string>('')
 
     const getLinkedModule = (tag: NfcTag) => {
         if (tag.card) return { type: '💳 Kartvizit', name: tag.card.title || 'İsimsiz', id: tag.card.id }
@@ -80,41 +77,6 @@ export default function NfcTagsClient({ userTags: initialTags, userModules, sent
         if (tag.gift) return { type: '🎁 Hediye', name: tag.gift.title || 'İsimsiz', id: tag.gift.id }
         if (tag.page) return { type: '📄 Sayfa', name: tag.page.title || 'İsimsiz', id: tag.page.id }
         return null
-    }
-
-    const handleLink = async () => {
-        if (!selectedTag || !selectedModuleType || !selectedModuleId) {
-            showToast('Lütfen modül seçin', 'error')
-            return
-        }
-
-        setLoading(true)
-        try {
-            const res = await fetch('/api/nfc/link', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    tagId: selectedTag.id,
-                    moduleType: selectedModuleType,
-                    moduleId: selectedModuleId
-                })
-            })
-
-            if (res.ok) {
-                showToast('Etiket başarıyla eşleştirildi', 'success')
-                setShowLinkModal(false)
-                setSelectedTag(null)
-                setSelectedModuleType('')
-                setSelectedModuleId('')
-                router.refresh()
-            } else {
-                showToast('Eşleştirme başarısız', 'error')
-            }
-        } catch (error) {
-            showToast('Bir hata oluştu', 'error')
-        } finally {
-            setLoading(false)
-        }
     }
 
     const handleUnlink = async (tag: NfcTag) => {
@@ -165,29 +127,9 @@ export default function NfcTagsClient({ userTags: initialTags, userModules, sent
         }
     }
 
-    const openLinkModal = (tag: NfcTag) => {
-        setSelectedTag(tag)
-        setSelectedModuleType('')
-        setSelectedModuleId('')
-        setShowLinkModal(true)
-    }
-
     const openTransferModal = (tag: NfcTag) => {
         setSelectedTag(tag)
         setShowTransferModal(true)
-    }
-
-    const getAvailableModules = () => {
-        if (!selectedModuleType) return []
-
-        switch (selectedModuleType) {
-            case 'plant': return userModules.plants
-            case 'mug': return userModules.mugs
-            case 'card': return userModules.cards
-            case 'gift': return userModules.gifts
-            case 'page': return userModules.pages
-            default: return []
-        }
     }
 
     return (
@@ -240,13 +182,13 @@ export default function NfcTagsClient({ userTags: initialTags, userModules, sent
                                             🔗 Eşleştirmeyi Kaldır
                                         </button>
                                     ) : (
-                                        <button
+                                        <a
+                                            href={`/claim?code=${tag.publicCode}`}
                                             className={`${styles.actionBtn} ${styles.primaryBtn}`}
-                                            onClick={() => openLinkModal(tag)}
-                                            disabled={loading}
+                                            style={{ textDecoration: 'none', display: 'block', textAlign: 'center' }}
                                         >
                                             🔗 Eşleştir
-                                        </button>
+                                        </a>
                                     )}
 
                                     <button
@@ -270,79 +212,6 @@ export default function NfcTagsClient({ userTags: initialTags, userModules, sent
                     })
                 )}
             </div>
-
-            {/* Link Modal */}
-            {showLinkModal && selectedTag && (
-                <div className="modal-overlay" onClick={() => setShowLinkModal(false)}>
-                    <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
-                        <div className="modal-header">
-                            <h2>🔗 Etiket Eşleştir</h2>
-                            <button className="close-btn" onClick={() => setShowLinkModal(false)}>×</button>
-                        </div>
-
-                        <div style={{ padding: '1.5rem' }}>
-                            <p style={{ marginBottom: '1rem', color: 'var(--color-text-muted)' }}>
-                                <strong>{selectedTag.publicCode}</strong> etiketini hangi modüle bağlamak istersiniz?
-                            </p>
-
-                            <div className={styles.inputGroup}>
-                                <label>Modül Türü</label>
-                                <select
-                                    className={styles.input}
-                                    value={selectedModuleType}
-                                    onChange={e => {
-                                        setSelectedModuleType(e.target.value)
-                                        setSelectedModuleId('')
-                                    }}
-                                >
-                                    <option value="">Seçin...</option>
-                                    {userModules.plants.length > 0 && <option value="plant">🪴 Bitki</option>}
-                                    {userModules.mugs.length > 0 && <option value="mug">☕ Kupa</option>}
-                                    {userModules.cards.length > 0 && <option value="card">💳 Kartvizit</option>}
-                                    {userModules.gifts.length > 0 && <option value="gift">🎁 Hediye</option>}
-                                    {userModules.pages.length > 0 && <option value="page">📄 Sayfa</option>}
-                                </select>
-                            </div>
-
-                            {selectedModuleType && (
-                                <div className={styles.inputGroup} style={{ marginTop: '1rem' }}>
-                                    <label>Modül Seçin</label>
-                                    <select
-                                        className={styles.input}
-                                        value={selectedModuleId}
-                                        onChange={e => setSelectedModuleId(e.target.value)}
-                                    >
-                                        <option value="">Seçin...</option>
-                                        {getAvailableModules().map((module: any) => (
-                                            <option key={module.id} value={module.id}>
-                                                {module.name || module.title || 'İsimsiz'}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="modal-actions">
-                            <button
-                                type="button"
-                                className="btn btn-secondary"
-                                onClick={() => setShowLinkModal(false)}
-                            >
-                                İptal
-                            </button>
-                            <button
-                                type="button"
-                                className="btn btn-primary"
-                                onClick={handleLink}
-                                disabled={loading || !selectedModuleId}
-                            >
-                                {loading ? 'Eşleştiriliyor...' : 'Eşleştir'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {/* Transfer Modal */}
             {selectedTag && (
