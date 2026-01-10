@@ -16,7 +16,7 @@ export default async function PlantDetailPage({ params }: { params: Promise<{ id
         include: {
             logs: { orderBy: { createdAt: 'desc' }, take: 20 },
             giftedBy: { select: { name: true } },
-            tag: { select: { id: true } },
+            tag: { select: { id: true, publicCode: true } },
             coOwners: {
                 select: {
                     id: true,
@@ -28,7 +28,15 @@ export default async function PlantDetailPage({ params }: { params: Promise<{ id
         }
     })
 
-    if (!plant || plant.ownerId !== session.user.id) {
+    if (!plant) {
+        redirect("/dashboard/plants")
+    }
+
+    // Check if user is owner or co-owner
+    const isOwner = plant.ownerId === session.user.id
+    const isCoOwner = plant.coOwners.some(co => co.id === session.user.id)
+
+    if (!isOwner && !isCoOwner) {
         redirect("/dashboard/plants")
     }
 

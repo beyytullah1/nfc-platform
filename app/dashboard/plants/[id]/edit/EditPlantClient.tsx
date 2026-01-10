@@ -24,11 +24,13 @@ interface EditPlantClientProps {
         name: string
         species: string | null
         birthDate: Date | null
+        slug: string | null
     }
 }
 
 export default function EditPlantClient({ plant }: EditPlantClientProps) {
     const [name, setName] = useState(plant.name)
+    const [slug, setSlug] = useState(plant.slug || "")
     const [species, setSpecies] = useState(plant.species || "")
     const [birthDate, setBirthDate] = useState(
         plant.birthDate ? new Date(plant.birthDate).toISOString().split('T')[0] : ""
@@ -41,6 +43,7 @@ export default function EditPlantClient({ plant }: EditPlantClientProps) {
 
         const formData = new FormData()
         formData.append("name", name)
+        formData.append("slug", slug)
         formData.append("species", species)
         formData.append("birthDate", birthDate)
 
@@ -71,6 +74,20 @@ export default function EditPlantClient({ plant }: EditPlantClientProps) {
                             placeholder="örn: Minnoş"
                             required
                         />
+                    </div>
+
+                    <div className={styles.formGroup}>
+                        <label htmlFor="slug">Özel URL (Kullanıcı Adı)</label>
+                        <input
+                            type="text"
+                            id="slug"
+                            value={slug}
+                            onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                            placeholder="örn: minnosun-hikayesi"
+                        />
+                        <small style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', display: 'block', marginTop: '0.5rem' }}>
+                            Boş bırakılırsa otomatik oluşturulur
+                        </small>
                     </div>
 
                     <div className={styles.formGroup}>
