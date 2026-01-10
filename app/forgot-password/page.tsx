@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
                 </div>
 
                 <form onSubmit={handleSubmit} className={styles.form}>
-                    <div className={styles.formGroup}>
+                    <div className={styles.inputGroup}>
                         <label htmlFor="email">Email</label>
                         <input
                             id="email"
@@ -55,7 +55,7 @@ export default function ForgotPasswordPage() {
                             placeholder="ornek@email.com"
                             required
                             disabled={loading}
-                            className={styles.input}
+
                         />
                     </div>
 
@@ -68,7 +68,7 @@ export default function ForgotPasswordPage() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className={styles.button}
+                        className={styles.submitBtn}
                     >
                         {loading ? 'Gönderiliyor...' : 'Sıfırlama Linki Gönder'}
                     </button>

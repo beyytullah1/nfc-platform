@@ -85,45 +85,61 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
-      // If signing in with OAuth (Google)
-      if (account?.provider === 'google') {
-        // Check if user with this email already exists
-        const existingUser = await prisma.user.findUnique({
-          where: { email: user.email! }
-        })
+      try {
+        console.log('[signIn callback] Provider:', account?.provider, 'Email:', user.email)
 
-        if (existingUser) {
-          // Check if this Google account is already linked
-          const existingAccount = await prisma.account.findFirst({
-            where: {
-              userId: existingUser.id,
-              provider: 'google',
-              providerAccountId: account.providerAccountId
-            }
+        // If signing in with OAuth (Google)
+        if (account?.provider === 'google') {
+          console.log('[signIn callback] Google OAuth detected')
+
+          // Check if user with this email already exists
+          const existingUser = await prisma.user.findUnique({
+            where: { email: user.email! }
           })
 
-          if (!existingAccount) {
-            // Link the Google account to existing user
-            await prisma.account.create({
-              data: {
+          console.log('[signIn callback] Existing user:', existingUser?.id)
+
+          if (existingUser) {
+            // Check if this Google account is already linked
+            const existingAccount = await prisma.account.findFirst({
+              where: {
                 userId: existingUser.id,
-                type: account.type,
-                provider: account.provider,
-                providerAccountId: account.providerAccountId,
-                refresh_token: account.refresh_token,
-                access_token: account.access_token,
-                expires_at: account.expires_at,
-                token_type: account.token_type,
-                scope: account.scope,
-                id_token: account.id_token,
-                session_state: account.session_state,
+                provider: 'google',
+                providerAccountId: account.providerAccountId
               }
             })
+
+            console.log('[signIn callback] Existing account:', existingAccount?.id)
+
+            if (!existingAccount) {
+              console.log('[signIn callback] Creating new account link...')
+              // Link the Google account to existing user
+              await prisma.account.create({
+                data: {
+                  userId: existingUser.id,
+                  type: account.type,
+                  provider: account.provider,
+                  providerAccountId: account.providerAccountId,
+                  refresh_token: account.refresh_token,
+                  access_token: account.access_token,
+                  expires_at: account.expires_at,
+                  token_type: account.token_type,
+                  scope: account.scope,
+                  id_token: account.id_token,
+                  session_state: account.session_state,
+                }
+              })
+              console.log('[signIn callback] Account linked successfully!')
+            }
           }
         }
-      }
 
-      return true
+        console.log('[signIn callback] Returning true')
+        return true
+      } catch (error) {
+        console.error('[signIn callback] ERROR:', error)
+        return true // Still allow sign-in even if linking fails
+      }
     },
     async jwt({ token, user, trigger, session, account }) {
       // On initial sign-in, user object is provided by the provider
