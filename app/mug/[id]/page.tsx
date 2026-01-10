@@ -12,8 +12,13 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { id } = await params
 
-    const mug = await prisma.mug.findUnique({
-        where: { id },
+    const mug = await prisma.mug.findFirst({
+        where: {
+            OR: [
+                { id: id },
+                { slug: id }
+            ]
+        },
         select: { name: true, owner: { select: { name: true } } }
     })
 
@@ -46,8 +51,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function PublicMugPage({ params }: Props) {
     const { id } = await params
 
-    const mug = await prisma.mug.findUnique({
-        where: { id },
+    const mug = await prisma.mug.findFirst({
+        where: {
+            OR: [
+                { id: id },
+                { slug: id }
+            ]
+        },
         include: {
             owner: { select: { name: true } },
             tag: { select: { id: true } },

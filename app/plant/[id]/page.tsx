@@ -5,8 +5,13 @@ import PublicPlantClient from "./PublicPlantClient"
 export default async function PublicPlantPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
 
-    const plant = await prisma.plant.findUnique({
-        where: { id },
+    const plant = await prisma.plant.findFirst({
+        where: {
+            OR: [
+                { id: id },
+                { slug: id }
+            ]
+        },
         include: {
             owner: { select: { name: true } },
             giftedBy: { select: { name: true } },
