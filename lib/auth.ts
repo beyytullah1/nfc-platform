@@ -9,7 +9,7 @@ import { AUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from "@/lib/env"
 export const { handlers, signIn, signOut, auth } = NextAuth({
   secret: AUTH_SECRET,
   // PrismaAdapter optional - using JWT strategy, so we can make it optional
-  adapter: process.env.DATABASE_URL ? PrismaAdapter(prisma) : undefined,
+  adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
@@ -150,13 +150,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           } catch (error) {
             console.error('Database error during session fetch:', error)
             // Use token data as fallback
-            session.user.username = token.username || undefined;
-            session.user.bio = token.bio || undefined
+            session.user.username = (token.username as string) || undefined;
+            session.user.bio = (token.bio as string) || undefined
               ; (session.user as any).role = token.role || 'user'
           }
         } else {
-          session.user.username = token.username;
-          session.user.bio = token.bio
+          session.user.username = token.username as string | undefined;
+          session.user.bio = token.bio as string | undefined
             ; (session.user as any).role = token.role || 'user'
         }
       }
