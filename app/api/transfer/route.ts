@@ -68,84 +68,41 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Transaction ile transfer yap
-        await prisma.$transaction(async (tx) => {
-            // 1. Tag sahipliğini değiştir
-            await tx.nfcTag.update({
-                where: { id: tagId },
-                data: {
-                    ownerId: toUser.id,
-                    status: 'claimed'
-                }
-            })
-
-            // 2. Modüle göre sahipliği güncelle
-            if (tag.card) {
-                await tx.card.update({
-                    where: { id: tag.card.id },
-                    data: { userId: toUser.id }
-                })
-            }
-            if (tag.plant) {
-                await tx.plant.update({
-                    where: { id: tag.plant.id },
-                    data: {
-                        ownerId: toUser.id,
-                        isGift: true,
-                        giftedById: session.user!.id,
-                        giftMessage: message || null
-                    }
-                })
-            }
-            if (tag.mug) {
-                await tx.mug.update({
-                    where: { id: tag.mug.id },
-                    data: { ownerId: toUser.id }
-                })
-            }
-            if (tag.page) {
-                await tx.page.update({
-                    where: { id: tag.page.id },
-                    data: { ownerId: toUser.id }
-                })
-            }
-            if (tag.gift) {
-                await (tx as any).gift.update({
-                    where: { id: tag.gift.id },
-                    data: { receiverId: toUser.id }
-                })
-            }
-
-            // 3. Transfer kaydı oluştur
-            await tx.ownershipTransfer.create({
+        // Transaction ile transfer request oluştur
+        const transferRequest = await prisma.$transaction(async (tx) => {
+            // 1. Transfer request oluştur (pending)
+            const request = await tx.transferRequest.create({
                 data: {
                     tagId: tagId,
                     fromUserId: session.user!.id,
                     toUserId: toUser.id,
-                    transferType: 'gift',
+                    status: 'pending',
                     message: message || null
                 }
             })
 
-            // 4. Alıcıya bildirim gönder
+            // 2. Alıcıya bildirim gönder
             await tx.notification.create({
                 data: {
                     userId: toUser.id,
                     senderId: session.user!.id,
                     type: 'gift_received',
                     title: 'Size Bir Hediye Var! 🎁',
-                    body: `${session.user!.name || 'Birisi'} size bir NFC etiketi hediye etti.`,
+                    body: `${session.user!.name || 'Birisi'} size bir NFC etiketi hediye etmek istiyor.`,
                     data: JSON.stringify({
                         tagId,
-                        giftId: tag.gift?.id
+                        transferRequestId: request.id
                     })
                 }
             })
+
+            return request
         })
 
         return NextResponse.json({
             success: true,
-            message: 'Transfer başarılı!'
+            message: 'Hediye isteği gönderildi!',
+            transferRequestId: transferRequest.id
         })
     } catch (error) {
         console.error('Transfer error:', error)
