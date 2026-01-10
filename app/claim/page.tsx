@@ -1,26 +1,34 @@
-'use client'
-
+import { auth } from '@/lib/auth'
+import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
 import ClaimPageContent from './ClaimPageContent'
 
-export default function ClaimPage() {
+export default async function ClaimPage() {
+    const session = await auth()
+
+    // If not logged in, redirect to login with callback
+    if (!session?.user) {
+        // Get the code from URL (will be available in ClaimPageContent via searchParams)
+        redirect('/login')
+    }
+
     return (
-        <Suspense fallback={
-            <div className="container" style={{
-                display: 'flex',
-                height: '100vh',
-                alignItems: 'center',
-                justifyContent: 'center'
+        <div style={{
+            minHeight: '100vh',
+            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+            padding: '2rem 1rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+        }}>
+            <div style={{
+                width: '100%',
+                maxWidth: '600px'
             }}>
-                <div className="card" style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
-                    <p style={{ color: 'var(--color-text-muted)' }}>
-                        Yükleniyor...
-                    </p>
-                </div>
+                <Suspense fallback={<div>Yükleniyor...</div>}>
+                    <ClaimPageContent />
+                </Suspense>
             </div>
-        }>
-            <ClaimPageContent />
-        </Suspense>
+        </div>
     )
 }
