@@ -5,6 +5,19 @@ import Link from "next/link"
 import { updatePlant } from "@/lib/plant-actions"
 import styles from "../../plants.module.css"
 
+const PLANT_SPECIES = [
+    "Sukulent",
+    "Kaktüs",
+    "Orkide",
+    "Bonsai",
+    "Fikus",
+    "Monstera",
+    "Pothos",
+    "Zamia",
+    "Aloe Vera",
+    "Diğer"
+]
+
 interface EditPlantClientProps {
     plant: {
         id: string
@@ -62,13 +75,16 @@ export default function EditPlantClient({ plant }: EditPlantClientProps) {
 
                     <div className={styles.formGroup}>
                         <label htmlFor="species">Tür</label>
-                        <input
-                            type="text"
+                        <select
                             id="species"
                             value={species}
                             onChange={(e) => setSpecies(e.target.value)}
-                            placeholder="örn: Sukulent, Monstera"
-                        />
+                        >
+                            <option value="">Tür seçin...</option>
+                            {PLANT_SPECIES.map((s) => (
+                                <option key={s} value={s}>{s}</option>
+                            ))}
+                        </select>
                     </div>
 
                     <div className={styles.formGroup}>
