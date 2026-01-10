@@ -105,12 +105,8 @@ export default function NotificationsClient({ notifications, unreadCount }: Noti
                 linkHref = `/dashboard/nfc-tags`
             }
         } else if (notification.type === 'gift_received') {
-            // Hediye bildirimi - data'daki giftId'ye git
-            if (data.giftId) {
-                linkHref = `/dashboard/gifts/${data.giftId}`
-            } else {
-                linkHref = `/dashboard/gifts`
-            }
+            // Hediye bildirimi - NFC etiketler sayfasına git
+            linkHref = `/dashboard/nfc-tags`
         } else if ((notification.type === 'transfer_received' || notification.type === 'transfer_request') && data.tagId) {
             linkHref = `/dashboard/nfc-tags`
         }
