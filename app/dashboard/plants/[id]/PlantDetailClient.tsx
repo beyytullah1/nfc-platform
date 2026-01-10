@@ -12,6 +12,7 @@ interface PlantDetailClientProps {
     plant: {
         id: string
         name: string
+        slug: string | null
         species: string | null
         birthDate: Date | null
         coverImageUrl: string | null
@@ -27,7 +28,7 @@ interface PlantDetailClientProps {
             createdAt: Date
         }[]
         giftedBy: { name: string | null } | null
-        tag: { id: string } | null
+        tag: { id: string; publicCode: string } | null
         coOwners: {
             id: string
             name: string | null
@@ -241,8 +242,8 @@ export default function PlantDetailClient({ plant, userName }: PlantDetailClient
                             <div>
                                 <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.8rem" }}>Public Link</span>
                                 <p style={{ color: "#10b981" }}>
-                                    <Link href={`/p/${plant.id}`} target="_blank">
-                                        /p/{plant.id}
+                                    <Link href={`/p/${plant.slug || plant.id}`} target="_blank">
+                                        /p/{plant.slug || plant.id}
                                     </Link>
                                 </p>
                             </div>

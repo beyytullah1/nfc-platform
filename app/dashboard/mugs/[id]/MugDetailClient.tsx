@@ -11,6 +11,7 @@ interface MugDetailClientProps {
     mug: {
         id: string
         name: string
+        slug: string | null
         createdAt: Date
         logs: {
             id: string
@@ -82,7 +83,7 @@ export default function MugDetailClient({ mug }: MugDetailClientProps) {
                     </p>
                 </div>
                 <Link
-                    href={`/mug/${mug.id}`}
+                    href={`/mug/${mug.slug || mug.id}`}
                     target="_blank"
                     style={{
                         padding: "0.75rem 1.25rem",
