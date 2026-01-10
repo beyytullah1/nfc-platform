@@ -28,17 +28,18 @@ model SystemSettings {
 // =============================================
 
 model User {
-  id           String   @id @default(cuid())
-  email        String?  @unique
+  id           String    @id @default(cuid())
+  email        String?   @unique
+  emailVerified DateTime? @map("email_verified")
   phone        String?
-  passwordHash String?  @map("password_hash")
+  passwordHash String?   @map("password_hash")
   name         String?
-  username     String?  @unique // Kullanıcı profil URL: /u/username
-  avatarUrl    String?  @map("avatar_url")
-  bio          String?  // Kullanıcı hakkında kısa açıklama
-  role         String   @default("user") // "user" veya "admin"
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  username     String?   @unique // Kullanıcı profil URL: /u/username
+  avatarUrl    String?   @map("avatar_url")
+  bio          String?   // Kullanıcı hakkında kısa açıklama
+  role         String    @default("user") // "user" veya "admin"
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
 
   // İlişkiler
   accounts            Account[]

@@ -25,6 +25,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           id: profile.sub,
           name: profile.name,
           email: profile.email,
+          emailVerified: new Date(), // Google accounts are pre-verified
           avatarUrl: profile.picture, // Map 'picture' to 'avatarUrl'
         }
       },
