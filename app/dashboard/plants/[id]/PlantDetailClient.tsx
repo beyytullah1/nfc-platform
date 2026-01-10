@@ -113,7 +113,7 @@ export default function PlantDetailClient({ plant, userName }: PlantDetailClient
                     )}
                 </div>
                 <Link
-                    href={`/plant/${plant.id}`}
+                    href={`/plant/${plant.slug || plant.id}`}
                     target="_blank"
                     style={{
                         padding: "0.75rem 1.25rem",
