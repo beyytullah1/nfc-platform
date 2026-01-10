@@ -6,7 +6,7 @@ import { addPlantLog, deletePlant } from "@/lib/plant-actions"
 import { TransferModal } from "@/app/components/TransferModal"
 import { PlantPrivacySettings } from "../components/PlantPrivacySettings"
 import { PlantCoOwners } from "../components/PlantCoOwners"
-import { NfcLinkingSection } from "../components/NfcLinkingSection"
+import { NfcLinkingSection } from "../../components/NfcLinkingSection"
 import { useToast } from "@/app/components/Toast"
 import styles from "../plants.module.css"
 
