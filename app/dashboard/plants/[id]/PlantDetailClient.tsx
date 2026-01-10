@@ -242,8 +242,8 @@ export default function PlantDetailClient({ plant, userName }: PlantDetailClient
                             <div>
                                 <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.8rem" }}>Public Link</span>
                                 <p style={{ color: "#10b981" }}>
-                                    <Link href={`/p/${plant.slug || plant.id}`} target="_blank">
-                                        /p/{plant.slug || plant.id}
+                                    <Link href={`/plant/${plant.slug || plant.id}`} target="_blank">
+                                        /plant/{plant.slug || plant.id}
                                     </Link>
                                 </p>
                             </div>
