@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import styles from "./dashboard.module.css"
 import { MobileMenuWrapper } from "./MobileMenu"
 import { Breadcrumb } from "../components/Breadcrumb"
@@ -27,7 +28,14 @@ export default async function DashboardLayout({
     const sidebarContent = (
         <>
             <div className={styles.logo}>
-                <span>Temasal</span>
+                <Image
+                    src="/temasal-logo.png"
+                    alt="Temasal"
+                    width={180}
+                    height={60}
+                    priority
+                    style={{ objectFit: 'contain' }}
+                />
             </div>
             <nav className={styles.nav}>
                 <Link href="/dashboard" className={styles.navItem}>

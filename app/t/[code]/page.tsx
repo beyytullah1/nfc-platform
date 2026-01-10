@@ -24,9 +24,9 @@ export default async function NfcRedirectPage({ params }: Props) {
     // Tag doesn't exist - redirect to claim page with code in URL
     if (!tag) {
         if (!session?.user) {
-            redirect(`/login?callbackUrl=/claim/${code}`)
+            redirect(`/login?callbackUrl=/claim?code=${code}`)
         }
-        redirect(`/claim/${code}`)
+        redirect(`/claim?code=${code}`)
     }
 
     // Tag exists - check if linked
@@ -44,13 +44,13 @@ export default async function NfcRedirectPage({ params }: Props) {
             case 'canvas':
                 redirect(`/gift/${code}`)
             default:
-                redirect(`/claim/${code}`)
+                redirect(`/claim?code=${code}`)
         }
     }
 
     // Tag exists but not linked - redirect to claim
     if (!session?.user) {
-        redirect(`/login?callbackUrl=/claim/${code}`)
+        redirect(`/login?callbackUrl=/claim?code=${code}`)
     }
-    redirect(`/claim/${code}`)
+    redirect(`/claim?code=${code}`)
 }

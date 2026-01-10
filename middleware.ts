@@ -11,6 +11,17 @@ const RESERVED_PATHS = [
 export async function middleware(req: NextRequest) {
     const { pathname } = req.nextUrl
 
+    // Redirect /u/[code] to /t/[code] for NFC codes
+    if (pathname.startsWith('/u/') && pathname.length > 3) {
+        const code = pathname.slice(3)
+        // Only redirect if it looks like an NFC code (uppercase alphanumeric)
+        if (/^[A-Z0-9]+$/.test(code)) {
+            const url = req.nextUrl.clone()
+            url.pathname = `/t/${code}`
+            return NextResponse.redirect(url)
+        }
+    }
+
     // Admin check moved to Layout to prevent Edge Runtime hangs
     // path rewriting logic below...
 
