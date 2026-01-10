@@ -72,7 +72,7 @@ function ResetPasswordForm() {
                 </div>
 
                 <form onSubmit={handleSubmit} className={styles.form}>
-                    <div className={styles.formGroup}>
+                    <div className={styles.inputGroup}>
                         <label htmlFor="password">Yeni Şifre</label>
                         <input
                             id="password"
@@ -82,11 +82,11 @@ function ResetPasswordForm() {
                             placeholder="En az 6 karakter"
                             required
                             disabled={loading || !token}
-                            className={styles.input}
+
                         />
                     </div>
 
-                    <div className={styles.formGroup}>
+                    <div className={styles.inputGroup}>
                         <label htmlFor="confirmPassword">Şifre Tekrar</label>
                         <input
                             id="confirmPassword"
@@ -96,7 +96,7 @@ function ResetPasswordForm() {
                             placeholder="Şifrenizi tekrar girin"
                             required
                             disabled={loading || !token}
-                            className={styles.input}
+
                         />
                     </div>
 
@@ -109,7 +109,7 @@ function ResetPasswordForm() {
                     <button
                         type="submit"
                         disabled={loading || !token}
-                        className={styles.button}
+                        className={styles.submitBtn}
                     >
                         {loading ? 'Güncelleniyor...' : 'Şifremi Güncelle'}
                     </button>
