@@ -68,7 +68,7 @@ export default async function DashboardLayout({
 
                 {/* Admin Panel - Only for admins */}
                 {(session.user as any)?.role === 'admin' && (
-                    <Link href="/admin" className={`${styles.navItem} ${styles.adminNavItem}`}>
+                    <Link href="/admin/dashboard" className={`${styles.navItem} ${styles.adminNavItem}`}>
                         <span className={styles.icon}>🔐</span>
                         Admin Paneli
                     </Link>
