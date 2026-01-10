@@ -1,108 +1,60 @@
-import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
-import prisma from '@/lib/db'
+import { auth } from "@/lib/auth"
+import { prisma } from "@/lib/db"
+import { NextResponse } from "next/server"
 
-export async function POST(request: Request) {
+export async function POST(req: Request) {
     try {
         const session = await auth()
-
-        if (!session?.user?.id) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        if (!session?.user) {
+            return NextResponse.json({ error: "Oturum açmalısınız" }, { status: 401 })
         }
 
-        const body = await request.json()
+        const body = await req.json()
         const { tagId } = body
 
         if (!tagId) {
-            return NextResponse.json(
-                { error: 'Tag ID gerekli' },
-                { status: 400 }
-            )
+            return NextResponse.json({ error: "Etiket ID gerekli" }, { status: 400 })
         }
 
-        // Tag'i bul
+        // 1. Check if user owns the tag
         const tag = await prisma.nfcTag.findUnique({
-            where: { id: tagId },
-            include: {
-                card: true,
-                plant: true,
-                mug: true,
-                page: true
+            where: { id: tagId }
+        })
+
+        if (!tag || tag.ownerId !== session.user.id) {
+            return NextResponse.json({ error: "NFC etiketi bulunamadı veya size ait değil" }, { status: 404 })
+        }
+
+        // 2. Perform Unlinking (Transaction)
+        await prisma.$transaction(async (tx) => {
+            // Update Tag
+            await tx.nfcTag.update({
+                where: { id: tagId },
+                data: {
+                    plantId: null,
+                    mugId: null
+                }
+            })
+
+            // Update associated module if it exists
+            if (tag.plantId) {
+                await tx.plant.update({
+                    where: { id: tag.plantId },
+                    data: { tagId: null }
+                })
+            }
+            if (tag.mugId) {
+                await tx.mug.update({
+                    where: { id: tag.mugId },
+                    data: { tagId: null }
+                })
             }
         })
 
-        if (!tag) {
-            return NextResponse.json(
-                { error: 'NFC tag bulunamadı' },
-                { status: 404 }
-            )
-        }
-
-        // Sahiplik kontrolü
-        if (tag.ownerId !== session.user.id) {
-            return NextResponse.json(
-                { error: 'Bu tag size ait değil' },
-                { status: 403 }
-            )
-        }
-
-        // Bağlantı çözme işlemi
-        const updates: any[] = []
-
-        // Tag'i güncelle
-        updates.push(
-            prisma.nfcTag.update({
-                where: { id: tagId },
-                data: {
-                    moduleType: null,
-                    status: 'claimed' // Sahipli ama bağlantısız
-                }
-            })
-        )
-
-        // İlgili modülün tagId'sini temizle
-        if (tag.card) {
-            updates.push(
-                prisma.card.update({
-                    where: { id: tag.card.id },
-                    data: { tagId: null }
-                })
-            )
-        } else if (tag.plant) {
-            updates.push(
-                prisma.plant.update({
-                    where: { id: tag.plant.id },
-                    data: { tagId: null }
-                })
-            )
-        } else if (tag.mug) {
-            updates.push(
-                prisma.mug.update({
-                    where: { id: tag.mug.id },
-                    data: { tagId: null }
-                })
-            )
-        } else if (tag.page) {
-            updates.push(
-                prisma.page.update({
-                    where: { id: tag.page.id },
-                    data: { tagId: null }
-                })
-            )
-        }
-
-        await prisma.$transaction(updates)
-
-        return NextResponse.json({
-            success: true,
-            message: 'NFC bağlantısı başarıyla kaldırıldı'
-        })
+        return NextResponse.json({ success: true })
 
     } catch (error) {
-        console.error('Unlink NFC error:', error)
-        return NextResponse.json(
-            { error: 'Bir hata oluştu' },
-            { status: 500 }
-        )
+        console.error("Unlink error:", error)
+        return NextResponse.json({ error: "Bir hata oluştu" }, { status: 500 })
     }
 }

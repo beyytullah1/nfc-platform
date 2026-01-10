@@ -40,10 +40,23 @@ export default async function PlantDetailPage({ params }: { params: Promise<{ id
         redirect("/dashboard/plants")
     }
 
+    // Unlinked tags for linking
+    const availableTags = await prisma.nfcTag.findMany({
+        where: {
+            ownerId: session.user.id,
+            plantId: null,
+            mugId: null
+        },
+        select: { id: true, publicCode: true }
+    })
+
     return (
         <PlantDetailClient
             plant={plant}
             userName={session.user.name || "Kullanıcı"}
+            isOwner={isOwner}
+            availableTags={availableTags}
         />
     )
 }
+```

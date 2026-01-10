@@ -6,6 +6,8 @@ import { addPlantLog, deletePlant } from "@/lib/plant-actions"
 import { TransferModal } from "@/app/components/TransferModal"
 import { PlantPrivacySettings } from "../components/PlantPrivacySettings"
 import { PlantCoOwners } from "../components/PlantCoOwners"
+import { NfcLinkingSection } from "../components/NfcLinkingSection"
+import { useToast } from "@/app/components/Toast"
 import styles from "../plants.module.css"
 
 interface PlantDetailClientProps {
@@ -37,16 +39,19 @@ interface PlantDetailClientProps {
         }[]
     }
     userName: string
+    isOwner: boolean
+    availableTags: { id: string; publicCode: string }[]
 }
 
-export default function PlantDetailClient({ plant, userName }: PlantDetailClientProps) {
-    const [showLogForm, setShowLogForm] = useState(false)
-    const [logType, setLogType] = useState("water")
-    const [content, setContent] = useState("")
-    const [amountMl, setAmountMl] = useState("")
+export default function PlantDetailClient({ plant, userName, isOwner, availableTags }: PlantDetailClientProps) {
     const [loading, setLoading] = useState(false)
-    const [deleting, setDeleting] = useState(false)
+    const [logType, setLogType] = useState("water")
+    const [showLogForm, setShowLogForm] = useState(false)
+    const [amountMl, setAmountMl] = useState("")
+    const [content, setContent] = useState("")
     const [showTransfer, setShowTransfer] = useState(false)
+
+    const { showToast } = useToast()
 
     const handleAddLog = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -255,6 +260,16 @@ export default function PlantDetailClient({ plant, userName }: PlantDetailClient
                         plantId={plant.id}
                         currentPrivacy={plant.privacyLevel || 'public'}
                     />
+
+                    {/* NFC Linking - Only for Owner */}
+                    {isOwner && (
+                        <NfcLinkingSection
+                            moduleId={plant.id}
+                            moduleType="plant"
+                            currentTag={plant.tag}
+                            availableTags={availableTags}
+                        />
+                    )}
 
                     {/* Co-owners */}
                     <PlantCoOwners

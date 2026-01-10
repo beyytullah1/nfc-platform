@@ -15,9 +15,9 @@ export default async function NfcRedirectPage({ params }: Props) {
         where: { publicCode: code },
         include: {
             card: { select: { id: true, slug: true } },
-            plant: { select: { id: true } },
-            mug: { select: { id: true } },
-            gift: { select: { id: true } }
+            plant: { select: { id: true, slug: true } },
+            mug: { select: { id: true, slug: true } },
+            gift: { select: { id: true, slug: true } }
         }
     })
 
@@ -35,12 +35,16 @@ export default async function NfcRedirectPage({ params }: Props) {
         switch (tag.moduleType) {
             case 'card':
                 const cardPath = tag.card?.slug || tag.card?.id
-                redirect(`/${cardPath}`)
+                redirect(`/c/${cardPath}`) // Assuming /c/ for cards
             case 'plant':
-                redirect(`/p/${tag.plant?.id}`)
+                const plantPath = tag.plant?.slug || tag.plant?.id
+                redirect(`/plant/${plantPath}`)
             case 'mug':
-                redirect(`/mug/${tag.mug?.id}`)
+                const mugPath = tag.mug?.slug || tag.mug?.id
+                redirect(`/mug/${mugPath}`)
             case 'gift':
+                const giftPath = tag.gift?.slug || tag.gift?.id
+                redirect(`/gift/${giftPath}`)
             case 'canvas':
                 redirect(`/gift/${code}`)
             default:
