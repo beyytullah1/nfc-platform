@@ -200,6 +200,62 @@ export default function ClaimPageContent() {
                             </button>
                         ))}
                     </div>
+
+                    {/* Sadece Kaydet Butonu */}
+                    <div style={{
+                        marginTop: '2rem',
+                        paddingTop: '1.5rem',
+                        borderTop: '1px solid rgba(255,255,255,0.1)'
+                    }}>
+                        <button
+                            onClick={async () => {
+                                setStep('loading')
+                                try {
+                                    const res = await fetch('/api/claim/claim-only', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ code }),
+                                    })
+                                    const data = await res.json()
+                                    if (data.error) {
+                                        setError(data.error)
+                                        setStep('module')
+                                        return
+                                    }
+                                    router.push('/dashboard/nfc-tags')
+                                } catch (err) {
+                                    setError('Bir hata oluştu')
+                                    setStep('module')
+                                }
+                            }}
+                            className="card"
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '16px',
+                                padding: '20px',
+                                border: '2px solid rgba(59, 130, 246, 0.3)',
+                                cursor: 'pointer',
+                                textAlign: 'left',
+                                width: '100%',
+                                background: 'rgba(59, 130, 246, 0.05)'
+                            }}
+                        >
+                            <span style={{ fontSize: '2.5rem' }}>💾</span>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontWeight: 600, fontSize: '1.1rem', color: '#fff' }}>
+                                    NFC Profilime Kaydet
+                                </div>
+                                <div style={{
+                                    color: 'rgba(255,255,255,0.6)',
+                                    fontSize: '0.85rem',
+                                    marginTop: '4px'
+                                }}>
+                                    Önce kaydet, sonra eşleştir
+                                </div>
+                            </div>
+                        </button>
+                    </div>
                 </div>
             )}
 
@@ -336,7 +392,6 @@ export default function ClaimPageContent() {
                     <label style={{
                         display: 'block',
                         marginBottom: '8px',
-                        color: 'var(--color-text-muted)',
                         fontSize: '0.9rem',
                         color: '#fff'
                     }}>
