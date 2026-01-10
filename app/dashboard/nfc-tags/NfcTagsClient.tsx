@@ -79,6 +79,10 @@ export default function NfcTagsClient({ userTags: initialTags, userModules, sent
         return null
     }
 
+    // Separate linked and unlinked tags
+    const linkedTags = tags.filter(tag => getLinkedModule(tag) !== null)
+    const unlinkedTags = tags.filter(tag => getLinkedModule(tag) === null)
+
     const handleUnlink = async (tag: NfcTag) => {
         if (!confirm('Bu etiketi modülden ayırmak istediğinizden emin misiniz?')) return
 
@@ -132,6 +136,65 @@ export default function NfcTagsClient({ userTags: initialTags, userModules, sent
         setShowTransferModal(true)
     }
 
+    const renderTag = (tag: NfcTag, linkedModule: any = null) => (
+        <div key={tag.id} className={styles.tagCard}>
+            <div className={styles.tagHeader}>
+                <div>
+                    <h3>{tag.publicCode}</h3>
+                    <small>
+                        {tag.claimedAt
+                            ? new Date(tag.claimedAt).toLocaleDateString('tr-TR')
+                            : 'Tarih yok'
+                        }
+                    </small>
+                </div>
+            </div>
+
+            {linkedModule && (
+                <div className={styles.linkedInfo}>
+                    <span className={styles.moduleType}>{linkedModule.type}</span>
+                    <span className={styles.moduleName}>{linkedModule.name}</span>
+                </div>
+            )}
+
+            <div className={styles.actions}>
+                {linkedModule ? (
+                    <button
+                        className={`${styles.actionBtn} ${styles.warningBtn}`}
+                        onClick={() => handleUnlink(tag)}
+                        disabled={loading}
+                    >
+                        🔗 Eşleştirmeyi Kaldır
+                    </button>
+                ) : (
+                    <a
+                        href={`/claim?code=${tag.publicCode}`}
+                        className={`${styles.actionBtn} ${styles.primaryBtn}`}
+                        style={{ textDecoration: 'none', display: 'block', textAlign: 'center' }}
+                    >
+                        🔗 Eşleştir
+                    </a>
+                )}
+
+                <button
+                    className={`${styles.actionBtn} ${styles.secondaryBtn}`}
+                    onClick={() => openTransferModal(tag)}
+                    disabled={loading}
+                >
+                    🎁 Transfer Et
+                </button>
+
+                <button
+                    className={`${styles.actionBtn} ${styles.dangerBtn}`}
+                    onClick={() => handleDelete(tag)}
+                    disabled={loading}
+                >
+                    🗑️ Kaldır
+                </button>
+            </div>
+        </div>
+    )
+
     return (
         <div className={styles.container}>
             <div className={styles.header}>
@@ -141,77 +204,37 @@ export default function NfcTagsClient({ userTags: initialTags, userModules, sent
                 </div>
             </div>
 
-            {/* Tags List */}
-            <div className={styles.tagsGrid}>
-                {tags.length === 0 ? (
-                    <div className={styles.emptyState}>
-                        <p>Henüz NFC etiketiniz yok</p>
-                    </div>
-                ) : (
-                    tags.map(tag => {
-                        const linkedModule = getLinkedModule(tag)
-
-                        return (
-                            <div key={tag.id} className={styles.tagCard}>
-                                <div className={styles.tagHeader}>
-                                    <div>
-                                        <h3>{tag.publicCode}</h3>
-                                        <small>
-                                            {tag.claimedAt
-                                                ? new Date(tag.claimedAt).toLocaleDateString('tr-TR')
-                                                : 'Tarih yok'
-                                            }
-                                        </small>
-                                    </div>
-                                </div>
-
-                                {linkedModule && (
-                                    <div className={styles.linkedInfo}>
-                                        <span className={styles.moduleType}>{linkedModule.type}</span>
-                                        <span className={styles.moduleName}>{linkedModule.name}</span>
-                                    </div>
-                                )}
-
-                                <div className={styles.actions}>
-                                    {linkedModule ? (
-                                        <button
-                                            className={`${styles.actionBtn} ${styles.warningBtn}`}
-                                            onClick={() => handleUnlink(tag)}
-                                            disabled={loading}
-                                        >
-                                            🔗 Eşleştirmeyi Kaldır
-                                        </button>
-                                    ) : (
-                                        <a
-                                            href={`/claim?code=${tag.publicCode}`}
-                                            className={`${styles.actionBtn} ${styles.primaryBtn}`}
-                                            style={{ textDecoration: 'none', display: 'block', textAlign: 'center' }}
-                                        >
-                                            🔗 Eşleştir
-                                        </a>
-                                    )}
-
-                                    <button
-                                        className={`${styles.actionBtn} ${styles.secondaryBtn}`}
-                                        onClick={() => openTransferModal(tag)}
-                                        disabled={loading}
-                                    >
-                                        🎁 Transfer Et
-                                    </button>
-
-                                    <button
-                                        className={`${styles.actionBtn} ${styles.dangerBtn}`}
-                                        onClick={() => handleDelete(tag)}
-                                        disabled={loading}
-                                    >
-                                        🗑️ Kaldır
-                                    </button>
-                                </div>
+            {tags.length === 0 ? (
+                <div className={styles.emptyState}>
+                    <p>Henüz NFC etiketiniz yok</p>
+                </div>
+            ) : (
+                <>
+                    {/* Linked Tags Section */}
+                    {linkedTags.length > 0 && (
+                        <div style={{ marginBottom: '2rem' }}>
+                            <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', color: '#fff' }}>
+                                🔗 Eşleşmiş Etiketler ({linkedTags.length})
+                            </h2>
+                            <div className={styles.tagsGrid}>
+                                {linkedTags.map(tag => renderTag(tag, getLinkedModule(tag)))}
                             </div>
-                        )
-                    })
-                )}
-            </div>
+                        </div>
+                    )}
+
+                    {/* Unlinked Tags Section */}
+                    {unlinkedTags.length > 0 && (
+                        <div>
+                            <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', color: '#fff' }}>
+                                📦 Eşleşmemiş Etiketler ({unlinkedTags.length})
+                            </h2>
+                            <div className={styles.tagsGrid}>
+                                {unlinkedTags.map(tag => renderTag(tag))}
+                            </div>
+                        </div>
+                    )}
+                </>
+            )}
 
             {/* Transfer Modal */}
             {selectedTag && (
