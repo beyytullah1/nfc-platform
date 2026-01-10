@@ -20,6 +20,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       clientId: GOOGLE_CLIENT_ID,
       clientSecret: GOOGLE_CLIENT_SECRET,
       allowDangerousEmailAccountLinking: true,
+      profile(profile) {
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.email,
+          avatarUrl: profile.picture, // Map 'picture' to 'avatarUrl'
+        }
+      },
     }),
     Credentials({
       name: "credentials",
@@ -80,39 +88,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return true
     },
     async jwt({ token, user, trigger, session, account }) {
+      // On initial sign-in, user object is provided by the provider
       if (user) {
-        // For new sign-ins, user object is provided
         token.id = user.id
         token.email = user.email
         token.name = user.name
         token.picture = user.image
-
-        // Fetch additional user data from database
-        try {
-          const dbUser = await prisma.user.findUnique({
-            where: {
-              id: user.id,
-            },
-            select: {
-              id: true,
-              username: true,
-              bio: true,
-              role: true
-            }
-          })
-
-          if (dbUser) {
-            token.id = dbUser.id
-            token.username = dbUser.username
-            token.bio = dbUser.bio
-            token.role = dbUser.role || 'user'
-          } else {
-            token.role = 'user'
-          }
-        } catch (error) {
-          console.error('Failed to fetch user data in jwt callback:', error)
-          token.role = 'user'
-        }
+        token.role = 'user' // Default role for new users
       }
 
       // Session update trigger (when updateProfile is called)
