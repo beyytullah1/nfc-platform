@@ -19,6 +19,11 @@ export default async function DashboardLayout({
         redirect("/login")
     }
 
+    // Check if user needs to complete profile (Google OAuth users without username)
+    if (!session.user.username) {
+        redirect("/complete-profile")
+    }
+
     const sidebarContent = (
         <>
             <div className={styles.logo}>
