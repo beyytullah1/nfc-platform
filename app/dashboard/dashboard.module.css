@@ -63,6 +63,18 @@
     font-size: 1.25rem;
 }
 
+.adminNavItem {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.15));
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #fca5a5 !important;
+}
+
+.adminNavItem:hover {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(220, 38, 38, 0.25));
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #fff !important;
+}
+
 .logoutForm {
     margin-top: auto;
 }
@@ -141,6 +153,27 @@
 
 .header p {
     color: rgba(255, 255, 255, 0.6);
+}
+
+.adminBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    text-decoration: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.adminBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
 }
 
 .userInfo {

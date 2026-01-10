@@ -251,7 +251,7 @@ export default function ClaimPageContent() {
                             >
                                 <span style={{ fontSize: '2.5rem' }}>🔗</span>
                                 <div>
-                                    <div style={{ fontWeight: 600, fontSize: '1.1rem' }}>
+                                    <div style={{ fontWeight: 600, fontSize: '1.1rem', color: '#fff' }}>
                                         Mevcut Kartvizitimi Eşleştir
                                     </div>
                                     <div style={{
@@ -281,7 +281,7 @@ export default function ClaimPageContent() {
                         >
                             <span style={{ fontSize: '2.5rem' }}>✨</span>
                             <div>
-                                <div style={{ fontWeight: 600, fontSize: '1.1rem' }}>
+                                <div style={{ fontWeight: 600, fontSize: '1.1rem', color: '#fff' }}>
                                     Yeni Kartvizit Oluştur
                                 </div>
                                 <div style={{
@@ -325,7 +325,7 @@ export default function ClaimPageContent() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                             <span style={{ fontSize: '2rem' }}>🔗</span>
                             <div>
-                                <div style={{ fontWeight: 600 }}>Kartvizit Eşleştir</div>
+                                <div style={{ fontWeight: 600, color: '#fff' }}>Kartvizit Eşleştir</div>
                                 <div style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
                                     Bu NFC etiketini mevcut kartvizitinize bağlayın
                                 </div>
@@ -337,7 +337,8 @@ export default function ClaimPageContent() {
                         display: 'block',
                         marginBottom: '8px',
                         color: 'var(--color-text-muted)',
-                        fontSize: '0.9rem'
+                        fontSize: '0.9rem',
+                        color: '#fff'
                     }}>
                         Kartvizit Seçin
                     </label>
