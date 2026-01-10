@@ -21,7 +21,15 @@ export default async function GiftDetailPage({ params }: { params: Promise<{ id:
         }
     })
 
-    if (!gift || gift.senderId !== session.user.id) {
+    if (!gift) {
+        redirect("/dashboard/gifts")
+    }
+
+    // Both sender and receiver can view
+    const isSender = gift.senderId === session.user.id
+    const isReceiver = gift.receiverId === session.user.id
+
+    if (!isSender && !isReceiver) {
         redirect("/dashboard/gifts")
     }
 
