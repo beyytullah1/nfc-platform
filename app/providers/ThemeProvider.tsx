@@ -46,7 +46,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
         setActualTheme(resolved)
         document.documentElement.setAttribute('data-theme', resolved)
-    }, [theme])
+    }, [theme, mounted])
 
     // System theme değişikliğini dinle
     useEffect(() => {

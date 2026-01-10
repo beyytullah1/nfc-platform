@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ContentCard } from '@/app/components/ContentCard'
 import styles from './profile.module.css'
 
@@ -89,7 +90,13 @@ export default function UserProfileClient({ user, isOwner, cards, plants, mugs, 
             <div className={styles.header}>
                 <div className={styles.avatar}>
                     {user.avatarUrl ? (
-                        <img src={user.avatarUrl} alt={user.name || 'User'} />
+                        <Image
+                            src={user.avatarUrl}
+                            alt={user.name || 'User'}
+                            width={120}
+                            height={120}
+                            priority
+                        />
                     ) : (
                         <div className={styles.avatarPlaceholder}>
                             {user.name?.charAt(0).toUpperCase() || '?'}

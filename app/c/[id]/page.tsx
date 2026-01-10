@@ -2,31 +2,37 @@ import { prisma } from "@/lib/db"
 import { notFound, redirect } from "next/navigation"
 import { Metadata } from "next"
 import PublicCardClient from "@/app/card/[id]/PublicCardClient"
+import { cache } from "react"
 
 type Props = {
     params: Promise<{ id: string }>
 }
 
-// Dynamic metadata for social sharing
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-    const { id } = await params
-
-    let card = null
+// Cached database query - prevents duplicate queries in generateMetadata and page component
+const getCard = cache(async (id: string) => {
     try {
-        // Önce slug ile ara, sonra id ile
-        card = await prisma.card.findFirst({
+        return await prisma.card.findFirst({
             where: {
                 OR: [
                     { slug: id },
                     { id: id }
                 ]
             },
-            include: { user: true }
+            include: {
+                user: true,
+                fields: { orderBy: { displayOrder: "asc" } }
+            }
         })
     } catch (error) {
-        console.error('Database error loading card metadata:', error)
-        // Continue with null - will return default metadata
+        console.error('Database error loading card:', error)
+        return null
     }
+})
+
+// Dynamic metadata for social sharing
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+    const { id } = await params
+    const card = await getCard(id)
 
     if (!card) {
         return {
@@ -60,26 +66,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function SlugCardPage({ params }: Props) {
     const { id } = await params
-
-    let card = null
-    try {
-        // Önce slug ile ara, sonra id ile
-        card = await prisma.card.findFirst({
-            where: {
-                OR: [
-                    { slug: id },
-                    { id: id }
-                ]
-            },
-            include: {
-                user: true,
-                fields: { orderBy: { displayOrder: "asc" } }
-            }
-        })
-    } catch (error) {
-        console.error('Database error loading card:', error)
-        notFound()
-    }
+    const card = await getCard(id)
 
     if (!card) {
         notFound()

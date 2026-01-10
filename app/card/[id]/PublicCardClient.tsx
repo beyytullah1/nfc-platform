@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Image from "next/image"
 import { AddToNetworkButton } from "@/app/components/AddToNetworkButton"
 import styles from "./public-card.module.css"
 
@@ -224,10 +225,13 @@ export default function PublicCardClient({ initialCard }: PublicCardClientProps)
                 <div className={styles.heroSection}>
                     {displayAvatar ? (
                         <>
-                            <img
+                            <Image
                                 src={displayAvatar}
-                                alt=""
+                                alt="Profile"
                                 className={styles.heroImage}
+                                fill
+                                priority
+                                style={{ objectFit: 'cover' }}
                             />
                             <div className={styles.heroGradient} />
                         </>
@@ -443,6 +447,6 @@ export default function PublicCardClient({ initialCard }: PublicCardClientProps)
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     )
 }

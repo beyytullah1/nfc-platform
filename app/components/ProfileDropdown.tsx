@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { logout } from '@/lib/auth-actions'
 import styles from './ProfileDropdown.module.css'
 
@@ -46,7 +47,14 @@ export function ProfileDropdown() {
             >
                 <div className={styles.avatarWrapper}>
                     {session.user.image ? (
-                        <img src={session.user.image} alt={session.user.name || 'User'} className={styles.avatar} />
+                        <Image
+                            src={session.user.image}
+                            alt={session.user.name || 'User'}
+                            className={styles.avatar}
+                            width={40}
+                            height={40}
+                            priority={false}
+                        />
                     ) : (
                         <div className={styles.avatarPlaceholder}>
                             {(session.user.name || session.user.email || 'U').charAt(0).toUpperCase()}
