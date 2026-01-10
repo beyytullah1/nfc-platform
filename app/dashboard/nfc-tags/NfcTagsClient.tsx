@@ -22,7 +22,36 @@ interface NfcTag {
     claimedAt?: string
 }
 
-export default function NfcTagsClient() {
+interface GiftTransfer {
+    id: string
+    tagId: string
+    fromUserId: string | null
+    toUserId: string
+    transferType: string
+    message: string | null
+    transferredAt: Date
+    fromUser?: {
+        name: string | null
+        username: string | null
+        email: string | null
+    }
+    toUser?: {
+        name: string | null
+        username: string | null
+        email: string | null
+    }
+    tag: {
+        publicCode: string
+        moduleType: string | null
+    }
+}
+
+interface NfcTagsClientProps {
+    sentGifts: GiftTransfer[]
+    receivedGifts: GiftTransfer[]
+}
+
+export default function NfcTagsClient({ sentGifts: initialSentGifts, receivedGifts: initialReceivedGifts }: NfcTagsClientProps) {
     const { showToast } = useToast()
     const router = useRouter()
     const [tags, setTags] = useState<NfcTag[]>([])
