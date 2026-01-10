@@ -153,18 +153,43 @@ export async function updatePlant(plantId: string, formData: FormData) {
     }
 
     const name = formData.get("name") as string
+    let slug = formData.get("slug") as string
     const species = formData.get("species") as string
+    const birthDate = formData.get("birthDate") as string
+
+    // Auto-generate slug if not provided
+    if (!slug) {
+        slug = name
+            .toLowerCase()
+            .replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's')
+            .replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ç/g, 'c')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '')
+    }
+
+    // Check if slug is unique (excluding current plant)
+    const existing = await prisma.plant.findFirst({
+        where: {
+            slug,
+            id: { not: plantId }
+        }
+    })
+    if (existing) {
+        slug = `${slug}-${Date.now()}`
+    }
 
     await prisma.plant.update({
         where: { id: plantId },
         data: {
             name,
-            species: species || null
+            slug,
+            species: species || null,
+            birthDate: birthDate ? new Date(birthDate) : null
         }
     })
 
     revalidatePath(`/dashboard/plants/${plantId}`)
-    return { success: true }
+    redirect(`/dashboard/plants/${plantId}`)
 }
 
 export async function updatePlantPrivacy(plantId: string, privacyLevel: string) {
