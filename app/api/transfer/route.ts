@@ -135,7 +135,10 @@ export async function POST(request: NextRequest) {
                     type: 'gift_received',
                     title: 'Size Bir Hediye Var! 🎁',
                     body: `${session.user!.name || 'Birisi'} size bir NFC etiketi hediye etti.`,
-                    data: JSON.stringify({ tagId })
+                    data: JSON.stringify({
+                        tagId,
+                        giftId: tag.gift?.id
+                    })
                 }
             })
         })
