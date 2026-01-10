@@ -409,10 +409,10 @@ export default function ClaimPageContent() {
                                     alignItems: 'center',
                                     gap: '12px',
                                     padding: '12px 16px',
-                                    border: selectedCardId === card.id ? '2px solid var(--color-primary)' : '1px solid transparent',
+                                    border: selectedCardId === card.id ? '2px solid var(--color-primary)' : '1px solid rgba(255,255,255,0.1)',
                                     cursor: 'pointer',
                                     textAlign: 'left',
-                                    background: selectedCardId === card.id ? 'rgba(59, 130, 246, 0.1)' : undefined,
+                                    background: selectedCardId === card.id ? 'rgba(59, 130, 246, 0.1)' : 'rgba(255,255,255,0.03)',
                                 }}
                             >
                                 <div style={{
