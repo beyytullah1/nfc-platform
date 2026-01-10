@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db"
 import Link from "next/link"
 import styles from "../admin.module.css"
+import { UnlinkButton } from "./UnlinkButton"
 
 export default async function AdminNfcTagsPage({
     searchParams
@@ -233,6 +234,11 @@ export default async function AdminNfcTagsPage({
                                         >
                                             👁️ Görüntüle
                                         </Link>
+                                        <UnlinkButton
+                                            tagId={tag.id}
+                                            hasModule={!!tag.moduleType}
+                                            hasOwner={!!tag.ownerId}
+                                        />
                                     </td>
                                 </tr>
                             ))}
