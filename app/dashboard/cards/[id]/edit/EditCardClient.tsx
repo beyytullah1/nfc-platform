@@ -197,11 +197,15 @@ export default function EditCardClient({ card, userName }: EditCardClientProps) 
         setLoading(true)
 
         const formData = new FormData()
+        formData.append("firstName", firstName)
+        formData.append("lastName", lastName)
         formData.append("title", title)
         formData.append("bio", bio)
         formData.append("slug", slug)
         formData.append("logoUrl", logoUrl)
         formData.append("avatarUrl", avatarUrl)
+        formData.append("level1Password", level1Password)
+        formData.append("level2Password", level2Password)
 
         // Prepare payload for backend
         const payloadData = {
