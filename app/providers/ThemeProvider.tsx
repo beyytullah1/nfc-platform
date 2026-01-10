@@ -13,55 +13,50 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-    const [theme, setThemeState] = useState<Theme>('dark')
-    const [actualTheme, setActualTheme] = useState<'light' | 'dark'>('dark')
+    const [theme, setThemeState] = useState<Theme>('system')
+    const [systemTheme, setSystemTheme] = useState<'light' | 'dark'>('dark')
     const [mounted, setMounted] = useState(false)
 
-    // Client-side mount check
+    // actualTheme: Türetilmiş değer. Ekstra render gerektirmez.
+    const actualTheme = theme === 'system' ? systemTheme : theme
+
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setMounted(true)
-        // İlk yüklemede localStorage'dan oku
+
+        const saved = localStorage.getItem('theme') as Theme | null
+        if (saved) {
+            setThemeState(saved)
+        }
+
         if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('theme') as Theme | null
-            if (saved) {
-                setThemeState(saved)
-            }
+            const media = window.matchMedia('(prefers-color-scheme: light)')
+            setSystemTheme(media.matches ? 'light' : 'dark')
         }
     }, [])
 
-    // Theme değiştiğinde localStorage'a kaydet ve HTML'e uygula
     useEffect(() => {
-        if (!mounted || typeof window === 'undefined') return
-
+        if (!mounted) return
         localStorage.setItem('theme', theme)
+    }, [theme, mounted])
 
-        let resolved: 'light' | 'dark' = 'dark'
-
-        if (theme === 'system') {
-            // System preference'ı oku
-            resolved = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
-        } else {
-            resolved = theme
-        }
-
-        setActualTheme(resolved)
-        document.documentElement.setAttribute('data-theme', resolved)
-    }, [theme])
-
-    // System theme değişikliğini dinle
+    // DOM güncellemesi bir side-effect'tir.
     useEffect(() => {
-        if (theme !== 'system') return
+        if (!mounted) return
+        document.documentElement.setAttribute('data-theme', actualTheme)
+    }, [actualTheme, mounted])
+
+    useEffect(() => {
+        if (!mounted) return
 
         const mediaQuery = window.matchMedia('(prefers-color-scheme: light)')
         const handleChange = (e: MediaQueryListEvent) => {
-            const resolved = e.matches ? 'light' : 'dark'
-            setActualTheme(resolved)
-            document.documentElement.setAttribute('data-theme', resolved)
+            setSystemTheme(e.matches ? 'light' : 'dark')
         }
 
         mediaQuery.addEventListener('change', handleChange)
         return () => mediaQuery.removeEventListener('change', handleChange)
-    }, [theme])
+    }, [mounted])
 
     const setTheme = (newTheme: Theme) => {
         setThemeState(newTheme)
