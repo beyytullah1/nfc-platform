@@ -84,7 +84,7 @@ export function TransferModal({ isOpen, onClose, tagId, itemName, moduleType }: 
                 ) : (
                     <>
                         <div className={styles.header}>
-                            <span className={styles.emoji}>{getModuleEmoji(moduleType)}</span>
+                            <span className={styles.emoji}>{getModuleEmoji(moduleType || 'tag')}</span>
                             <div>
                                 <h2>Sahipliği Devret</h2>
                                 <p className={styles.itemName}>{itemName}</p>
