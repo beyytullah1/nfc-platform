@@ -1,9 +1,49 @@
 import { prisma } from "@/lib/db"
 import { auth } from "@/lib/auth"
 import { notFound } from "next/navigation"
+import { Metadata } from "next"
 import PublicMugClient from "./PublicMugClient"
 
-export default async function PublicMugPage({ params }: { params: Promise<{ id: string }> }) {
+type Props = {
+    params: Promise<{ id: string }>
+}
+
+// Dynamic metadata for browser title
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+    const { id } = await params
+
+    const mug = await prisma.mug.findUnique({
+        where: { id },
+        select: { name: true, owner: { select: { name: true } } }
+    })
+
+    if (!mug) {
+        return {
+            title: "Kupa Bulunamadı",
+            description: "Bu akıllı kupa bulunamadı."
+        }
+    }
+
+    const title = `${mug.name} - Akıllı Kupa`
+    const description = `${mug.owner.name || 'Kullanıcı'}'nın akıllı kupası: ${mug.name}`
+
+    return {
+        title,
+        description,
+        openGraph: {
+            title,
+            description,
+            type: "website",
+        },
+        twitter: {
+            card: "summary",
+            title,
+            description,
+        },
+    }
+}
+
+export default async function PublicMugPage({ params }: Props) {
     const { id } = await params
 
     const mug = await prisma.mug.findUnique({
@@ -35,7 +75,7 @@ export default async function PublicMugPage({ params }: { params: Promise<{ id: 
 
     if (mug.tag) {
         const session = await auth()
-        
+
         // Parallel queries for follow status and count
         const [followCount, userFollow] = await Promise.all([
             prisma.follow.count({
@@ -50,7 +90,7 @@ export default async function PublicMugPage({ params }: { params: Promise<{ id: 
                 }
             }) : null
         ])
-        
+
         followerCount = followCount
         isFollowing = !!userFollow
     }
