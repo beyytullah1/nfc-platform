@@ -12,15 +12,33 @@ export async function createMug(formData: FormData) {
     }
 
     const name = formData.get("name") as string
+    let slug = formData.get("slug") as string
 
     if (!name) {
         return { error: "Kupa adı gerekli" }
+    }
+
+    // Auto-generate slug if not provided
+    if (!slug) {
+        slug = name
+            .toLowerCase()
+            .replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's')
+            .replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ç/g, 'c')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '')
+    }
+
+    // Check if slug is unique
+    const existing = await prisma.mug.findUnique({ where: { slug } })
+    if (existing) {
+        slug = `${slug}-${Date.now()}`
     }
 
     const mug = await prisma.mug.create({
         data: {
             ownerId: session.user!.id,
             name,
+            slug,
             theme: JSON.stringify({ style: "warm" })
         }
     })
