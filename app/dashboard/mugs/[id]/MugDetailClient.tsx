@@ -6,6 +6,7 @@ import { addMugLog, deleteMug } from "@/lib/mug-actions"
 import { TransferModal } from "@/app/components/TransferModal"
 import styles from "../mugs.module.css"
 import { useToast } from "@/app/components/Toast"
+import { NfcLinkingSection } from "../../components/NfcLinkingSection"
 
 interface MugDetailClientProps {
     mug: {
@@ -18,11 +19,13 @@ interface MugDetailClientProps {
             logType: string
             createdAt: Date
         }[]
-        tag?: { id: string } | null
+        tag?: { id: string; publicCode: string } | null
     }
+    isOwner: boolean
+    availableTags: { id: string; publicCode: string }[]
 }
 
-export default function MugDetailClient({ mug }: MugDetailClientProps) {
+export default function MugDetailClient({ mug, isOwner, availableTags }: MugDetailClientProps) {
     const [loading, setLoading] = useState(false)
     const [deleting, setDeleting] = useState(false)
     const [note, setNote] = useState("")
@@ -49,7 +52,12 @@ export default function MugDetailClient({ mug }: MugDetailClientProps) {
     const handleDelete = async () => {
         if (confirm("Bu kupayı silmek istediğinizden emin misiniz?")) {
             setDeleting(true)
-            await deleteMug(mug.id)
+            try {
+                await deleteMug(mug.id)
+            } catch (error) {
+                showToast("Kupa silinemedi", "error")
+                setDeleting(false)
+            }
         }
     }
 
@@ -58,12 +66,12 @@ export default function MugDetailClient({ mug }: MugDetailClientProps) {
     const waterCount = mug.logs.filter(l => l.logType === 'water').length
 
     return (
-        <>
+        <div style={{ maxWidth: "900px", margin: "0 auto", padding: "1rem" }}>
             <Link href="/dashboard/mugs" className={styles.backLink}>
                 ← Kupalara Dön
             </Link>
 
-            <div style={{ display: "flex", alignItems: "center", gap: "1.5rem", marginBottom: "2rem", maxWidth: "900px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "1.5rem", marginBottom: "2rem" }}>
                 <div style={{
                     width: "100px",
                     height: "100px",
@@ -82,38 +90,51 @@ export default function MugDetailClient({ mug }: MugDetailClientProps) {
                         Toplam {mug.logs.length} içecek kaydı
                     </p>
                 </div>
-                <Link
-                    href={`/mug/${mug.slug || mug.id}`}
-                    target="_blank"
-                    style={{
-                        padding: "0.75rem 1.25rem",
-                        background: "rgba(59, 130, 246, 0.15)",
-                        border: "1px solid rgba(59, 130, 246, 0.3)",
-                        borderRadius: "12px",
-                        color: "#60a5fa",
-                        textDecoration: "none",
-                        fontSize: "0.9rem"
-                    }}
-                >
-                    🔗 Public Sayfa
-                </Link>
-                <Link
-                    href={`/dashboard/mugs/${mug.id}/edit`}
-                    style={{
-                        padding: "0.75rem 1.25rem",
-                        background: "rgba(255, 255, 255, 0.1)",
-                        border: "1px solid rgba(255, 255, 255, 0.2)",
-                        borderRadius: "12px",
-                        color: "#fff",
-                        textDecoration: "none",
-                        fontSize: "0.9rem"
-                    }}
-                >
-                    ✏️ Düzenle
-                </Link>
+                <div style={{ display: "flex", gap: "0.75rem" }}>
+                    <Link
+                        href={`/mug/${mug.slug || mug.id}`}
+                        target="_blank"
+                        style={{
+                            padding: "0.75rem 1.25rem",
+                            background: "rgba(59, 130, 246, 0.15)",
+                            border: "1px solid rgba(59, 130, 246, 0.3)",
+                            borderRadius: "12px",
+                            color: "#60a5fa",
+                            textDecoration: "none",
+                            fontSize: "0.9rem"
+                        }}
+                    >
+                        🔗 Public Sayfa
+                    </Link>
+                    <Link
+                        href={`/dashboard/mugs/${mug.id}/edit`}
+                        style={{
+                            padding: "0.75rem",
+                            background: "rgba(255, 255, 255, 0.1)",
+                            borderRadius: "12px",
+                            color: "#fff",
+                            textDecoration: "none",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center"
+                        }}
+                    >
+                        ⚙️
+                    </Link>
+                </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem", maxWidth: "900px" }}>
+            {/* NFC Linking Section */}
+            {isOwner && (
+                <NfcLinkingSection
+                    moduleId={mug.id}
+                    moduleType="mug"
+                    currentTag={mug.tag || null}
+                    availableTags={availableTags}
+                />
+            )}
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", marginTop: "1.5rem" }}>
                 {/* İçecek Ekle */}
                 <div className={styles.formCard}>
                     <h2>☕ İçecek Ekle</h2>
@@ -130,11 +151,12 @@ export default function MugDetailClient({ mug }: MugDetailClientProps) {
                                 border: "1px solid rgba(255,255,255,0.1)",
                                 background: "rgba(255,255,255,0.05)",
                                 color: "#fff",
-                                fontSize: "0.9rem"
+                                fontSize: "0.9rem",
+                                boxSizing: "border-box"
                             }}
                         />
                     </div>
-                    <div className={styles.drinkButtons}>
+                    <div className={styles.drinkButtons} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.5rem" }}>
                         <button
                             onClick={() => handleAddDrink("coffee")}
                             className={styles.drinkBtn}
@@ -183,7 +205,7 @@ export default function MugDetailClient({ mug }: MugDetailClientProps) {
             </div>
 
             {/* Son Kayıtlar */}
-            <div className={styles.formCard} style={{ marginTop: "1.5rem", maxWidth: "900px" }}>
+            <div className={styles.formCard} style={{ marginTop: "1.5rem" }}>
                 <h2>📋 Son Kayıtlar</h2>
                 {mug.logs.length === 0 ? (
                     <p style={{ color: "rgba(255,255,255,0.5)", textAlign: "center", padding: "2rem" }}>
@@ -220,45 +242,49 @@ export default function MugDetailClient({ mug }: MugDetailClientProps) {
             </div>
 
             {/* Tehlikeli Bölge */}
-            <div className={styles.formCard} style={{ marginTop: "1.5rem", maxWidth: "900px", borderColor: "rgba(239, 68, 68, 0.3)" }}>
+            <div className={styles.formCard} style={{ marginTop: "1.5rem", borderColor: "rgba(239, 68, 68, 0.3)" }}>
                 <h2 style={{ color: "#fca5a5" }}>⚠️ Tehlikeli Bölge</h2>
-                <p style={{ color: "rgba(255,255,255,0.6)", marginBottom: "1rem", fontSize: "0.9rem" }}>
-                    Bu kupayı sildiğinizde tüm içecek kayıtları da silinecektir.
-                </p>
-                <button
-                    onClick={handleDelete}
-                    disabled={deleting}
-                    style={{
-                        padding: "0.875rem 1.5rem",
-                        background: "rgba(239, 68, 68, 0.15)",
-                        border: "1px solid rgba(239, 68, 68, 0.3)",
-                        borderRadius: "12px",
-                        color: "#fca5a5",
-                        cursor: "pointer",
-                        fontSize: "0.9rem"
-                    }}
-                >
-                    {deleting ? "Siliniyor..." : "🗑️ Kupayı Sil"}
-                </button>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                    <p style={{ color: "rgba(255,255,255,0.6)", marginBottom: "0.25rem", fontSize: "0.9rem" }}>
+                        Bu kupayı sildiğinizde tüm içecek kayıtları da silinecektir.
+                    </p>
+                    <div style={{ display: "flex", gap: "1rem" }}>
+                        <button
+                            onClick={handleDelete}
+                            disabled={deleting}
+                            style={{
+                                flex: 1,
+                                padding: "0.875rem 1.5rem",
+                                background: "rgba(239, 68, 68, 0.15)",
+                                border: "1px solid rgba(239, 68, 68, 0.3)",
+                                borderRadius: "12px",
+                                color: "#fca5a5",
+                                cursor: "pointer",
+                                fontSize: "0.9rem"
+                            }}
+                        >
+                            {deleting ? "Siliniyor..." : "🗑️ Kupayı Sil"}
+                        </button>
 
-                {mug.tag && (
-                    <button
-                        onClick={() => setShowTransfer(true)}
-                        style={{
-                            marginTop: "0.75rem",
-                            padding: "0.875rem 1.5rem",
-                            background: "rgba(168, 85, 247, 0.15)",
-                            border: "1px solid rgba(168, 85, 247, 0.3)",
-                            borderRadius: "12px",
-                            color: "#c4b5fd",
-                            cursor: "pointer",
-                            fontSize: "0.9rem",
-                            width: "100%"
-                        }}
-                    >
-                        🎁 Sahipliği Devret
-                    </button>
-                )}
+                        {mug.tag && (
+                            <button
+                                onClick={() => setShowTransfer(true)}
+                                style={{
+                                    flex: 1,
+                                    padding: "0.875rem 1.5rem",
+                                    background: "rgba(168, 85, 247, 0.15)",
+                                    border: "1px solid rgba(168, 85, 247, 0.3)",
+                                    borderRadius: "12px",
+                                    color: "#c4b5fd",
+                                    cursor: "pointer",
+                                    fontSize: "0.9rem"
+                                }}
+                            >
+                                🎁 Sahipliği Devret
+                            </button>
+                        )}
+                    </div>
+                </div>
             </div>
 
             {/* Transfer Modal */}
@@ -271,6 +297,6 @@ export default function MugDetailClient({ mug }: MugDetailClientProps) {
                     moduleType="mug"
                 />
             )}
-        </>
+        </div>
     )
 }

@@ -118,10 +118,24 @@ export async function updateMug(mugId: string, formData: FormData) {
     }
 
     const name = formData.get("name") as string
+    const slug = formData.get("slug") as string
+
+    // Check slug uniqueness if changed
+    if (slug && slug !== mug.slug) {
+        const existing = await prisma.mug.findFirst({
+            where: { slug, id: { not: mugId } }
+        })
+        if (existing) {
+            return { error: "Bu kullanıcı adı zaten kullanılıyor" }
+        }
+    }
 
     await prisma.mug.update({
         where: { id: mugId },
-        data: { name }
+        data: {
+            name,
+            ...(slug && { slug })
+        }
     })
 
     revalidatePath(`/dashboard/mugs/${mugId}`)

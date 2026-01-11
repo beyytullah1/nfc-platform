@@ -14,21 +14,30 @@ export function NfcLinkingSection({ moduleId, moduleType, currentTag, availableT
     const [loading, setLoading] = useState(false)
     const [selectedTagId, setSelectedTagId] = useState("")
     const [error, setError] = useState("")
+    const [showManualInput, setShowManualInput] = useState(false)
+    const [manualCode, setManualCode] = useState("")
 
     const handleLink = async () => {
-        if (!selectedTagId) return
+        if (!selectedTagId && !manualCode) return
         setLoading(true)
         setError("")
 
         try {
+            const body: any = {
+                moduleId,
+                moduleType
+            }
+
+            if (showManualInput) {
+                body.publicCode = manualCode
+            } else {
+                body.tagId = selectedTagId
+            }
+
             const response = await fetch("/api/nfc/link", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    tagId: selectedTagId,
-                    moduleId,
-                    moduleType
-                })
+                body: JSON.stringify(body)
             })
 
             if (!response.ok) {
@@ -73,7 +82,41 @@ export function NfcLinkingSection({ moduleId, moduleType, currentTag, availableT
 
     return (
         <div className={styles.formCard} style={{ marginTop: "1.5rem", borderColor: "rgba(59, 130, 246, 0.3)" }}>
-            <h2 style={{ color: "#60a5fa" }}>📡 NFC Bağlantısı</h2>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+                <h2 style={{ color: "#60a5fa", margin: 0 }}>📡 NFC Bağlantısı</h2>
+                {!currentTag && (
+                    <div style={{ display: "flex", gap: "0.5rem", background: "rgba(255,255,255,0.05)", padding: "4px", borderRadius: "8px" }}>
+                        <button
+                            onClick={() => setShowManualInput(false)}
+                            style={{
+                                padding: "0.4rem 0.8rem",
+                                borderRadius: "6px",
+                                border: "none",
+                                background: !showManualInput ? "rgba(96, 165, 250, 0.2)" : "transparent",
+                                color: !showManualInput ? "#60a5fa" : "rgba(255,255,255,0.5)",
+                                fontSize: "0.8rem",
+                                cursor: "pointer"
+                            }}
+                        >
+                            Listeden
+                        </button>
+                        <button
+                            onClick={() => setShowManualInput(true)}
+                            style={{
+                                padding: "0.4rem 0.8rem",
+                                borderRadius: "6px",
+                                border: "none",
+                                background: showManualInput ? "rgba(96, 165, 250, 0.2)" : "transparent",
+                                color: showManualInput ? "#60a5fa" : "rgba(255,255,255,0.5)",
+                                fontSize: "0.8rem",
+                                cursor: "pointer"
+                            }}
+                        >
+                            Manuel
+                        </button>
+                    </div>
+                )}
+            </div>
 
             {error && (
                 <div style={{
@@ -143,11 +186,13 @@ export function NfcLinkingSection({ moduleId, moduleType, currentTag, availableT
                         Bu bitkiyi bir NFC etiketiyle eşleştirerek fiziksel dünyayla bağlantı kurun.
                     </p>
 
-                    {availableTags.length > 0 ? (
-                        <div style={{ display: "flex", gap: "0.5rem" }}>
-                            <select
-                                value={selectedTagId}
-                                onChange={(e) => setSelectedTagId(e.target.value)}
+                    <div style={{ display: "flex", gap: "0.5rem" }}>
+                        {showManualInput ? (
+                            <input
+                                type="text"
+                                placeholder="NFC Kodu (örn: nfckart-123)"
+                                value={manualCode}
+                                onChange={(e) => setManualCode(e.target.value)}
                                 style={{
                                     flex: 1,
                                     padding: "0.75rem",
@@ -157,42 +202,60 @@ export function NfcLinkingSection({ moduleId, moduleType, currentTag, availableT
                                     color: "#fff",
                                     outline: "none"
                                 }}
-                            >
-                                <option value="">Etiket Seçin...</option>
-                                {availableTags.map(tag => (
-                                    <option key={tag.id} value={tag.id}>
-                                        {tag.publicCode}
-                                    </option>
-                                ))}
-                            </select>
-                            <button
-                                onClick={handleLink}
-                                disabled={!selectedTagId || loading}
-                                style={{
-                                    padding: "0.75rem 1.5rem",
-                                    background: !selectedTagId ? "rgba(255,255,255,0.1)" : "rgba(59, 130, 246, 0.2)",
-                                    border: `1px solid ${!selectedTagId ? "rgba(255,255,255,0.1)" : "rgba(59, 130, 246, 0.4)"}`,
+                            />
+                        ) : (
+                            availableTags.length > 0 ? (
+                                <select
+                                    value={selectedTagId}
+                                    onChange={(e) => setSelectedTagId(e.target.value)}
+                                    style={{
+                                        flex: 1,
+                                        padding: "0.75rem",
+                                        borderRadius: "12px",
+                                        background: "#000",
+                                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                                        color: "#fff",
+                                        outline: "none"
+                                    }}
+                                >
+                                    <option value="" style={{ background: "#000", color: "#fff" }}>Etiket Seçin...</option>
+                                    {availableTags.map(tag => (
+                                        <option key={tag.id} value={tag.id} style={{ background: "#000", color: "#fff" }}>
+                                            {tag.publicCode}
+                                        </option>
+                                    ))}
+                                </select>
+                            ) : (
+                                <div style={{
+                                    flex: 1,
+                                    padding: "0.75rem",
+                                    background: "rgba(255, 255, 255, 0.05)",
                                     borderRadius: "12px",
-                                    color: !selectedTagId ? "rgba(255,255,255,0.3)" : "#60a5fa",
-                                    cursor: !selectedTagId || loading ? "not-allowed" : "pointer",
-                                    whiteSpace: "nowrap"
-                                }}
-                            >
-                                {loading ? "..." : "🔗 Eşleştir"}
-                            </button>
-                        </div>
-                    ) : (
-                        <div style={{
-                            padding: "1rem",
-                            background: "rgba(255, 255, 255, 0.05)",
-                            borderRadius: "12px",
-                            textAlign: "center",
-                            color: "rgba(255,255,255,0.5)",
-                            fontSize: "0.9rem"
-                        }}>
-                            Eşleştirilebilir boş etiketiniz yok. Yeni etiket eklemek için NFC Etiketleri sayfasına gidin.
-                        </div>
-                    )}
+                                    textAlign: "center",
+                                    color: "rgba(255,255,255,0.5)",
+                                    fontSize: "0.9rem"
+                                }}>
+                                    Listenizde boş etiket yok.
+                                </div>
+                            )
+                        )}
+
+                        <button
+                            onClick={handleLink}
+                            disabled={(!selectedTagId && !manualCode) || loading}
+                            style={{
+                                padding: "0.75rem 1.5rem",
+                                background: (!selectedTagId && !manualCode) ? "rgba(255,255,255,0.1)" : "rgba(59, 130, 246, 0.2)",
+                                border: `1px solid ${(!selectedTagId && !manualCode) ? "rgba(255,255,255,0.1)" : "rgba(59, 130, 246, 0.4)"}`,
+                                borderRadius: "12px",
+                                color: (!selectedTagId && !manualCode) ? "rgba(255,255,255,0.3)" : "#60a5fa",
+                                cursor: (!selectedTagId && !manualCode) || loading ? "not-allowed" : "pointer",
+                                whiteSpace: "nowrap"
+                            }}
+                        >
+                            {loading ? "..." : "🔗 Eşleştir"}
+                        </button>
+                    </div>
                 </div>
             )}
         </div>

@@ -16,13 +16,44 @@ export default function ClaimPageContent() {
     const router = useRouter()
     const code = searchParams.get('code')
 
-    const [step, setStep] = useState<'module' | 'card-choice' | 'card-link' | 'name' | 'loading'>('module')
+    const [step, setStep] = useState<'checking' | 'invalid-code' | 'module' | 'card-choice' | 'card-link' | 'name' | 'loading'>('checking')
     const [selectedModule, setSelectedModule] = useState<string | null>(null)
     const [name, setName] = useState('')
     const [error, setError] = useState('')
     const [userCards, setUserCards] = useState<Card[]>([])
     const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
     const [loadingCards, setLoadingCards] = useState(false)
+    const [tagExists, setTagExists] = useState<boolean | null>(null)
+    const [newCode, setNewCode] = useState('')
+
+    // NFC kodunu veritabanında kontrol et
+    useEffect(() => {
+        if (!code) {
+            setStep('invalid-code')
+            return
+        }
+
+        const checkCode = async () => {
+            try {
+                const res = await fetch(`/api/nfc/check?code=${encodeURIComponent(code)}`)
+                const data = await res.json()
+
+                if (data.exists) {
+                    setTagExists(true)
+                    setStep('module')
+                } else {
+                    setTagExists(false)
+                    setStep('invalid-code')
+                }
+            } catch (err) {
+                console.error('Code check error:', err)
+                setTagExists(false)
+                setStep('invalid-code')
+            }
+        }
+
+        checkCode()
+    }, [code])
 
     // Kullanıcının kartvizitlerini yükle
     const loadUserCards = async () => {
@@ -39,7 +70,8 @@ export default function ClaimPageContent() {
         setLoadingCards(false)
     }
 
-    if (!code) {
+    // Loading state
+    if (step === 'checking') {
         return (
             <div className="container" style={{
                 display: 'flex',
@@ -48,10 +80,135 @@ export default function ClaimPageContent() {
                 justifyContent: 'center'
             }}>
                 <div className="card" style={{ textAlign: 'center' }}>
-                    <h1>Geçersiz Bağlantı</h1>
+                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
+                    <h1 style={{ color: '#fff' }}>Etiket Kontrol Ediliyor...</h1>
                     <p style={{ color: 'var(--color-text-muted)' }}>
-                        Lütfen NFC etiketini tekrar okutun.
+                        Kod: <strong>{code}</strong>
                     </p>
+                </div>
+            </div>
+        )
+    }
+
+    // Invalid code - show options
+    if (step === 'invalid-code') {
+        return (
+            <div className="container" style={{
+                display: 'flex',
+                height: '100vh',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '1rem'
+            }}>
+                <div className="card" style={{ textAlign: 'center', maxWidth: '450px' }}>
+                    <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🏷️</div>
+                    <h1 style={{ color: '#fff', marginBottom: '0.5rem' }}>Etiket Bulunamadı</h1>
+                    <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem' }}>
+                        {code ? (
+                            <>
+                                <strong style={{ color: '#f59e0b' }}>{code}</strong> kodu sistemde kayıtlı değil.
+                            </>
+                        ) : (
+                            'NFC etiket kodu girilmedi.'
+                        )}
+                    </p>
+
+                    {/* Manuel kod girişi */}
+                    <div style={{ marginBottom: '1.5rem' }}>
+                        <input
+                            type="text"
+                            placeholder="NFC etiket kodunu girin..."
+                            value={newCode}
+                            onChange={(e) => setNewCode(e.target.value.toUpperCase())}
+                            style={{
+                                width: '100%',
+                                padding: '0.75rem 1rem',
+                                borderRadius: '8px',
+                                border: '1px solid rgba(255,255,255,0.2)',
+                                background: 'rgba(255,255,255,0.05)',
+                                color: '#fff',
+                                fontSize: '1rem',
+                                textAlign: 'center',
+                                textTransform: 'uppercase'
+                            }}
+                        />
+                        <button
+                            onClick={() => {
+                                if (newCode.trim()) {
+                                    router.push(`/claim?code=${newCode.trim()}`)
+                                }
+                            }}
+                            disabled={!newCode.trim()}
+                            style={{
+                                width: '100%',
+                                marginTop: '0.5rem',
+                                padding: '0.75rem',
+                                borderRadius: '8px',
+                                border: 'none',
+                                background: newCode.trim() ? '#3b82f6' : 'rgba(255,255,255,0.1)',
+                                color: '#fff',
+                                fontSize: '1rem',
+                                cursor: newCode.trim() ? 'pointer' : 'not-allowed'
+                            }}
+                        >
+                            🔍 Kodu Kontrol Et
+                        </button>
+                    </div>
+
+                    <div style={{
+                        width: '100%',
+                        height: '1px',
+                        background: 'rgba(255,255,255,0.1)',
+                        margin: '1.5rem 0',
+                        position: 'relative'
+                    }}>
+                        <span style={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            background: 'var(--color-bg-secondary)',
+                            padding: '0 1rem',
+                            color: 'rgba(255,255,255,0.5)',
+                            fontSize: '0.85rem'
+                        }}>
+                            veya
+                        </span>
+                    </div>
+
+                    {/* NFC'siz profil oluştur */}
+                    <button
+                        onClick={() => router.push('/dashboard/cards/create')}
+                        style={{
+                            width: '100%',
+                            padding: '1rem',
+                            borderRadius: '12px',
+                            border: '1px solid rgba(16, 185, 129, 0.3)',
+                            background: 'rgba(16, 185, 129, 0.1)',
+                            color: '#10b981',
+                            fontSize: '1rem',
+                            cursor: 'pointer',
+                            marginBottom: '0.75rem'
+                        }}
+                    >
+                        💳 NFC'siz Kartvizit Oluştur
+                    </button>
+
+                    <button
+                        onClick={() => router.push('/dashboard')}
+                        style={{
+                            width: '100%',
+                            padding: '0.75rem',
+                            borderRadius: '8px',
+                            border: 'none',
+                            background: 'transparent',
+                            color: 'rgba(255,255,255,0.6)',
+                            fontSize: '0.9rem',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        ← Dashboard'a Dön
+                    </button>
                 </div>
             </div>
         )

@@ -40,10 +40,9 @@ export default async function UserProfilePage({ params }: Props) {
     let cards: any[] = []
     let plants: any[] = []
     let mugs: any[] = []
-    let gifts: any[] = []
 
     try {
-        [cards, plants, mugs, gifts] = await Promise.all([
+        [cards, plants, mugs] = await Promise.all([
             prisma.card.findMany({
                 where: { userId: user.id },
                 orderBy: { createdAt: 'desc' }
@@ -61,10 +60,6 @@ export default async function UserProfilePage({ params }: Props) {
             prisma.mug.findMany({
                 where: { ownerId: user.id },
                 include: { tag: true },
-                orderBy: { createdAt: 'desc' }
-            }),
-            prisma.gift.findMany({
-                where: { senderId: user.id },
                 orderBy: { createdAt: 'desc' }
             })
         ])
@@ -86,7 +81,6 @@ export default async function UserProfilePage({ params }: Props) {
             cards={cards}
             plants={plantsWithOwnerId}
             mugs={mugs}
-            gifts={gifts}
         />
     )
 }

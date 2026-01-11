@@ -18,6 +18,7 @@ interface Gift {
     claimedAt: Date | null
     createdAt: Date
     tag?: { publicCode: string } | null
+    slug?: string | null
 }
 
 export function GiftList({ gifts }: { gifts: Gift[] }) {
@@ -88,39 +89,51 @@ export function GiftList({ gifts }: { gifts: Gift[] }) {
                             </div>
 
                             <div className={styles.actions}>
-                                {gift.tag?.publicCode && (
-                                    <>
-                                        <button
-                                            className={styles.actionBtn}
-                                            onClick={() => {
-                                                const url = `${window.location.origin}/gift/${gift.tag?.publicCode}`
-                                                copy(url)
-                                            }}
-                                            title="Linki Kopyala"
-                                        >
-                                            🔗
-                                        </button>
-                                        <button
-                                            className={styles.actionBtn}
-                                            onClick={() => {
-                                                setSelectedGift(gift)
-                                                setShowQR(true)
-                                            }}
-                                            title="QR Kod"
-                                        >
-                                            📱
-                                        </button>
-                                        <Link
-                                            href={`/gift/${gift.tag?.publicCode}`}
-                                            target="_blank"
-                                            className={styles.actionBtn}
-                                            title="Görüntüle"
-                                            style={{ color: '#3b82f6' }}
-                                        >
-                                            👁️
-                                        </Link>
-                                    </>
-                                )}
+                                <>
+                                    <button
+                                        className={styles.actionBtn}
+                                        onClick={() => {
+                                            const code = gift.tag?.publicCode || gift.slug || gift.id
+                                            // If tag exists use /gift/code (legacy/nfc), else use /h/id (generic)
+                                            // Actually let's standardize on /h/ for generic and /gift/ for nfc if exists, 
+                                            // BUT /h/ works for everything if I updated checking.
+                                            // Let's use the logic: if tag -> /gift/code, else -> /h/id
+                                            const path = gift.tag?.publicCode ? `/gift/${gift.tag.publicCode}` : `/h/${gift.slug || gift.id}`
+                                            const url = `${window.location.origin}${path}`
+                                            copy(url)
+                                        }}
+                                        title="Linki Kopyala"
+                                    >
+                                        🔗
+                                    </button>
+                                    <button
+                                        className={styles.actionBtn}
+                                        onClick={() => {
+                                            setSelectedGift(gift)
+                                            setShowQR(true)
+                                        }}
+                                        title="QR Kod"
+                                    >
+                                        📱
+                                    </button>
+                                    <Link
+                                        href={`/dashboard/gifts/${gift.id}`}
+                                        className={styles.actionBtn}
+                                        title="Detay Görüntüle"
+                                        style={{ color: '#ec4899' }}
+                                    >
+                                        👁️
+                                    </Link>
+                                    <Link
+                                        href={gift.tag?.publicCode ? `/gift/${gift.tag.publicCode}` : `/h/${gift.slug || gift.id}`}
+                                        target="_blank"
+                                        className={styles.actionBtn}
+                                        title="Public Sayfayı Aç"
+                                        style={{ color: '#3b82f6' }}
+                                    >
+                                        🌐
+                                    </Link>
+                                </>
                                 <Link href={`/dashboard/gifts/${gift.id}/edit`} className={styles.actionBtn} title="Düzenle">
                                     ✏️
                                 </Link>
@@ -141,11 +154,11 @@ export function GiftList({ gifts }: { gifts: Gift[] }) {
             </div>
 
             {/* QR Modal */}
-            {selectedGift && selectedGift.tag?.publicCode && (
+            {selectedGift && (
                 <QRCodeModal
                     isOpen={showQR}
                     onClose={() => setShowQR(false)}
-                    url={`${typeof window !== 'undefined' ? window.location.origin : ''}/gift/${selectedGift.tag.publicCode}`}
+                    url={`${typeof window !== 'undefined' ? window.location.origin : ''}${selectedGift.tag?.publicCode ? `/gift/${selectedGift.tag.publicCode}` : `/h/${selectedGift.slug || selectedGift.id}`}`}
                     title={selectedGift.title || 'Hediye Kartı'}
                 />
             )}

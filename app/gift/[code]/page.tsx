@@ -75,12 +75,15 @@ export default async function PublicGiftPage({ params }: { params: Promise<{ cod
         giftType: gift.giftType
     }
 
+    // Check if gift is password protected
+    const isLocked = !!gift.password
+
     return (
         <GiftAccessControl
             publicCode={code}
             giftId={gift.id}
-            initialGift={gift}
-            isLocked={false}
+            initialGift={isLocked ? undefined : gift}
+            isLocked={isLocked}
             publicData={publicData}
             tagId={tagId || undefined}
         />

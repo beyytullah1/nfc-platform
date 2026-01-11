@@ -207,6 +207,16 @@ export default function NfcTagsClient({ userTags: initialTags, userModules, sent
             {tags.length === 0 ? (
                 <div className={styles.emptyState}>
                     <p>Henüz NFC etiketiniz yok</p>
+                    <a
+                        href="/claim"
+                        className={styles.addCard}
+                        style={{ marginTop: '1rem', padding: '2rem', display: 'block', textDecoration: 'none' }}
+                    >
+                        <div className={styles.addContent}>
+                            <span className={styles.addIcon}>➕</span>
+                            <span>NFC Etiket Ekle</span>
+                        </div>
+                    </a>
                 </div>
             ) : (
                 <>

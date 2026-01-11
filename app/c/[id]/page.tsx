@@ -74,7 +74,7 @@ export default async function SlugCardPage({ params }: Props) {
 
     // If card has slug and was accessed via ID, redirect to slug URL
     if (card.slug && id !== card.slug) {
-        redirect(`/${card.slug}`)
+        redirect(`/c/${card.slug}`)
     }
 
     const cardData = {

@@ -44,8 +44,8 @@ export default async function PlantDetailPage({ params }: { params: Promise<{ id
     const availableTags = await prisma.nfcTag.findMany({
         where: {
             ownerId: session.user.id,
-            plantId: null,
-            mugId: null
+            plant: null,
+            mug: null
         },
         select: { id: true, publicCode: true }
     })

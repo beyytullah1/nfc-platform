@@ -15,13 +15,35 @@ export default async function MugDetailPage({ params }: { params: Promise<{ id: 
         where: { id },
         include: {
             logs: { orderBy: { createdAt: 'desc' }, take: 50 },
-            tag: { select: { id: true } }
+            tag: { select: { id: true, publicCode: true } }
         }
     })
 
-    if (!mug || mug.ownerId !== session.user.id) {
+    if (!mug) {
         redirect("/dashboard/mugs")
     }
 
-    return <MugDetailClient mug={mug} />
+    // Check if user is owner
+    const isOwner = mug.ownerId === session.user.id
+    if (!isOwner) {
+        redirect("/dashboard/mugs")
+    }
+
+    // Unlinked tags for linking
+    const availableTags = await prisma.nfcTag.findMany({
+        where: {
+            ownerId: session.user.id,
+            plant: null,
+            mug: null
+        },
+        select: { id: true, publicCode: true }
+    })
+
+    return (
+        <MugDetailClient
+            mug={mug}
+            isOwner={isOwner}
+            availableTags={availableTags}
+        />
+    )
 }

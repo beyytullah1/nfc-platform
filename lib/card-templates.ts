@@ -92,5 +92,67 @@ export const CARD_TEMPLATES = [
             secondaryColor: '#ec4899',
             style: 'creative'
         }
+    },
+    {
+        id: 'lost_pet',
+        name: 'Kayıp Hayvan',
+        icon: '🐶',
+        description: 'Kayıp evcil hayvan bilgileri',
+        fields: [
+            { name: 'petName', label: 'Hayvan Adı', value: '', fieldType: 'text', icon: '🐾', privacyLevel: 0, groupName: 'Hayvan Bilgisi' },
+            { name: 'petType', label: 'Hayvan Türü', value: '', fieldType: 'text', icon: '🐕', privacyLevel: 0, groupName: 'Hayvan Bilgisi' },
+            { name: 'petBreed', label: 'Cinsi', value: '', fieldType: 'text', icon: '📋', privacyLevel: 0, groupName: 'Hayvan Bilgisi' },
+            { name: 'petColor', label: 'Renk/Özellik', value: '', fieldType: 'text', icon: '🎨', privacyLevel: 0, groupName: 'Hayvan Bilgisi' },
+            { name: 'emergencyPhone', label: 'Acil Telefon', value: '', fieldType: 'phone', icon: '🚨', privacyLevel: 0, groupName: 'İletişim' },
+            { name: 'phone', label: 'Telefon', value: '', fieldType: 'phone', icon: '📞', privacyLevel: 0, groupName: 'İletişim' },
+            { name: 'location', label: 'Ev Konumu', value: '', fieldType: 'location', icon: '📍', privacyLevel: 0, groupName: 'Konum' },
+            { name: 'reward', label: 'Ödül', value: '', fieldType: 'text', icon: '💰', privacyLevel: 0, groupName: 'Diğer' },
+        ],
+        theme: {
+            primaryColor: '#f97316',
+            secondaryColor: '#fbbf24',
+            style: 'alert'
+        }
+    },
+    {
+        id: 'health',
+        name: 'Sağlık/Yaşlı',
+        icon: '🧓',
+        description: 'Sağlık ve acil durum bilgileri',
+        fields: [
+            { name: 'fullName', label: 'Ad Soyad', value: '', fieldType: 'text', icon: '👤', privacyLevel: 0, groupName: 'Kişisel' },
+            { name: 'bloodType', label: 'Kan Grubu', value: '', fieldType: 'text', icon: '🩸', privacyLevel: 0, groupName: 'Sağlık' },
+            { name: 'medicalConditions', label: 'Kronik Hastalıklar', value: '', fieldType: 'textarea', icon: '🏥', privacyLevel: 0, groupName: 'Sağlık' },
+            { name: 'medications', label: 'Kullanılan İlaçlar', value: '', fieldType: 'textarea', icon: '💊', privacyLevel: 0, groupName: 'Sağlık' },
+            { name: 'allergies', label: 'Alerjiler', value: '', fieldType: 'text', icon: '⚠️', privacyLevel: 0, groupName: 'Sağlık' },
+            { name: 'emergencyPhone', label: 'Acil Kişi Telefonu', value: '', fieldType: 'phone', icon: '🚨', privacyLevel: 0, groupName: 'Acil Durum' },
+            { name: 'emergencyName', label: 'Acil Kişi Adı', value: '', fieldType: 'text', icon: '👥', privacyLevel: 0, groupName: 'Acil Durum' },
+            { name: 'location', label: 'Ev Konumu', value: '', fieldType: 'location', icon: '🏠', privacyLevel: 0, groupName: 'Konum' },
+            { name: 'doctor', label: 'Doktor', value: '', fieldType: 'text', icon: '👨‍⚕️', privacyLevel: 1, groupName: 'Sağlık' },
+            { name: 'doctorPhone', label: 'Doktor Telefonu', value: '', fieldType: 'phone', icon: '📱', privacyLevel: 1, groupName: 'Sağlık' },
+        ],
+        theme: {
+            primaryColor: '#ef4444',
+            secondaryColor: '#f97316',
+            style: 'emergency'
+        }
+    },
+    {
+        id: 'emergency',
+        name: 'Acil Durum',
+        icon: '🧑‍⚕️',
+        description: 'Minimal acil durum kartı',
+        fields: [
+            { name: 'fullName', label: 'Ad Soyad', value: '', fieldType: 'text', icon: '👤', privacyLevel: 0, groupName: 'Kişisel' },
+            { name: 'bloodType', label: 'Kan Grubu', value: '', fieldType: 'text', icon: '🩸', privacyLevel: 0, groupName: 'Sağlık' },
+            { name: 'emergencyPhone', label: 'Acil Durum Telefonu', value: '', fieldType: 'phone', icon: '🚨', privacyLevel: 0, groupName: 'Acil' },
+            { name: 'location', label: 'Ev Konumu', value: '', fieldType: 'location', icon: '📍', privacyLevel: 0, groupName: 'Konum' },
+            { name: 'allergies', label: 'Alerjiler', value: '', fieldType: 'text', icon: '⚠️', privacyLevel: 0, groupName: 'Sağlık' },
+        ],
+        theme: {
+            primaryColor: '#dc2626',
+            secondaryColor: '#b91c1c',
+            style: 'emergency'
+        }
     }
 ]

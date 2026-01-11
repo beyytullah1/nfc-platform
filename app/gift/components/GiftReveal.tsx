@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import styles from '../gift-public.module.css'
 import { FollowButton } from '@/app/components/FollowButton'
 
@@ -12,11 +13,20 @@ interface Gift {
     spotifyUrl: string | null
     sender?: { name: string | null } | null
     senderName: string | null
+    isClaimed?: boolean
 }
 
-export function GiftReveal({ gift, tagId }: { gift: Gift; tagId?: string }) {
+interface GiftRevealProps {
+    gift: Gift
+    tagId?: string
+    giftId?: string
+    publicCode?: string
+}
+
+export function GiftReveal({ gift, tagId, giftId, publicCode }: GiftRevealProps) {
     const [isOpened, setIsOpened] = useState(false)
     const [audio] = useState(typeof Audio !== 'undefined' ? new Audio('/sounds/pop.mp3') : null) // Optional sound
+    const router = useRouter()
 
     const triggerConfetti = () => {
         const colors = ['#ec4899', '#8b5cf6', '#eab308', '#22c55e', '#3b82f6']
@@ -171,9 +181,46 @@ export function GiftReveal({ gift, tagId }: { gift: Gift; tagId?: string }) {
                 )}
 
                 {/* Follow Button */}
-                {tagId && (
+                {tagId && gift.isClaimed && (
                     <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center' }}>
                         <FollowButton tagId={tagId} />
+                    </div>
+                )}
+
+                {/* Claim Button - Show only for unclaimed gifts */}
+                {!gift.isClaimed && (
+                    <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
+                        <div style={{
+                            padding: '1rem',
+                            background: 'rgba(255,255,255,0.1)',
+                            borderRadius: '12px',
+                            textAlign: 'center',
+                            border: '1px dashed rgba(255,255,255,0.3)'
+                        }}>
+                            <p style={{ color: 'rgba(255,255,255,0.8)', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                                🎉 Bu hediyeyi NFC etiketine bağlamak için sahiplen!
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => router.push(`/gift/${publicCode || giftId}/claim`)}
+                            style={{
+                                padding: '1rem 2rem',
+                                background: 'linear-gradient(135deg, #10b981, #059669)',
+                                border: 'none',
+                                borderRadius: '12px',
+                                color: 'white',
+                                fontSize: '1.1rem',
+                                fontWeight: 'bold',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                boxShadow: '0 4px 20px rgba(16, 185, 129, 0.4)',
+                                transition: 'all 0.3s ease'
+                            }}
+                        >
+                            🎁 Bu Hediyeyi Sahiplen
+                        </button>
                     </div>
                 )}
             </div>

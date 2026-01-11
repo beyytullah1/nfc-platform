@@ -34,30 +34,30 @@ export async function PATCH(
         } else if (type === 'plant') {
             const plant = await prisma.plant.findUnique({
                 where: { id },
-                include: { tag: true }
+                select: { ownerId: true }
             })
 
-            if (!plant || plant.ownerId !== session.user.id || !plant.tag) {
+            if (!plant || plant.ownerId !== session.user.id) {
                 return NextResponse.json({ error: 'Not found or unauthorized' }, { status: 404 })
             }
 
-            await prisma.nfcTag.update({
-                where: { id: plant.tag.id },
-                data: { isPublic }
+            await prisma.plant.update({
+                where: { id },
+                data: { isVisibleInProfile: isPublic }
             })
         } else if (type === 'mug') {
             const mug = await prisma.mug.findUnique({
                 where: { id },
-                include: { tag: true }
+                select: { ownerId: true }
             })
 
-            if (!mug || mug.ownerId !== session.user.id || !mug.tag) {
+            if (!mug || mug.ownerId !== session.user.id) {
                 return NextResponse.json({ error: 'Not found or unauthorized' }, { status: 404 })
             }
 
-            await prisma.nfcTag.update({
-                where: { id: mug.tag.id },
-                data: { isPublic }
+            await prisma.mug.update({
+                where: { id },
+                data: { isVisibleInProfile: isPublic }
             })
         } else {
             return NextResponse.json({ error: 'Invalid type' }, { status: 400 })

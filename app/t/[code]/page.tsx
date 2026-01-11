@@ -10,14 +10,14 @@ export default async function NfcRedirectPage({ params }: Props) {
     const { code } = await params
     const session = await auth()
 
-    // Find tag
+    // Find tag with gift info
     const tag = await prisma.nfcTag.findUnique({
         where: { publicCode: code },
         include: {
             card: { select: { id: true, slug: true } },
             plant: { select: { id: true, slug: true } },
             mug: { select: { id: true, slug: true } },
-            gift: { select: { id: true, slug: true } }
+            gift: { select: { id: true, slug: true, isClaimed: true, receiverId: true } }
         }
     })
 
@@ -29,13 +29,21 @@ export default async function NfcRedirectPage({ params }: Props) {
         redirect(`/claim?code=${code}`)
     }
 
+    // SPECIAL CASE: Gift linked but not claimed - show gift surprise page
+    // This creates the separation between gift (surprise) and permanent profile
+    if (tag.moduleType === 'gift' && tag.gift && !tag.gift.isClaimed) {
+        // Show the gift surprise page - user hasn't claimed it yet
+        const giftPath = tag.gift.slug || tag.gift.id
+        redirect(`/gift/${giftPath}`)
+    }
+
     // Tag exists - check if linked
     if (tag.moduleType && tag.ownerId) {
         // Linked - redirect to appropriate module
         switch (tag.moduleType) {
             case 'card':
                 const cardPath = tag.card?.slug || tag.card?.id
-                redirect(`/c/${cardPath}`) // Assuming /c/ for cards
+                redirect(`/c/${cardPath}`)
             case 'plant':
                 const plantPath = tag.plant?.slug || tag.plant?.id
                 redirect(`/plant/${plantPath}`)
@@ -43,6 +51,7 @@ export default async function NfcRedirectPage({ params }: Props) {
                 const mugPath = tag.mug?.slug || tag.mug?.id
                 redirect(`/mug/${mugPath}`)
             case 'gift':
+                // Gift is claimed - redirect to the claimed module or gift page
                 const giftPath = tag.gift?.slug || tag.gift?.id
                 redirect(`/gift/${giftPath}`)
             case 'canvas':

@@ -7,6 +7,7 @@ import { TransferModal } from "@/app/components/TransferModal"
 import { PlantPrivacySettings } from "../components/PlantPrivacySettings"
 import { PlantCoOwners } from "../components/PlantCoOwners"
 import { NfcLinkingSection } from "../../components/NfcLinkingSection"
+import { PlantAiChat } from "../../components/PlantAiChat"
 import { useToast } from "@/app/components/Toast"
 import styles from "../plants.module.css"
 
@@ -373,6 +374,11 @@ export default function PlantDetailClient({ plant, userName, isOwner, availableT
                     itemName={plant.name}
                     moduleType="plant"
                 />
+            )}
+
+            {/* AI Chat Assistant */}
+            {isOwner && (
+                <PlantAiChat plantId={plant.id} plantName={plant.name} />
             )}
         </>
     )

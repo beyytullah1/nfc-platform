@@ -21,6 +21,25 @@ const FIELD_ICONS: Record<string, string> = {
     vcard: "👤",
     video: "🎬",
     custom: "✨",
+    // Health & Emergency fields
+    bloodType: "🩸",
+    location: "📍",
+    emergencyPhone: "🚨",
+    medicalConditions: "🏥",
+    medications: "💊",
+    allergies: "⚠️",
+    emergencyName: "👥",
+    doctor: "👨‍⚕️",
+    doctorPhone: "📱",
+    // Pet fields
+    petName: "🐾",
+    petType: "🐕",
+    petBreed: "📋",
+    petColor: "🎨",
+    reward: "💰",
+    fullName: "👤",
+    text: "📝",
+    textarea: "📄",
 }
 
 // vCard oluşturma fonksiyonu

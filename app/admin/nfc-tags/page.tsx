@@ -217,11 +217,11 @@ export default async function AdminNfcTagsPage({
                                     </td>
                                     <td>
                                         <span className={
-                                            tag.status === 'claimed'
+                                            tag.ownerId
                                                 ? styles.statusClaimed
                                                 : styles.statusUnclaimed
                                         }>
-                                            {tag.status === 'claimed' ? '✅ Bağlı' : '⏳ Bekleyen'}
+                                            {tag.ownerId ? '✅ Bağlı' : '⏳ Bekleyen'}
                                         </span>
                                     </td>
                                     <td>{new Date(tag.createdAt).toLocaleDateString('tr-TR')}</td>

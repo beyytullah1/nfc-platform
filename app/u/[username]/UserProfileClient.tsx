@@ -28,9 +28,11 @@ interface Card {
 interface Plant {
     id: string
     name: string
+    slug: string | null
     ownerId: string // Added for co-owner checks
     species: string | null
     coverImageUrl: string | null
+    isVisibleInProfile: boolean
     createdAt: Date
     tag: { id: string; isPublic: boolean } | null
 }
@@ -38,17 +40,12 @@ interface Plant {
 interface Mug {
     id: string
     name: string
+    slug: string | null
     type: string | null
     coverImageUrl: string | null
+    isVisibleInProfile: boolean
     createdAt: Date
     tag: { id: string; isPublic: boolean } | null
-}
-
-interface Gift {
-    id: string
-    title: string | null
-    giftType: string
-    createdAt: Date
 }
 
 interface UserProfileClientProps {
@@ -57,11 +54,10 @@ interface UserProfileClientProps {
     cards: Card[]
     plants: Plant[]
     mugs: Mug[]
-    gifts: Gift[]
 }
 
-export default function UserProfileClient({ user, isOwner, cards, plants, mugs, gifts }: UserProfileClientProps) {
-    const [activeTab, setActiveTab] = useState<'cards' | 'plants' | 'mugs' | 'gifts'>('cards')
+export default function UserProfileClient({ user, isOwner, cards, plants, mugs }: UserProfileClientProps) {
+    const [activeTab, setActiveTab] = useState<'cards' | 'plants' | 'mugs'>('cards')
 
     const handleVisibilityToggle = async (itemId: string, itemType: string) => {
         try {
@@ -80,9 +76,9 @@ export default function UserProfileClient({ user, isOwner, cards, plants, mugs, 
     }
 
     const visibleCards = isOwner ? cards : cards.filter(c => c.isPublic)
-    // Server already filters plants by ownership OR co-ownership, no need to filter again
-    const visiblePlants = plants
-    const visibleMugs = isOwner ? mugs : mugs.filter(m => m.tag?.isPublic)
+    // Filter plants: owner sees all, others see only isVisibleInProfile=true
+    const visiblePlants = isOwner ? plants : plants.filter(p => p.isVisibleInProfile)
+    const visibleMugs = isOwner ? mugs : mugs.filter(m => m.isVisibleInProfile)
 
     return (
         <div className={styles.container}>
@@ -131,12 +127,6 @@ export default function UserProfileClient({ user, isOwner, cards, plants, mugs, 
                     onClick={() => setActiveTab('mugs')}
                 >
                     ☕ Kupalar ({visibleMugs.length})
-                </button>
-                <button
-                    className={activeTab === 'gifts' ? styles.activeTab : ''}
-                    onClick={() => setActiveTab('gifts')}
-                >
-                    🎁 Hediyeler ({gifts.length})
                 </button>
             </div>
 
@@ -189,22 +179,6 @@ export default function UserProfileClient({ user, isOwner, cards, plants, mugs, 
                         ))}
                         {visibleMugs.length === 0 && (
                             <p className={styles.empty}>Henüz kupa yok</p>
-                        )}
-                    </div>
-                )}
-
-                {activeTab === 'gifts' && (
-                    <div className={styles.grid}>
-                        {gifts.map(gift => (
-                            <ContentCard
-                                key={gift.id}
-                                type="gift"
-                                item={gift}
-                                isOwner={isOwner}
-                            />
-                        ))}
-                        {gifts.length === 0 && (
-                            <p className={styles.empty}>Henüz hediye yok</p>
                         )}
                     </div>
                 )}

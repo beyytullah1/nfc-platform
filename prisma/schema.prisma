@@ -64,6 +64,7 @@ model User {
   transferRequestsSent     TransferRequest[] @relation("TransferRequestSender")
   transferRequestsReceived TransferRequest[] @relation("TransferRequestReceiver")
   coOwnedPlants       Plant[]              @relation("PlantCoOwners")
+  geminiApiKey        String?              @map("gemini_api_key") // User's custom Gemini API key
   passwordResetTokens PasswordResetToken[]
   adminLogs           AdminLog[]           @relation("AdminActions")
 
@@ -294,6 +295,7 @@ model Plant {
   giftedById    String?   @map("gifted_by")
   giftMessage   String?   @map("gift_message")
   privacyLevel  String    @default("public") @map("privacy_level") // public, followers, private
+  isVisibleInProfile Boolean @default(true) @map("is_visible_in_profile") // Profilde görünürlük
   coOwners      User[]    @relation("PlantCoOwners")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
@@ -373,6 +375,7 @@ model Mug {
   name      String   @default("Kupam")
   slug      String?  @unique // Custom URL slug
   theme     String?
+  isVisibleInProfile Boolean @default(true) @map("is_visible_in_profile") // Profilde görünürlük
   createdAt DateTime @default(now()) @map("created_at")
 
   // İlişkiler
@@ -485,6 +488,7 @@ model Gift {
   mediaUrl    String?  @map("media_url") // Video/Fotoğraf
   spotifyUrl  String?  @map("spotify_url") // Şarkı
   password    String?  // Hediye şifresi (opsiyonel)
+  passwordHint String? @map("password_hint") // Şifre ipucu
   
   claimFormat String?  @map("claim_format") // 'plant', 'mug', 'generic'
   claimedAsId String?  @map("claimed_as_id") // Claimed plant/mug ID

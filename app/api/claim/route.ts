@@ -6,6 +6,10 @@ import { createRateLimiter, RATE_LIMITS } from '@/lib/rate-limit'
 import { logger } from '@/lib/logger'
 import { validateRequest, claimNFCSchema } from '@/lib/validations'
 
+/**
+ * SECURITY: This endpoint ONLY claims EXISTING NFC tags
+ * NFC tags can ONLY be created via admin panel
+ */
 export async function POST(request: NextRequest) {
     // Rate limiting
     const rateLimiter = createRateLimiter(RATE_LIMITS.nfc)
@@ -32,29 +36,28 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // NFC tag'i bul veya oluştur
-        let tag = await prisma.nfcTag.findUnique({
+        // SECURITY: Only find existing tags - NEVER create new ones
+        const tag = await prisma.nfcTag.findUnique({
             where: { publicCode: code }
         })
 
         if (!tag) {
-            // Demo için yeni tag oluştur
-            tag = await prisma.nfcTag.create({
-                data: {
-                    tagId: `TAG_${code}`,
-                    publicCode: code,
-                    moduleType: moduleType,
-                    ownerId: session.user.id,
-                    claimedAt: new Date()
-                }
-            })
-        } else if (tag.ownerId && tag.ownerId !== session.user.id) {
+            // Tag doesn't exist - user must use admin-created tags
+            return NextResponse.json(
+                { error: 'Bu NFC etiket kodu sistemde bulunamadı. Lütfen admin panelinden oluşturulmuş bir etiket kullanın.' },
+                { status: 404 }
+            )
+        }
+
+        if (tag.ownerId && tag.ownerId !== session.user.id) {
             return NextResponse.json(
                 { error: 'Bu etiket başka bir kullanıcıya ait.' },
                 { status: 400 }
             )
-        } else if (!tag.ownerId) {
-            // Tag'i sahiplen
+        }
+
+        // If tag is unclaimed, claim it
+        if (!tag.ownerId) {
             await prisma.nfcTag.update({
                 where: { id: tag.id },
                 data: {

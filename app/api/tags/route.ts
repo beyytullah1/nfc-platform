@@ -1,8 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/db'
+import { auth } from '@/lib/auth'
 
-// Test için örnek tag oluşturma
+/**
+ * SECURITY: NFC tags can ONLY be created via admin panel
+ * This endpoint is for READ-ONLY operations
+ */
+
+// POST - DISABLED - Tags can only be created via admin panel
 export async function POST(request: NextRequest) {
+    // Verify admin role
+    const session = await auth()
+    if (!session?.user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Check if user is admin
+    const user = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { role: true }
+    })
+
+    if (user?.role !== 'admin') {
+        return NextResponse.json(
+            { error: 'Bu işlem sadece admin tarafından yapılabilir. NFC etiketleri admin panelinden oluşturulmalıdır.' },
+            { status: 403 }
+        )
+    }
+
+    // Only admins can create tags
     try {
         const body = await request.json()
         const { tagId, publicCode } = body
@@ -31,7 +57,7 @@ export async function POST(request: NextRequest) {
     }
 }
 
-// Tag listele
+// GET - Tag listele (read-only, safe)
 export async function GET(request: NextRequest) {
     try {
         const tags = await prisma.nfcTag.findMany({

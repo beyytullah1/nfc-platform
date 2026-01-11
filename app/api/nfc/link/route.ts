@@ -10,23 +10,29 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json()
-        const { tagId, moduleId, moduleType } = body
+        const { tagId, publicCode, moduleId, moduleType } = body
 
-        if (!tagId || !moduleId || !moduleType) {
+        if ((!tagId && !publicCode) || !moduleId || !moduleType) {
             return NextResponse.json({ error: "Eksik bilgi" }, { status: 400 })
         }
 
-        // 1. Check if user owns the tag
-        const tag = await prisma.nfcTag.findUnique({
-            where: { id: tagId }
-        })
+        // 1. Find the tag (either by ID or Code) and include relations
+        let tag;
+        if (tagId) {
+            tag = await prisma.nfcTag.findUnique({ where: { id: tagId }, include: { plant: true, mug: true } })
+        } else if (publicCode) {
+            tag = await prisma.nfcTag.findUnique({ where: { publicCode: publicCode }, include: { plant: true, mug: true } })
+        }
 
         if (!tag || tag.ownerId !== session.user.id) {
             return NextResponse.json({ error: "NFC etiketi bulunamadı veya size ait değil" }, { status: 404 })
         }
 
+        // Use the found tag ID for linking
+        const finalTagId = tag.id;
+
         // 2. Check if tag is already linked
-        if (tag.plantId || tag.mugId) {
+        if (tag.plant || tag.mug) {
             return NextResponse.json({ error: "Bu etiket zaten başka bir şeye bağlı" }, { status: 400 })
         }
 
@@ -58,25 +64,16 @@ export async function POST(req: Request) {
 
         // 4. Perform Linking (Transaction)
         await prisma.$transaction(async (tx) => {
-            // Update Tag
-            await tx.nfcTag.update({
-                where: { id: tagId },
-                data: {
-                    plantId: moduleType === "plant" ? moduleId : null,
-                    mugId: moduleType === "mug" ? moduleId : null
-                }
-            })
-
             // Update Module (Plant/Mug)
             if (moduleType === "plant") {
                 await tx.plant.update({
                     where: { id: moduleId },
-                    data: { tagId: tagId }
+                    data: { tagId: finalTagId }
                 })
             } else if (moduleType === "mug") {
                 await tx.mug.update({
                     where: { id: moduleId },
-                    data: { tagId: tagId }
+                    data: { tagId: finalTagId }
                 })
             }
         })

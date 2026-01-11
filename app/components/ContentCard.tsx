@@ -22,6 +22,7 @@ export function ContentCard({ type, item, isOwner, onVisibilityToggle }: Content
         species?: string
         viewCount?: number
         isPublic?: boolean
+        isVisibleInProfile?: boolean
         isClaimed?: boolean
         moduleType?: string
         tag?: {
@@ -45,19 +46,19 @@ export function ContentCard({ type, item, isOwner, onVisibilityToggle }: Content
             icon: '🌱',
             label: 'Bitki',
             color: '#10b981',
-            getLink: (item: GenericItem) => `/p/${item.id}`,
+            getLink: (item: GenericItem) => `/plant/${item.slug || item.id}`,
             getTitle: (item: GenericItem) => item.name || 'Bitki',
             getSubtitle: (item: GenericItem) => item.species || 'Bitki',
-            isPublic: (item: GenericItem) => item.tag?.isPublic ?? false
+            isPublic: (item: GenericItem) => item.isVisibleInProfile ?? true
         },
         mug: {
             icon: '☕',
             label: 'Kupa',
             color: '#f59e0b',
-            getLink: (item: GenericItem) => `/mug/${item.id}`,
+            getLink: (item: GenericItem) => `/mug/${item.slug || item.id}`,
             getTitle: (item: GenericItem) => item.name || 'Kupa',
             getSubtitle: (item: GenericItem) => 'Kahve Kupası',
-            isPublic: (item: GenericItem) => item.tag?.isPublic ?? false
+            isPublic: (item: GenericItem) => item.isVisibleInProfile ?? true
         },
         gift: {
             icon: '🎁',

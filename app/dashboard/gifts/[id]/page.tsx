@@ -33,7 +33,7 @@ export default async function GiftDetailPage({ params }: { params: Promise<{ id:
         redirect("/dashboard/gifts")
     }
 
-    const publicLink = gift.tag?.publicCode ? `/gift/${gift.tag.publicCode}` : `/gift/${gift.id}`
+    const publicLink = `/h/${gift.id}`
 
     return (
         <>

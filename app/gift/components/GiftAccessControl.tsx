@@ -14,11 +14,12 @@ interface GiftAccessControlProps {
         title: string | null
         senderName: string | null
         giftType: string
+        passwordHint?: string | null
     }
     tagId?: string
 }
 
-export function GiftAccessControl({ publicCode, initialGift, isLocked, publicData, tagId }: GiftAccessControlProps) {
+export function GiftAccessControl({ giftId, publicCode, initialGift, isLocked, publicData, tagId }: GiftAccessControlProps) {
     const [gift, setGift] = useState(initialGift)
     const [unlocked, setUnlocked] = useState(!isLocked)
     const [password, setPassword] = useState('')
@@ -46,7 +47,7 @@ export function GiftAccessControl({ publicCode, initialGift, isLocked, publicDat
     }
 
     if (unlocked && gift) {
-        return <GiftReveal gift={gift} tagId={tagId} />
+        return <GiftReveal gift={gift} tagId={tagId} giftId={giftId} publicCode={publicCode} />
     }
 
     return (
@@ -104,6 +105,17 @@ export function GiftAccessControl({ publicCode, initialGift, isLocked, publicDat
                     >
                         {loading ? 'Kontrol Ediliyor...' : 'Kilidi Aç 🔓'}
                     </button>
+
+                    {publicData.passwordHint && (
+                        <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+                            <details style={{ cursor: 'pointer', color: 'rgba(255,255,255,0.6)' }}>
+                                <summary style={{ listStyle: 'none' }}>💡 İpucu Göster</summary>
+                                <p style={{ marginTop: '0.5rem', color: 'white', fontStyle: 'italic', background: 'rgba(255,255,255,0.1)', padding: '0.5rem', borderRadius: '8px' }}>
+                                    {publicData.passwordHint}
+                                </p>
+                            </details>
+                        </div>
+                    )}
                 </form>
             </div>
         </div>

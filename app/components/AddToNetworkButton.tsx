@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 import { useToast } from '@/app/components/Toast'
 import { useRouter } from 'next/navigation'
 
@@ -19,6 +20,7 @@ interface Category {
 
 export function AddToNetworkButton({ cardId, cardOwnerId, cardOwnerName }: AddToNetworkButtonProps) {
     const { showToast } = useToast()
+    const { data: session, status: sessionStatus } = useSession()
     const [status, setStatus] = useState<'idle' | 'added' | 'loading'>('idle')
     const [showModal, setShowModal] = useState(false)
     const [categories, setCategories] = useState<Category[]>([])
@@ -58,6 +60,14 @@ export function AddToNetworkButton({ cardId, cardOwnerId, cardOwnerName }: AddTo
     }
 
     const handleAddClick = () => {
+        // Check if user is logged in
+        if (sessionStatus !== 'authenticated' || !session) {
+            // Redirect to login with callback URL
+            const currentUrl = typeof window !== 'undefined' ? window.location.pathname : '/'
+            router.push(`/login?callbackUrl=${encodeURIComponent(currentUrl)}`)
+            return
+        }
+
         if (status === 'added') {
             // Navigate to card profile (middleware will handle slug lookup)
             router.push(`/c/${cardId}`)
