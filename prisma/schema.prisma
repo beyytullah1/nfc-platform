@@ -92,6 +92,7 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
   @@map("accounts")
 }
 
@@ -102,6 +103,7 @@ model Session {
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("sessions")
 }
 
@@ -201,6 +203,7 @@ model CardLinkGroup {
   card   Card        @relation(fields: [cardId], references: [id], onDelete: Cascade)
   fields CardField[]
 
+  @@index([cardId])
   @@map("card_link_groups")
 }
 
@@ -220,6 +223,8 @@ model CardField {
   card  Card           @relation(fields: [cardId], references: [id], onDelete: Cascade)
   group CardLinkGroup? @relation(fields: [groupId], references: [id])
 
+  @@index([cardId])
+  @@index([groupId])
   @@map("card_fields")
 }
 
@@ -274,6 +279,7 @@ model ConnectionCategory {
   user        User         @relation(fields: [userId], references: [id])
   connections Connection[]
 
+  @@index([userId])
   @@map("connection_categories")
 }
 
@@ -311,6 +317,7 @@ model Plant {
   @@index([tagId])
   @@index([slug])
   @@index([createdAt])
+  @@index([giftedById])
   @@map("plants")
 }
 
@@ -327,6 +334,7 @@ model PlantLog {
   // İlişkiler
   plant Plant @relation(fields: [plantId], references: [id], onDelete: Cascade)
 
+  @@index([plantId])
   @@map("plant_logs")
 }
 
@@ -343,6 +351,8 @@ model PlantAiChat {
   plant Plant @relation(fields: [plantId], references: [id], onDelete: Cascade)
   user  User? @relation(fields: [userId], references: [id])
 
+  @@index([plantId])
+  @@index([userId])
   @@map("plant_ai_chats")
 }
 
@@ -361,6 +371,9 @@ model OwnershipTransfer {
   fromUser User?  @relation("TransferFrom", fields: [fromUserId], references: [id])
   toUser   User   @relation("TransferTo", fields: [toUserId], references: [id])
 
+  @@index([tagId])
+  @@index([fromUserId])
+  @@index([toUserId])
   @@map("ownership_transfers")
 }
 
@@ -384,6 +397,7 @@ model Mug {
   logs  MugLog[]
 
   @@index([slug])
+  @@index([ownerId])
   @@map("mugs")
 }
 
@@ -399,6 +413,7 @@ model MugLog {
   // İlişkiler
   mug Mug @relation(fields: [mugId], references: [id], onDelete: Cascade)
 
+  @@index([mugId])
   @@map("mug_logs")
 }
 
@@ -428,6 +443,7 @@ model Page {
   blocks PageBlock[]
 
   @@index([slug])
+  @@index([ownerId])
   @@map("pages")
 }
 
@@ -443,6 +459,7 @@ model PageBlock {
   // İlişkiler
   page Page @relation(fields: [pageId], references: [id], onDelete: Cascade)
 
+  @@index([pageId])
   @@map("page_blocks")
 }
 
@@ -466,6 +483,8 @@ model Notification {
   sender User? @relation("NotificationSender", fields: [senderId], references: [id])
 
 
+  @@index([userId])
+  @@index([senderId])
   @@map("notifications")
 }
 
@@ -504,6 +523,8 @@ model Gift {
   receiver    User?    @relation("GiftReceiver", fields: [receiverId], references: [id])
   tag         NfcTag?  @relation(fields: [tagId], references: [id])
 
+  @@index([senderId])
+  @@index([receiverId])
   @@map("gifts")
 }
 
@@ -522,6 +543,7 @@ model Follow {
   tag  NfcTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@unique([userId, tagId])
+  @@index([tagId])
   @@map("follows")
 }
 
@@ -544,6 +566,9 @@ model TransferRequest {
   fromUser User   @relation("TransferRequestSender", fields: [fromUserId], references: [id])
   toUser   User   @relation("TransferRequestReceiver", fields: [toUserId], references: [id])
 
+  @@index([tagId])
+  @@index([fromUserId])
+  @@index([toUserId])
   @@map("transfer_requests")
 }
 
