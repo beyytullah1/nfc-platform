@@ -21,6 +21,7 @@ interface Connection {
         id: string
         slug: string | null  // Profile Git için
         title: string | null
+        avatarUrl: string | null
         fields: { value: string }[]
     }
     category: {
@@ -70,6 +71,8 @@ export function ConnectionsClient({
     const [newGroupIcon, setNewGroupIcon] = useState('📁')
     const [selectedContact, setSelectedContact] = useState<Connection | null>(null)
     const [editingContact, setEditingContact] = useState<string | null>(null)
+    const [editNote, setEditNote] = useState('')
+    const [editTags, setEditTags] = useState('')
 
     // Arama ve kategori filtresi
     const filteredConnections = connections.filter(conn => {
@@ -158,6 +161,37 @@ export function ConnectionsClient({
             showToast('Bir hata oluştu', 'error')
         }
     }
+
+    const handleSaveEdit = async () => {
+        if (!editingContact) return
+
+        try {
+            const tagsArray = editTags
+                .split(',')
+                .map(t => t.trim())
+                .filter(t => t.length > 0)
+
+            const res = await fetch(`/api/connections/${editingContact}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    myNote: editNote || null,
+                    myTags: tagsArray.length > 0 ? JSON.stringify(tagsArray) : null
+                })
+            })
+
+            if (res.ok) {
+                showToast('Başarıyla güncellendi', 'success')
+                setEditingContact(null)
+                window.location.reload()
+            } else {
+                showToast('Güncelleme başarısız', 'error')
+            }
+        } catch (err) {
+            showToast('Bir hata oluştu', 'error')
+        }
+    }
+
 
     const handleRemove = async (connectionId: string) => {
         if (!confirm('Bu kişiyi ağınızdan çıkarmak istediğinize emin misiniz?')) {
@@ -399,7 +433,7 @@ export function ConnectionsClient({
                                                         e.currentTarget.style.transform = 'translateY(0)'
                                                     }}
                                                 >
-                                                    {/* Sağ Üst - Grup Dropdown ve Sil Butonu */}
+                                                    {/* Sağ Üst - Grup Dropdown, Düzenle ve Sil Butonu */}
                                                     <div style={{ position: 'absolute', top: '0.75rem', right: '0.75rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                                                         <select
                                                             value={conn.category?.id || ''}
@@ -428,6 +462,35 @@ export function ConnectionsClient({
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation()
+                                                                // Populate edit fields
+                                                                const tags = (() => {
+                                                                    try {
+                                                                        const parsed = JSON.parse(conn.myTags || '[]')
+                                                                        return Array.isArray(parsed) ? parsed.join(', ') : ''
+                                                                    } catch {
+                                                                        return ''
+                                                                    }
+                                                                })()
+                                                                setEditNote(conn.myNote || '')
+                                                                setEditTags(tags)
+                                                                setEditingContact(conn.id)
+                                                            }}
+                                                            title="Düzenle"
+                                                            style={{
+                                                                padding: '0.25rem 0.5rem',
+                                                                background: 'rgba(59, 130, 246, 0.15)',
+                                                                border: '1px solid rgba(59, 130, 246, 0.3)',
+                                                                borderRadius: '0.5rem',
+                                                                color: '#93c5fd',
+                                                                fontSize: '0.75rem',
+                                                                cursor: 'pointer'
+                                                            }}
+                                                        >
+                                                            🖊️
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
                                                                 handleRemove(conn.id)
                                                             }}
                                                             disabled={removingId === conn.id}
@@ -445,9 +508,57 @@ export function ConnectionsClient({
                                                         </button>
                                                     </div>
 
-                                                    <h3 style={{ color: '#fff', marginBottom: '0.25rem', fontSize: '1.1rem', fontWeight: '600' }}>
-                                                        {conn.friend.name || 'İsimsiz'}
-                                                    </h3>
+                                                    {/* Avatar */}
+                                                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.75rem' }}>
+                                                        {conn.card.avatarUrl ? (
+                                                            <img
+                                                                src={conn.card.avatarUrl}
+                                                                alt={conn.friend.name || 'Avatar'}
+                                                                style={{
+                                                                    width: '48px',
+                                                                    height: '48px',
+                                                                    borderRadius: '50%',
+                                                                    marginRight: '1rem',
+                                                                    objectFit: 'cover',
+                                                                    border: '2px solid rgba(255,255,255,0.1)',
+                                                                    cursor: 'pointer'
+                                                                }}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation()
+                                                                    const slug = conn.card.slug || conn.card.id
+                                                                    window.open(`/${slug}`, '_blank')
+                                                                }}
+                                                            />
+                                                        ) : (
+                                                            <div
+                                                                style={{
+                                                                    width: '48px',
+                                                                    height: '48px',
+                                                                    borderRadius: '50%',
+                                                                    marginRight: '1rem',
+                                                                    background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    color: 'white',
+                                                                    fontWeight: 'bold',
+                                                                    fontSize: '1.2rem',
+                                                                    border: '2px solid rgba(255,255,255,0.1)',
+                                                                    cursor: 'pointer'
+                                                                }}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation()
+                                                                    const slug = conn.card.slug || conn.card.id
+                                                                    window.open(`/${slug}`, '_blank')
+                                                                }}
+                                                            >
+                                                                {(conn.friend.name || '?').charAt(0).toUpperCase()}
+                                                            </div>
+                                                        )}
+                                                        <h3 style={{ color: '#fff', fontSize: '1.1rem', fontWeight: '600', margin: 0 }}>
+                                                            {conn.friend.name || 'İsimsiz'}
+                                                        </h3>
+                                                    </div>
                                                     <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '0.75rem', height: '1.4em', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                         {conn.card.title || `@${conn.friend.email?.split('@')[0]}`}
                                                     </p>
@@ -629,9 +740,9 @@ export function ConnectionsClient({
                                                     }} onClick={(e) => e.stopPropagation()}>
                                                         {/* Header */}
                                                         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                                                            {selectedContact.friend.avatarUrl && (
+                                                            {selectedContact.card.avatarUrl && (
                                                                 <img
-                                                                    src={selectedContact.friend.avatarUrl}
+                                                                    src={selectedContact.card.avatarUrl}
                                                                     alt="Avatar"
                                                                     style={{
                                                                         width: '80px',
@@ -703,6 +814,41 @@ export function ConnectionsClient({
                                                                     <div style={{ color: '#fff', fontSize: '0.9rem' }}>{selectedContact.myNote}</div>
                                                                 </div>
                                                             )}
+
+                                                            {/* Etiketler */}
+                                                            {(() => {
+                                                                try {
+                                                                    const tags = selectedContact.myTags ? JSON.parse(selectedContact.myTags) : []
+                                                                    if (Array.isArray(tags) && tags.length > 0) {
+                                                                        return (
+                                                                            <div style={{
+                                                                                padding: '0.75rem',
+                                                                                background: '#0f172a',
+                                                                                borderRadius: '0.5rem'
+                                                                            }}>
+                                                                                <div style={{ color: '#64748b', fontSize: '0.7rem', marginBottom: '0.5rem' }}>🏷️ Etiketler</div>
+                                                                                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                                                                    {tags.map((tag: string, idx: number) => (
+                                                                                        <span key={idx} style={{
+                                                                                            padding: '0.25rem 0.5rem',
+                                                                                            background: 'rgba(99, 102, 241, 0.15)',
+                                                                                            border: '1px solid rgba(99, 102, 241, 0.3)',
+                                                                                            borderRadius: '0.5rem',
+                                                                                            color: '#a5b4fc',
+                                                                                            fontSize: '0.75rem'
+                                                                                        }}>
+                                                                                            #{tag}
+                                                                                        </span>
+                                                                                    ))}
+                                                                                </div>
+                                                                            </div>
+                                                                        )
+                                                                    }
+                                                                } catch {
+                                                                    return null
+                                                                }
+                                                                return null
+                                                            })()}
                                                         </div>
 
                                                         {/* Butonlar */}
@@ -747,6 +893,118 @@ export function ConnectionsClient({
                                                 </div>
                                             )
                                         }
+
+                                        {/* Edit Modal */}
+                                        {editingContact && (() => {
+                                            const conn = connections.find(c => c.id === editingContact)
+                                            if (!conn) return null
+
+                                            return (
+                                                <div style={{
+                                                    position: 'fixed',
+                                                    top: 0,
+                                                    left: 0,
+                                                    right: 0,
+                                                    bottom: 0,
+                                                    background: 'rgba(0,0,0,0.8)',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    zIndex: 1000
+                                                }} onClick={() => setEditingContact(null)}>
+                                                    <div style={{
+                                                        background: '#1e293b',
+                                                        borderRadius: '1rem',
+                                                        padding: '2rem',
+                                                        maxWidth: '500px',
+                                                        width: '100%'
+                                                    }} onClick={(e) => e.stopPropagation()}>
+                                                        <h2 style={{ color: '#fff', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                            🖊️ Düzenle - {conn.friend.name || 'İsimsiz'}
+                                                        </h2>
+
+                                                        {/* Not */}
+                                                        <div style={{ marginBottom: '1.5rem' }}>
+                                                            <label style={{ display: 'block', color: '#94a3b8', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                                                                💭 Notum
+                                                            </label>
+                                                            <textarea
+                                                                value={editNote}
+                                                                onChange={(e) => setEditNote(e.target.value)}
+                                                                placeholder="Bu kişi hakkında notlarınız..."
+                                                                style={{
+                                                                    width: '100%',
+                                                                    padding: '0.75rem',
+                                                                    background: '#0f172a',
+                                                                    border: '1px solid #334155',
+                                                                    borderRadius: '0.5rem',
+                                                                    color: '#fff',
+                                                                    fontSize: '0.9rem',
+                                                                    minHeight: '100px',
+                                                                    resize: 'vertical'
+                                                                }}
+                                                            />
+                                                        </div>
+
+                                                        {/* Etiketler */}
+                                                        <div style={{ marginBottom: '1.5rem' }}>
+                                                            <label style={{ display: 'block', color: '#94a3b8', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                                                                🏷️ Etiketler (virgülle ayırın)
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                value={editTags}
+                                                                onChange={(e) => setEditTags(e.target.value)}
+                                                                placeholder="örn: arkadaş, iş, önemli"
+                                                                style={{
+                                                                    width: '100%',
+                                                                    padding: '0.75rem',
+                                                                    background: '#0f172a',
+                                                                    border: '1px solid #334155',
+                                                                    borderRadius: '0.5rem',
+                                                                    color: '#fff',
+                                                                    fontSize: '0.9rem'
+                                                                }}
+                                                            />
+                                                        </div>
+
+                                                        {/* Butonlar */}
+                                                        <div style={{ display: 'flex', gap: '0.75rem' }}>
+                                                            <button
+                                                                onClick={() => setEditingContact(null)}
+                                                                style={{
+                                                                    flex: 1,
+                                                                    padding: '0.75rem',
+                                                                    background: 'rgba(71, 85, 105, 0.5)',
+                                                                    border: '1px solid #334155',
+                                                                    borderRadius: '0.5rem',
+                                                                    color: '#94a3b8',
+                                                                    fontWeight: '600',
+                                                                    cursor: 'pointer'
+                                                                }}
+                                                            >
+                                                                İptal
+                                                            </button>
+                                                            <button
+                                                                onClick={handleSaveEdit}
+                                                                style={{
+                                                                    flex: 1,
+                                                                    padding: '0.75rem',
+                                                                    background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                                                                    border: 'none',
+                                                                    borderRadius: '0.5rem',
+                                                                    color: '#fff',
+                                                                    fontWeight: '600',
+                                                                    cursor: 'pointer'
+                                                                }}
+                                                            >
+                                                                💾 Kaydet
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )
+                                        })()}
                                     </div>
                                 </div>
                             )
@@ -801,18 +1059,31 @@ export function ConnectionsClient({
                                     }}
                                 >
                                     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                                        <div style={{
-                                            fontSize: '3rem',
-                                            width: '60px',
-                                            height: '60px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            background: 'linear-gradient(135deg, #10b981, #059669)',
-                                            borderRadius: '1rem'
-                                        }}>
-                                            🌱
-                                        </div>
+                                        {plant.coverImageUrl ? (
+                                            <img
+                                                src={plant.coverImageUrl}
+                                                alt={plant.name}
+                                                style={{
+                                                    width: '60px',
+                                                    height: '60px',
+                                                    objectFit: 'cover',
+                                                    borderRadius: '1rem'
+                                                }}
+                                            />
+                                        ) : (
+                                            <div style={{
+                                                fontSize: '3rem',
+                                                width: '60px',
+                                                height: '60px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                background: 'linear-gradient(135deg, #10b981, #059669)',
+                                                borderRadius: '1rem'
+                                            }}>
+                                                🌱
+                                            </div>
+                                        )}
 
                                         <div style={{ flex: 1 }}>
                                             <h3 style={{

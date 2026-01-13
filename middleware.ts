@@ -1,15 +1,27 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
+import { auth } from "@/lib/auth"
 
 // Reserved paths that should NOT be treated as card slugs
 const RESERVED_PATHS = [
     '/dashboard', '/api', '/login', '/register', '/logout', '/forgot-password', '/reset-password', '/complete-profile',
-    '/plant', '/mug', '/gift', '/c', '/card', '/t', '/p', '/page', '/u',
+    '/plant', '/mug', '/gift', '/c', '/card', '/t', '/p', '/page', '/u', '/h',
     '/admin', '/claim', '/actions', '/_next', '/favicon'
 ]
 
 export async function middleware(req: NextRequest) {
     const { pathname } = req.nextUrl
+
+    // Dashboard auth check - protect all dashboard routes
+    if (pathname.startsWith('/dashboard')) {
+        const session = await auth()
+        if (!session?.user) {
+            const url = req.nextUrl.clone()
+            url.pathname = '/login'
+            url.searchParams.set('callbackUrl', pathname)
+            return NextResponse.redirect(url)
+        }
+    }
 
     // Redirect /u/[code] to /t/[code] for NFC codes
     if (pathname.startsWith('/u/') && pathname.length > 3) {

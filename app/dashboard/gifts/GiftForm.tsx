@@ -19,7 +19,10 @@ interface GiftFormProps {
         message: string | null
         giftType: string
         mediaUrl: string | null
+        youtubeUrls: string | null
+        musicUrl: string | null
         spotifyUrl: string | null
+        isBirthday: boolean
         senderName: string | null
         password?: string | null
         passwordHint?: string | null
@@ -361,15 +364,48 @@ export function GiftForm({ gift, availableTags = [] }: GiftFormProps) {
                 </div>
 
                 <div className={styles.formGroup}>
-                    <label>veya Görsel/Video URL</label>
+                    <label>veya Görsel URL</label>
                     <input
-                        type="url"
+                        type="text"
                         name="mediaUrl"
-                        placeholder="https://..."
+                        placeholder="https://... veya yüklenen dosya yolu"
                         defaultValue={gift?.mediaUrl || ''}
                     />
                     <small style={{ color: 'rgba(255,255,255,0.4)', marginTop: '0.5rem', display: 'block' }}>
-                        Direkt resim linki veya YouTube video linki kullanabilirsiniz.
+                        Direkt resim linki girebilirsiniz veya yukarıdan fotoğraf yükleyin.
+                    </small>
+                </div>
+
+                <div className={styles.formGroup}>
+                    <label>YouTube Video URL 1 (İsteğe Bağlı)</label>
+                    <input
+                        type="url"
+                        name="youtubeUrl1"
+                        placeholder="https://youtube.com/watch?v=..."
+                        defaultValue={gift?.youtubeUrls ? (JSON.parse(gift.youtubeUrls)[0] || '') : ''}
+                    />
+                </div>
+
+                <div className={styles.formGroup}>
+                    <label>YouTube Video URL 2 (İsteğe Bağlı)</label>
+                    <input
+                        type="url"
+                        name="youtubeUrl2"
+                        placeholder="https://youtube.com/watch?v=..."
+                        defaultValue={gift?.youtubeUrls ? (JSON.parse(gift.youtubeUrls)[1] || '') : ''}
+                    />
+                </div>
+
+                <div className={styles.formGroup}>
+                    <label>Müzik URL (Pixabay, Mixkit, Bensound)</label>
+                    <input
+                        type="url"
+                        name="musicUrl"
+                        placeholder="https://..."
+                        defaultValue={gift?.musicUrl || ''}
+                    />
+                    <small style={{ color: 'rgba(255,255,255,0.4)', marginTop: '0.5rem', display: 'block' }}>
+                        Ücretsiz müzik siteleri: <a href="https://pixabay.com/music/" target="_blank" style={{ color: '#60a5fa' }}>Pixabay</a>, <a href="https://mixkit.co/free-stock-music/" target="_blank" style={{ color: '#60a5fa' }}>Mixkit</a>, <a href="https://www.bensound.com/" target="_blank" style={{ color: '#60a5fa' }}>Bensound</a>
                     </small>
                 </div>
 
@@ -390,6 +426,18 @@ export function GiftForm({ gift, availableTags = [] }: GiftFormProps) {
                             </ul>
                         </details>
                     </div>
+                </div>
+
+                <div className={styles.formGroup}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                        <input
+                            type="checkbox"
+                            name="isBirthday"
+                            defaultChecked={gift?.isBirthday || false}
+                            style={{ width: 'auto', cursor: 'pointer' }}
+                        />
+                        <span>🎂 Doğum Günü Hediyesi (Müzik yoksa otomatik doğum günü şarkısı çalar)</span>
+                    </label>
                 </div>
             </div>
 

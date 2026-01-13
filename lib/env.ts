@@ -107,8 +107,17 @@ export function buildUrl(path: string): string {
 
 /**
  * Get card public URL
- * @param slug - Card slug/username
+ * @param slug - Card slug/username or card ID
  */
 export function getCardUrl(slug: string): string {
+  // If it's a CUID (starts with 'c' and has specific length), use /c/ prefix
+  // CUIDs typically start with 'c' followed by random characters
+  const isCuid = /^c[a-z0-9]{24,25}$/i.test(slug)
+
+  if (isCuid) {
+    return buildUrl(`/c/${slug}`)
+  }
+
+  // Otherwise it's a username, use direct path
   return buildUrl(`/${slug}`)
 }

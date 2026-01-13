@@ -60,10 +60,12 @@ interface NfcTagsClientProps {
     receivedRequests: TransferRequest[]
 }
 
-export default function NfcTagsClient({ userTags: initialTags, userModules, sentRequests, receivedRequests }: NfcTagsClientProps) {
+export default function NfcTagsClient({ userTags: initialTags, userModules, sentRequests: initialSent, receivedRequests: initialReceived }: NfcTagsClientProps) {
     const { showToast } = useToast()
     const router = useRouter()
     const [tags, setTags] = useState<NfcTag[]>(initialTags)
+    const [sentRequests, setSentRequests] = useState<TransferRequest[]>(initialSent)
+    const [receivedRequests, setReceivedRequests] = useState<TransferRequest[]>(initialReceived)
     const [loading, setLoading] = useState(false)
 
     // Modals
@@ -71,11 +73,11 @@ export default function NfcTagsClient({ userTags: initialTags, userModules, sent
     const [selectedTag, setSelectedTag] = useState<NfcTag | null>(null)
 
     const getLinkedModule = (tag: NfcTag) => {
-        if (tag.card) return { type: '💳 Kartvizit', name: tag.card.title || 'İsimsiz', id: tag.card.id }
-        if (tag.plant) return { type: '🪴 Bitki', name: tag.plant.name, id: tag.plant.id }
-        if (tag.mug) return { type: '☕ Kupa', name: tag.mug.name, id: tag.mug.id }
-        if (tag.gift) return { type: '🎁 Hediye', name: tag.gift.title || 'İsimsiz', id: tag.gift.id }
-        if (tag.page) return { type: '📄 Sayfa', name: tag.page.title || 'İsimsiz', id: tag.page.id }
+        if (tag.card) return { type: 'card', emoji: '💳', label: 'Kartvizit', name: tag.card.title || 'İsimsiz', id: tag.card.id }
+        if (tag.plant) return { type: 'plant', emoji: '🪴', label: 'Bitki', name: tag.plant.name, id: tag.plant.id }
+        if (tag.mug) return { type: 'mug', emoji: '☕', label: 'Kupa', name: tag.mug.name, id: tag.mug.id }
+        if (tag.gift) return { type: 'gift', emoji: '🎁', label: 'Hediye', name: tag.gift.title || 'İsimsiz', id: tag.gift.id }
+        if (tag.page) return { type: 'page', emoji: '📄', label: 'Sayfa', name: tag.page.title || 'İsimsiz', id: tag.page.id }
         return null
     }
 
@@ -131,119 +133,298 @@ export default function NfcTagsClient({ userTags: initialTags, userModules, sent
         }
     }
 
+    const handleCancelTransfer = async (requestId: string) => {
+        if (!confirm('Transfer isteğini iptal etmek istiyor musunuz?')) return
+        setLoading(true)
+        try {
+            const res = await fetch('/api/transfer/cancel', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ requestId })
+            })
+
+            if (res.ok) {
+                showToast('Transfer isteği iptal edildi', 'success')
+                setSentRequests(prev => prev.filter(r => r.id !== requestId))
+                router.refresh()
+            } else {
+                showToast('İptal işlemi başarısız', 'error')
+            }
+        } catch (error) {
+            showToast('Bir hata oluştu', 'error')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleRespondTransfer = async (requestId: string, action: 'accept' | 'reject') => {
+        if (!confirm(action === 'accept' ? 'Transferi kabul etmek istiyor musunuz?' : 'Transferi reddetmek istiyor musunuz?')) return
+        setLoading(true)
+        try {
+            const res = await fetch('/api/transfer/respond', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ requestId, action })
+            })
+
+            const data = await res.json()
+            if (res.ok) {
+                showToast(data.message, 'success')
+                setReceivedRequests(prev => prev.filter(r => r.id !== requestId))
+                router.refresh()
+            } else {
+                showToast(data.error || 'İşlem başarısız', 'error')
+            }
+        } catch (error) {
+            showToast('Bir hata oluştu', 'error')
+        } finally {
+            setLoading(false)
+        }
+    }
+
     const openTransferModal = (tag: NfcTag) => {
         setSelectedTag(tag)
         setShowTransferModal(true)
     }
 
-    const renderTag = (tag: NfcTag, linkedModule: any = null) => (
-        <div key={tag.id} className={styles.tagCard}>
-            <div className={styles.tagHeader}>
+    return (
+        <div className={styles.container}>
+            {/* Header */}
+            <div className={styles.pageHeader}>
                 <div>
-                    <h3>{tag.publicCode}</h3>
-                    <small>
-                        {tag.claimedAt
-                            ? new Date(tag.claimedAt).toLocaleDateString('tr-TR')
-                            : 'Tarih yok'
-                        }
-                    </small>
+                    <h1 className={styles.pageTitle}>🏷️ NFC Etiketlerim</h1>
+                    <p className={styles.pageSubtitle}>
+                        {tags.length > 0 ? `${tags.length} adet etiket` : 'Henüz etiketiniz yok'}
+                    </p>
                 </div>
+                <a href="/claim" className={styles.addButton}>
+                    <span className={styles.addButtonIcon}>➕</span>
+                    Yeni Etiket Ekle
+                </a>
             </div>
 
-            {linkedModule && (
-                <div className={styles.linkedInfo}>
-                    <span className={styles.moduleType}>{linkedModule.type}</span>
-                    <span className={styles.moduleName}>{linkedModule.name}</span>
+            {/* RECEIVED REQUESTS - High Priority */}
+            {receivedRequests.length > 0 && (
+                <div className={styles.section}>
+                    <div className={styles.sectionHeader}>
+                        <h2 className={styles.sectionTitle}>
+                            <span className={styles.sectionEmoji}>📥</span>
+                            Gelen Transfer İstekleri
+                            <span className={styles.badge}>{receivedRequests.length}</span>
+                        </h2>
+                    </div>
+                    <div className={styles.requestGrid}>
+                        {receivedRequests.map(req => (
+                            <div key={req.id} className={styles.requestCard}>
+                                <div className={styles.requestHeader}>
+                                    <div className={styles.requestCode}>{req.tag.publicCode}</div>
+                                    <div className={styles.requestBadge}>Yeni</div>
+                                </div>
+                                <div className={styles.requestBody}>
+                                    <p className={styles.requestText}>
+                                        <strong>{req.fromUser?.name || req.fromUser?.username || 'Biri'}</strong> size bu etiketi göndermek istiyor.
+                                    </p>
+                                    {req.message && (
+                                        <p className={styles.requestMessage}>"{req.message}"</p>
+                                    )}
+                                </div>
+                                <div className={styles.requestActions}>
+                                    <button
+                                        className={`${styles.btn} ${styles.btnSuccess}`}
+                                        onClick={() => handleRespondTransfer(req.id, 'accept')}
+                                        disabled={loading}
+                                    >
+                                        ✅ Kabul Et
+                                    </button>
+                                    <button
+                                        className={`${styles.btn} ${styles.btnDanger}`}
+                                        onClick={() => handleRespondTransfer(req.id, 'reject')}
+                                        disabled={loading}
+                                    >
+                                        ❌ Reddet
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
 
-            <div className={styles.actions}>
-                {linkedModule ? (
-                    <button
-                        className={`${styles.actionBtn} ${styles.warningBtn}`}
-                        onClick={() => handleUnlink(tag)}
-                        disabled={loading}
-                    >
-                        🔗 Eşleştirmeyi Kaldır
-                    </button>
-                ) : (
-                    <a
-                        href={`/claim?code=${tag.publicCode}`}
-                        className={`${styles.actionBtn} ${styles.primaryBtn}`}
-                        style={{ textDecoration: 'none', display: 'block', textAlign: 'center' }}
-                    >
-                        🔗 Eşleştir
-                    </a>
-                )}
-
-                <button
-                    className={`${styles.actionBtn} ${styles.secondaryBtn}`}
-                    onClick={() => openTransferModal(tag)}
-                    disabled={loading}
-                >
-                    🎁 Transfer Et
-                </button>
-
-                <button
-                    className={`${styles.actionBtn} ${styles.dangerBtn}`}
-                    onClick={() => handleDelete(tag)}
-                    disabled={loading}
-                >
-                    🗑️ Kaldır
-                </button>
-            </div>
-        </div>
-    )
-
-    return (
-        <div className={styles.container}>
-            <div className={styles.header}>
-                <div>
-                    <h1>NFC Etiketlerim</h1>
-                    <p>Sahip olduğunuz NFC etiketlerini yönetin</p>
+            {/* SENT REQUESTS */}
+            {sentRequests.length > 0 && (
+                <div className={styles.section}>
+                    <div className={styles.sectionHeader}>
+                        <h2 className={styles.sectionTitle}>
+                            <span className={styles.sectionEmoji}>📤</span>
+                            Gönderilen İstekler
+                            <span className={styles.badge}>{sentRequests.length}</span>
+                        </h2>
+                    </div>
+                    <div className={styles.requestGrid}>
+                        {sentRequests.map(req => (
+                            <div key={req.id} className={styles.requestCard}>
+                                <div className={styles.requestHeader}>
+                                    <div className={styles.requestCode}>{req.tag.publicCode}</div>
+                                    <div className={styles.requestBadgePending}>⏳ Beklemede</div>
+                                </div>
+                                <div className={styles.requestBody}>
+                                    <p className={styles.requestText}>
+                                        Alıcı: <strong>{req.toUser?.name || req.toUser?.username}</strong>
+                                    </p>
+                                </div>
+                                <div className={styles.requestActions}>
+                                    <button
+                                        className={`${styles.btn} ${styles.btnWarning}`}
+                                        onClick={() => handleCancelTransfer(req.id)}
+                                        disabled={loading}
+                                    >
+                                        🚫 İptal Et
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
-            </div>
+            )}
 
-            {tags.length === 0 ? (
+            {/* LINKED TAGS */}
+            {linkedTags.length > 0 && (
+                <div className={styles.section}>
+                    <div className={styles.sectionHeader}>
+                        <h2 className={styles.sectionTitle}>
+                            <span className={styles.sectionEmoji}>🔗</span>
+                            Eşleşmiş Etiketler
+                            <span className={styles.badge}>{linkedTags.length}</span>
+                        </h2>
+                    </div>
+                    <div className={styles.tagsGrid}>
+                        {linkedTags.map(tag => {
+                            const module = getLinkedModule(tag)
+                            return (
+                                <div key={tag.id} className={styles.tagCard}>
+                                    <div className={styles.tagCardHeader}>
+                                        <div className={styles.tagIcon}>{module?.emoji}</div>
+                                        <div className={styles.tagStatus}>
+                                            <span className={styles.statusDot}></span>
+                                            Aktif
+                                        </div>
+                                    </div>
+
+                                    <div className={styles.tagCardBody}>
+                                        <div className={styles.tagCode}>{tag.publicCode}</div>
+                                        <div className={styles.tagModule}>
+                                            <span className={styles.moduleLabel}>{module?.label}</span>
+                                            <span className={styles.moduleName}>{module?.name}</span>
+                                        </div>
+                                        <div className={styles.tagDate}>
+                                            {tag.claimedAt ? new Date(tag.claimedAt).toLocaleDateString('tr-TR') : '—'}
+                                        </div>
+                                    </div>
+
+                                    <div className={styles.tagCardActions}>
+                                        <button
+                                            className={`${styles.btn} ${styles.btnSecondary}`}
+                                            onClick={() => handleUnlink(tag)}
+                                            disabled={loading}
+                                            title="Eşleştirmeyi Kaldır"
+                                        >
+                                            🔗 Ayır
+                                        </button>
+                                        <button
+                                            className={`${styles.btn} ${styles.btnSecondary}`}
+                                            onClick={() => openTransferModal(tag)}
+                                            disabled={loading}
+                                            title="Transfer Et"
+                                        >
+                                            🎁 Transfer
+                                        </button>
+                                        <button
+                                            className={`${styles.btn} ${styles.btnDanger}`}
+                                            onClick={() => handleDelete(tag)}
+                                            disabled={loading}
+                                            title="Etiket Sil"
+                                        >
+                                            🗑️
+                                        </button>
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
+            )}
+
+            {/* UNLINKED TAGS */}
+            {unlinkedTags.length > 0 && (
+                <div className={styles.section}>
+                    <div className={styles.sectionHeader}>
+                        <h2 className={styles.sectionTitle}>
+                            <span className={styles.sectionEmoji}>📦</span>
+                            Eşleşmemiş Etiketler
+                            <span className={styles.badge}>{unlinkedTags.length}</span>
+                        </h2>
+                    </div>
+                    <div className={styles.tagsGrid}>
+                        {unlinkedTags.map(tag => (
+                            <div key={tag.id} className={`${styles.tagCard} ${styles.tagCardUnlinked}`}>
+                                <div className={styles.tagCardHeader}>
+                                    <div className={styles.tagIconUnlinked}>🏷️</div>
+                                    <div className={styles.tagStatusInactive}>
+                                        <span className={styles.statusDotInactive}></span>
+                                        Beklemede
+                                    </div>
+                                </div>
+
+                                <div className={styles.tagCardBody}>
+                                    <div className={styles.tagCode}>{tag.publicCode}</div>
+                                    <div className={styles.tagModuleEmpty}>Henüz eşleşmemiş</div>
+                                    <div className={styles.tagDate}>
+                                        {tag.claimedAt ? new Date(tag.claimedAt).toLocaleDateString('tr-TR') : '—'}
+                                    </div>
+                                </div>
+
+                                <div className={styles.tagCardActions}>
+                                    <a
+                                        href={`/claim?code=${tag.publicCode}`}
+                                        className={`${styles.btn} ${styles.btnPrimary}`}
+                                    >
+                                        🔗 Eşleştir
+                                    </a>
+                                    <button
+                                        className={`${styles.btn} ${styles.btnSecondary}`}
+                                        onClick={() => openTransferModal(tag)}
+                                        disabled={loading}
+                                        title="Transfer Et"
+                                    >
+                                        🎁
+                                    </button>
+                                    <button
+                                        className={`${styles.btn} ${styles.btnDanger}`}
+                                        onClick={() => handleDelete(tag)}
+                                        disabled={loading}
+                                        title="Etiket Sil"
+                                    >
+                                        🗑️
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Empty State */}
+            {tags.length === 0 && receivedRequests.length === 0 && sentRequests.length === 0 && (
                 <div className={styles.emptyState}>
-                    <p>Henüz NFC etiketiniz yok</p>
-                    <a
-                        href="/claim"
-                        className={styles.addCard}
-                        style={{ marginTop: '1rem', padding: '2rem', display: 'block', textDecoration: 'none' }}
-                    >
-                        <div className={styles.addContent}>
-                            <span className={styles.addIcon}>➕</span>
-                            <span>NFC Etiket Ekle</span>
-                        </div>
+                    <div className={styles.emptyIcon}>🏷️</div>
+                    <h2 className={styles.emptyTitle}>Henüz NFC etiketiniz yok</h2>
+                    <p className={styles.emptyText}>
+                        Yeni bir NFC etiketi ekleyerek başlayın.
+                    </p>
+                    <a href="/claim" className={styles.emptyButton}>
+                        ➕ İlk Etiketimi Ekle
                     </a>
                 </div>
-            ) : (
-                <>
-                    {/* Linked Tags Section */}
-                    {linkedTags.length > 0 && (
-                        <div style={{ marginBottom: '2rem' }}>
-                            <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', color: '#fff' }}>
-                                🔗 Eşleşmiş Etiketler ({linkedTags.length})
-                            </h2>
-                            <div className={styles.tagsGrid}>
-                                {linkedTags.map(tag => renderTag(tag, getLinkedModule(tag)))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Unlinked Tags Section */}
-                    {unlinkedTags.length > 0 && (
-                        <div>
-                            <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', color: '#fff' }}>
-                                📦 Eşleşmemiş Etiketler ({unlinkedTags.length})
-                            </h2>
-                            <div className={styles.tagsGrid}>
-                                {unlinkedTags.map(tag => renderTag(tag))}
-                            </div>
-                        </div>
-                    )}
-                </>
             )}
 
             {/* Transfer Modal */}

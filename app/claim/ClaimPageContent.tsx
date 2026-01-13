@@ -4,25 +4,33 @@ import { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { MODULE_OPTIONS } from '@/lib/types'
 
-interface Card {
-    id: string
-    title: string | null
-    slug: string | null
-    avatarUrl: string | null
-}
+interface Card { id: string; title: string | null; slug: string | null }
+interface Plant { id: string; name: string; slug: string | null }
+interface Mug { id: string; name: string; slug: string | null }
+interface Gift { id: string; title: string | null; slug: string | null }
+interface Page { id: string; title: string | null; slug: string | null }
 
 export default function ClaimPageContent() {
     const searchParams = useSearchParams()
     const router = useRouter()
     const code = searchParams.get('code')
 
-    const [step, setStep] = useState<'checking' | 'invalid-code' | 'module' | 'card-choice' | 'card-link' | 'name' | 'loading'>('checking')
+    const [step, setStep] = useState<'checking' | 'invalid-code' | 'module' | 'link-choice' | 'link-select' | 'name' | 'loading'>('checking')
     const [selectedModule, setSelectedModule] = useState<string | null>(null)
     const [name, setName] = useState('')
     const [error, setError] = useState('')
-    const [userCards, setUserCards] = useState<Card[]>([])
-    const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
-    const [loadingCards, setLoadingCards] = useState(false)
+
+    // Modules State
+    const [userModules, setUserModules] = useState<{
+        cards: Card[],
+        plants: Plant[],
+        mugs: Mug[],
+        gifts: Gift[],
+        pages: Page[]
+    }>({ cards: [], plants: [], mugs: [], gifts: [], pages: [] })
+
+    const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null)
+    const [loadingModules, setLoadingModules] = useState(false)
     const [tagExists, setTagExists] = useState<boolean | null>(null)
     const [newCode, setNewCode] = useState('')
 
@@ -40,7 +48,13 @@ export default function ClaimPageContent() {
 
                 if (data.exists) {
                     setTagExists(true)
-                    setStep('module')
+                    // If tag is already claimed/linked, maybe redirect? 
+                    // check API might handle redirections or we handle it here if data.redirectUrl exists
+                    if (data.redirectUrl) {
+                        router.push(data.redirectUrl)
+                    } else {
+                        setStep('module')
+                    }
                 } else {
                     setTagExists(false)
                     setStep('invalid-code')
@@ -53,195 +67,104 @@ export default function ClaimPageContent() {
         }
 
         checkCode()
-    }, [code])
+    }, [code, router])
 
-    // Kullanıcının kartvizitlerini yükle
-    const loadUserCards = async () => {
-        setLoadingCards(true)
+    // Kullanıcının modüllerini yükle
+    const loadUserModules = async () => {
+        setLoadingModules(true)
         try {
-            const res = await fetch('/api/cards/my')
+            const res = await fetch('/api/user/modules')
             if (res.ok) {
                 const data = await res.json()
-                setUserCards(data.cards || [])
+                setUserModules({
+                    cards: data.cards || [],
+                    plants: data.plants || [],
+                    mugs: data.mugs || [],
+                    gifts: data.gifts || [],
+                    pages: data.pages || []
+                })
             }
         } catch (err) {
-            console.error('Failed to load cards:', err)
+            console.error('Failed to load modules:', err)
         }
-        setLoadingCards(false)
+        setLoadingModules(false)
     }
+
+    // Load modules initially to check if "Match Existing" should be shown
+    useEffect(() => {
+        if (step === 'module') {
+            loadUserModules()
+        }
+    }, [step])
 
     // Loading state
     if (step === 'checking') {
         return (
-            <div className="container" style={{
-                display: 'flex',
-                height: '100vh',
-                alignItems: 'center',
-                justifyContent: 'center'
-            }}>
+            <div className="container" style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center' }}>
                 <div className="card" style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
                     <h1 style={{ color: '#fff' }}>Etiket Kontrol Ediliyor...</h1>
-                    <p style={{ color: 'var(--color-text-muted)' }}>
-                        Kod: <strong>{code}</strong>
-                    </p>
+                    <p style={{ color: 'var(--color-text-muted)' }}>Kod: <strong>{code}</strong></p>
                 </div>
             </div>
         )
     }
 
-    // Invalid code - show options
+    // Invalid code
     if (step === 'invalid-code') {
         return (
-            <div className="container" style={{
-                display: 'flex',
-                height: '100vh',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '1rem'
-            }}>
+            <div className="container" style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
                 <div className="card" style={{ textAlign: 'center', maxWidth: '450px' }}>
                     <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🏷️</div>
                     <h1 style={{ color: '#fff', marginBottom: '0.5rem' }}>Etiket Bulunamadı</h1>
                     <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem' }}>
-                        {code ? (
-                            <>
-                                <strong style={{ color: '#f59e0b' }}>{code}</strong> kodu sistemde kayıtlı değil.
-                            </>
-                        ) : (
-                            'NFC etiket kodu girilmedi.'
-                        )}
+                        {code ? <><strong style={{ color: '#f59e0b' }}>{code}</strong> kodu sistemde kayıtlı değil.</> : 'NFC etiket kodu girilmedi.'}
                     </p>
-
-                    {/* Manuel kod girişi */}
                     <div style={{ marginBottom: '1.5rem' }}>
                         <input
                             type="text"
                             placeholder="NFC etiket kodunu girin..."
                             value={newCode}
                             onChange={(e) => setNewCode(e.target.value.toUpperCase())}
-                            style={{
-                                width: '100%',
-                                padding: '0.75rem 1rem',
-                                borderRadius: '8px',
-                                border: '1px solid rgba(255,255,255,0.2)',
-                                background: 'rgba(255,255,255,0.05)',
-                                color: '#fff',
-                                fontSize: '1rem',
-                                textAlign: 'center',
-                                textTransform: 'uppercase'
-                            }}
+                            className="input"
+                            style={{ textAlign: 'center', textTransform: 'uppercase' }}
                         />
                         <button
-                            onClick={() => {
-                                if (newCode.trim()) {
-                                    router.push(`/claim?code=${newCode.trim()}`)
-                                }
-                            }}
+                            onClick={() => { if (newCode.trim()) router.push(`/claim?code=${newCode.trim()}`) }}
                             disabled={!newCode.trim()}
-                            style={{
-                                width: '100%',
-                                marginTop: '0.5rem',
-                                padding: '0.75rem',
-                                borderRadius: '8px',
-                                border: 'none',
-                                background: newCode.trim() ? '#3b82f6' : 'rgba(255,255,255,0.1)',
-                                color: '#fff',
-                                fontSize: '1rem',
-                                cursor: newCode.trim() ? 'pointer' : 'not-allowed'
-                            }}
+                            className="btn btn-primary"
+                            style={{ marginTop: '0.5rem', width: '100%' }}
                         >
                             🔍 Kodu Kontrol Et
                         </button>
                     </div>
-
-                    <div style={{
-                        width: '100%',
-                        height: '1px',
-                        background: 'rgba(255,255,255,0.1)',
-                        margin: '1.5rem 0',
-                        position: 'relative'
-                    }}>
-                        <span style={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            background: 'var(--color-bg-secondary)',
-                            padding: '0 1rem',
-                            color: 'rgba(255,255,255,0.5)',
-                            fontSize: '0.85rem'
-                        }}>
-                            veya
-                        </span>
-                    </div>
-
-                    {/* NFC'siz profil oluştur */}
-                    <button
-                        onClick={() => router.push('/dashboard/cards/create')}
-                        style={{
-                            width: '100%',
-                            padding: '1rem',
-                            borderRadius: '12px',
-                            border: '1px solid rgba(16, 185, 129, 0.3)',
-                            background: 'rgba(16, 185, 129, 0.1)',
-                            color: '#10b981',
-                            fontSize: '1rem',
-                            cursor: 'pointer',
-                            marginBottom: '0.75rem'
-                        }}
-                    >
-                        💳 NFC'siz Kartvizit Oluştur
-                    </button>
-
-                    <button
-                        onClick={() => router.push('/dashboard')}
-                        style={{
-                            width: '100%',
-                            padding: '0.75rem',
-                            borderRadius: '8px',
-                            border: 'none',
-                            background: 'transparent',
-                            color: 'rgba(255,255,255,0.6)',
-                            fontSize: '0.9rem',
-                            cursor: 'pointer'
-                        }}
-                    >
-                        ← Dashboard'a Dön
-                    </button>
+                    <button onClick={() => router.push('/dashboard')} className="btn btn-ghost">← Dashboard'a Dön</button>
                 </div>
             </div>
         )
     }
 
-    const handleModuleSelect = async (moduleId: string) => {
+    const handleModuleSelect = (moduleId: string) => {
         setSelectedModule(moduleId)
-
-        if (moduleId === 'card') {
-            // Kartvizit için özel akış: önce mevcut kartları kontrol et
-            await loadUserCards()
-            setStep('card-choice')
-        } else {
-            // Diğer modüller için direkt isim girişi
-            setStep('name')
-        }
+        setStep('link-choice')
     }
 
-    const handleCardLink = async () => {
-        if (!selectedCardId) {
-            setError('Lütfen bir kartvizit seçin.')
+    const handleLinkModule = async () => {
+        if (!selectedModuleId || !selectedModule) {
+            setError('Lütfen bir seçim yapın.')
             return
         }
 
         setStep('loading')
 
         try {
-            const res = await fetch('/api/claim/link-card', {
+            const res = await fetch('/api/claim/link-module', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     code,
-                    cardId: selectedCardId,
+                    moduleId: selectedModuleId,
+                    moduleType: selectedModule
                 }),
             })
 
@@ -249,7 +172,7 @@ export default function ClaimPageContent() {
 
             if (data.error) {
                 setError(data.error)
-                setStep('card-link')
+                setStep('link-select')
                 return
             }
 
@@ -258,11 +181,11 @@ export default function ClaimPageContent() {
             }
         } catch (err) {
             setError('Bir hata oluştu. Lütfen tekrar deneyin.')
-            setStep('card-link')
+            setStep('link-select')
         }
     }
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleCreateNew = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!name.trim()) {
             setError('Lütfen bir isim girin.')
@@ -299,11 +222,22 @@ export default function ClaimPageContent() {
         }
     }
 
+    const getAvailableModules = () => {
+        switch (selectedModule) {
+            case 'card': return userModules.cards;
+            case 'plant': return userModules.plants;
+            case 'mug': return userModules.mugs;
+            case 'gift': return userModules.gifts;
+            case 'canvas': return userModules.pages; // mapped to pages
+            default: return [];
+        }
+    }
+
+    const availableModules = getAvailableModules()
     const selectedModuleInfo = MODULE_OPTIONS.find(m => m.id === selectedModule)
 
     return (
         <div className="container" style={{ paddingTop: '2rem', paddingBottom: '4rem' }}>
-            {/* Header */}
             <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
                 <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🏷️</div>
                 <h1 className="title-gradient" style={{ fontSize: '1.8rem', marginBottom: '0.5rem', color: '#fff' }}>
@@ -317,12 +251,7 @@ export default function ClaimPageContent() {
             {/* Step 1: Modül Seçimi */}
             {step === 'module' && (
                 <div>
-                    <h2 style={{
-                        textAlign: 'center',
-                        fontSize: '1.1rem',
-                        marginBottom: '1.5rem',
-                        color: 'rgba(255,255,255,0.8)'
-                    }}>
+                    <h2 style={{ textAlign: 'center', fontSize: '1.1rem', marginBottom: '1.5rem', color: 'rgba(255,255,255,0.8)' }}>
                         Bu etiketi neye yapıştırdın?
                     </h2>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -331,369 +260,107 @@ export default function ClaimPageContent() {
                                 key={module.id}
                                 onClick={() => handleModuleSelect(module.id)}
                                 className="card"
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '16px',
-                                    padding: '20px',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    textAlign: 'left',
-                                    width: '100%',
-                                }}
+                                style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '20px', border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%' }}
                             >
                                 <span style={{ fontSize: '2.5rem' }}>{module.emoji}</span>
                                 <div>
-                                    <div style={{ fontWeight: 600, fontSize: '1.1rem', color: '#fff' }}>
-                                        {module.name}
-                                    </div>
-                                    <div style={{
-                                        color: 'rgba(255,255,255,0.6)',
-                                        fontSize: '0.85rem'
-                                    }}>
-                                        {module.description}
-                                    </div>
+                                    <div style={{ fontWeight: 600, fontSize: '1.1rem', color: '#fff' }}>{module.name}</div>
+                                    <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem' }}>{module.description}</div>
                                 </div>
                             </button>
                         ))}
                     </div>
-
-                    {/* Sadece Kaydet Butonu */}
-                    <div style={{
-                        marginTop: '2rem',
-                        paddingTop: '1.5rem',
-                        borderTop: '1px solid rgba(255,255,255,0.1)'
-                    }}>
-                        <button
-                            onClick={async () => {
-                                setStep('loading')
-                                try {
-                                    const res = await fetch('/api/claim/claim-only', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ code }),
-                                    })
-                                    const data = await res.json()
-                                    if (data.error) {
-                                        setError(data.error)
-                                        setStep('module')
-                                        return
-                                    }
-                                    router.push('/dashboard/nfc-tags')
-                                } catch (err) {
-                                    setError('Bir hata oluştu')
-                                    setStep('module')
-                                }
-                            }}
-                            className="card"
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '16px',
-                                padding: '20px',
-                                border: '2px solid rgba(59, 130, 246, 0.3)',
-                                cursor: 'pointer',
-                                textAlign: 'left',
-                                width: '100%',
-                                background: 'rgba(59, 130, 246, 0.05)'
-                            }}
-                        >
-                            <span style={{ fontSize: '2.5rem' }}>💾</span>
-                            <div style={{ flex: 1 }}>
-                                <div style={{ fontWeight: 600, fontSize: '1.1rem', color: '#fff' }}>
-                                    NFC Profilime Kaydet
-                                </div>
-                                <div style={{
-                                    color: 'rgba(255,255,255,0.6)',
-                                    fontSize: '0.85rem',
-                                    marginTop: '4px'
-                                }}>
-                                    Önce kaydet, sonra eşleştir
-                                </div>
-                            </div>
-                        </button>
-                    </div>
                 </div>
             )}
 
-            {/* Step 2a: Kartvizit Seçimi (Yeni veya Mevcut) */}
-            {step === 'card-choice' && (
+            {/* Step 2: Seçim (Yeni oluştur veya Mevcut Bağla) */}
+            {step === 'link-choice' && (
                 <div>
-                    <button
-                        onClick={() => setStep('module')}
-                        style={{
-                            background: 'none',
-                            border: 'none',
-                            color: 'var(--color-text-muted)',
-                            cursor: 'pointer',
-                            marginBottom: '1rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px'
-                        }}
-                    >
-                        ← Geri
-                    </button>
-
-                    <h2 style={{
-                        textAlign: 'center',
-                        fontSize: '1.1rem',
-                        marginBottom: '1.5rem',
-                        color: 'var(--color-text-muted)'
-                    }}>
-                        Kartvizit Eşleştirme
+                    <button onClick={() => setStep('module')} className="btn btn-ghost" style={{ marginBottom: '1rem' }}>← Geri</button>
+                    <h2 style={{ textAlign: 'center', fontSize: '1.1rem', marginBottom: '1.5rem', color: 'var(--color-text-muted)' }}>
+                        {selectedModuleInfo?.name} Eşleştirme
                     </h2>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        {/* Mevcut kartviziti eşleştir */}
-                        {userCards.length > 0 && (
+                        {availableModules.length > 0 && (
                             <button
-                                onClick={() => setStep('card-link')}
+                                onClick={() => setStep('link-select')}
                                 className="card"
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '16px',
-                                    padding: '20px',
-                                    border: '2px solid var(--color-primary)',
-                                    cursor: 'pointer',
-                                    textAlign: 'left',
-                                    width: '100%',
-                                    background: 'rgba(59, 130, 246, 0.1)'
-                                }}
+                                style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '20px', border: '2px solid var(--color-primary)', cursor: 'pointer', textAlign: 'left', width: '100%', background: 'rgba(59, 130, 246, 0.1)' }}
                             >
                                 <span style={{ fontSize: '2.5rem' }}>🔗</span>
                                 <div>
-                                    <div style={{ fontWeight: 600, fontSize: '1.1rem', color: '#fff' }}>
-                                        Mevcut Kartvizitimi Eşleştir
-                                    </div>
-                                    <div style={{
-                                        color: 'var(--color-text-muted)',
-                                        fontSize: '0.85rem'
-                                    }}>
-                                        {userCards.length} kartvizitiniz var
-                                    </div>
+                                    <div style={{ fontWeight: 600, fontSize: '1.1rem', color: '#fff' }}>Mevcut İle Eşleştir</div>
+                                    <div style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>{availableModules.length} adet {selectedModuleInfo?.name}</div>
                                 </div>
                             </button>
                         )}
 
-                        {/* Yeni kartvizit oluştur */}
                         <button
                             onClick={() => setStep('name')}
                             className="card"
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '16px',
-                                padding: '20px',
-                                border: 'none',
-                                cursor: 'pointer',
-                                textAlign: 'left',
-                                width: '100%',
-                            }}
+                            style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '20px', border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%' }}
                         >
                             <span style={{ fontSize: '2.5rem' }}>✨</span>
                             <div>
-                                <div style={{ fontWeight: 600, fontSize: '1.1rem', color: '#fff' }}>
-                                    Yeni Kartvizit Oluştur
-                                </div>
-                                <div style={{
-                                    color: 'var(--color-text-muted)',
-                                    fontSize: '0.85rem'
-                                }}>
-                                    Sıfırdan bir kartvizit oluştur
-                                </div>
+                                <div style={{ fontWeight: 600, fontSize: '1.1rem', color: '#fff' }}>Yeni Oluştur</div>
+                                <div style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Sıfırdan oluştur ve eşleştir</div>
                             </div>
                         </button>
                     </div>
-
-                    {loadingCards && (
-                        <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', marginTop: '1rem' }}>
-                            Kartvizitler yükleniyor...
-                        </p>
-                    )}
                 </div>
             )}
 
-            {/* Step 2b: Kartvizit Seçimi (Dropdown) */}
-            {step === 'card-link' && (
+            {/* Step 3: Mevcut Modül Seçimi */}
+            {step === 'link-select' && (
                 <div>
-                    <button
-                        onClick={() => setStep('card-choice')}
-                        style={{
-                            background: 'none',
-                            border: 'none',
-                            color: 'var(--color-text-muted)',
-                            cursor: 'pointer',
-                            marginBottom: '1rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px'
-                        }}
-                    >
-                        ← Geri
-                    </button>
-
-                    <div className="card" style={{ marginBottom: '1.5rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <span style={{ fontSize: '2rem' }}>🔗</span>
-                            <div>
-                                <div style={{ fontWeight: 600, color: '#fff' }}>Kartvizit Eşleştir</div>
-                                <div style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
-                                    Bu NFC etiketini mevcut kartvizitinize bağlayın
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <label style={{
-                        display: 'block',
-                        marginBottom: '8px',
-                        fontSize: '0.9rem',
-                        color: '#fff'
-                    }}>
-                        Kartvizit Seçin
-                    </label>
+                    <button onClick={() => setStep('link-choice')} className="btn btn-ghost" style={{ marginBottom: '1rem' }}>← Geri</button>
+                    <h2 style={{ textAlign: 'center', marginBottom: '1rem', color: '#fff' }}>Hangi {selectedModuleInfo?.name}?</h2>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '1rem' }}>
-                        {userCards.map(card => (
+                        {availableModules.map((item: any) => (
                             <button
-                                key={card.id}
-                                onClick={() => setSelectedCardId(card.id)}
+                                key={item.id}
+                                onClick={() => setSelectedModuleId(item.id)}
                                 className="card"
                                 style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '12px',
-                                    padding: '12px 16px',
-                                    border: selectedCardId === card.id ? '2px solid var(--color-primary)' : '1px solid rgba(255,255,255,0.1)',
-                                    cursor: 'pointer',
-                                    textAlign: 'left',
-                                    background: selectedCardId === card.id ? 'rgba(59, 130, 246, 0.1)' : 'rgba(255,255,255,0.03)',
+                                    display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px',
+                                    border: selectedModuleId === item.id ? '2px solid var(--color-primary)' : '1px solid rgba(255,255,255,0.1)',
+                                    cursor: 'pointer', textAlign: 'left',
+                                    background: selectedModuleId === item.id ? 'rgba(59, 130, 246, 0.1)' : 'rgba(255,255,255,0.03)',
                                 }}
                             >
-                                <div style={{
-                                    width: '40px',
-                                    height: '40px',
-                                    borderRadius: '50%',
-                                    background: 'var(--color-primary)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    color: 'white',
-                                    fontWeight: 600,
-                                    fontSize: '1.2rem'
-                                }}>
-                                    {card.title?.charAt(0) || '?'}
-                                </div>
-                                <div>
-                                    <div style={{ fontWeight: 600 }}>{card.title || 'İsimsiz Kartvizit'}</div>
-                                    {card.slug && (
-                                        <div style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>
-                                            /{card.slug}
-                                        </div>
-                                    )}
-                                </div>
-                                {selectedCardId === card.id && (
-                                    <span style={{ marginLeft: 'auto', color: 'var(--color-primary)' }}>✓</span>
-                                )}
+                                <div style={{ fontWeight: 600 }}>{item.title || item.name || 'İsimsiz'}</div>
+                                {selectedModuleId === item.id && <span style={{ marginLeft: 'auto', color: 'var(--color-primary)' }}>✓</span>}
                             </button>
                         ))}
                     </div>
 
-                    {error && (
-                        <p style={{
-                            color: '#e74c3c',
-                            fontSize: '0.9rem',
-                            marginBottom: '1rem'
-                        }}>
-                            {error}
-                        </p>
-                    )}
+                    {error && <p style={{ color: '#e74c3c', marginBottom: '1rem' }}>{error}</p>}
 
-                    <button
-                        onClick={handleCardLink}
-                        className="btn btn-primary"
-                        disabled={!selectedCardId}
-                        style={{ opacity: selectedCardId ? 1 : 0.5 }}
-                    >
-                        NFC'yi Bu Kartvizite Bağla 🔗
+                    <button onClick={handleLinkModule} className="btn btn-primary" disabled={!selectedModuleId}>
+                        Eşleşmeyi Tamamla 🚀
                     </button>
                 </div>
             )}
 
-            {/* Step 3: İsim Girişi (Yeni oluşturma) */}
-            {step === 'name' && selectedModuleInfo && (
+            {/* Step 4: Yeni İsim Girişi */}
+            {step === 'name' && (
                 <div>
-                    <button
-                        onClick={() => setStep(selectedModule === 'card' ? 'card-choice' : 'module')}
-                        style={{
-                            background: 'none',
-                            border: 'none',
-                            color: 'var(--color-text-muted)',
-                            cursor: 'pointer',
-                            marginBottom: '1rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px'
-                        }}
-                    >
-                        ← Geri
-                    </button>
-
-                    <div className="card" style={{ marginBottom: '1.5rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <span style={{ fontSize: '2rem' }}>{selectedModuleInfo.emoji}</span>
-                            <div>
-                                <div style={{ fontWeight: 600 }}>{selectedModuleInfo.name}</div>
-                                <div style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
-                                    {selectedModuleInfo.description}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <form onSubmit={handleSubmit}>
-                        <label style={{
-                            display: 'block',
-                            marginBottom: '8px',
-                            color: 'var(--color-text-muted)',
-                            fontSize: '0.9rem'
-                        }}>
-                            {selectedModule === 'card' && 'Kartvizit Başlığı'}
-                            {selectedModule === 'plant' && 'Bitkinin Adı'}
-                            {selectedModule === 'mug' && 'Kupanın Adı'}
-                            {selectedModule === 'gift' && 'Hediye Başlığı'}
-                            {selectedModule === 'canvas' && 'Sayfa Başlığı'}
-                        </label>
+                    <button onClick={() => setStep('link-choice')} className="btn btn-ghost" style={{ marginBottom: '1rem' }}>← Geri</button>
+                    <form onSubmit={handleCreateNew}>
+                        <label style={{ display: 'block', marginBottom: '8px', color: 'var(--color-text-muted)' }}>İsimlendirin</label>
                         <input
                             type="text"
                             className="input"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            placeholder={
-                                selectedModule === 'card' ? 'Örn: CEO @ Şirket' :
-                                    selectedModule === 'plant' ? 'Örn: Minnoş' :
-                                        selectedModule === 'mug' ? 'Örn: Kahve Kupam' :
-                                            'Örn: Özel Sayfam'
-                            }
+                            placeholder={`Örn: Benim ${selectedModuleInfo?.name || 'Şeyim'}`}
                             autoFocus
                             style={{ marginBottom: '1rem' }}
                         />
-
-                        {error && (
-                            <p style={{
-                                color: '#e74c3c',
-                                fontSize: '0.9rem',
-                                marginBottom: '1rem'
-                            }}>
-                                {error}
-                            </p>
-                        )}
-
-                        <button type="submit" className="btn btn-primary">
-                            Sahiplen ve Başla 🚀
-                        </button>
+                        {error && <p style={{ color: '#e74c3c', marginBottom: '1rem' }}>{error}</p>}
+                        <button type="submit" className="btn btn-primary">Kaydet ve Başla 🚀</button>
                     </form>
                 </div>
             )}
@@ -701,25 +368,12 @@ export default function ClaimPageContent() {
             {/* Loading */}
             {step === 'loading' && (
                 <div style={{ textAlign: 'center', padding: '3rem 0' }}>
-                    <div style={{
-                        fontSize: '3rem',
-                        marginBottom: '1rem',
-                        animation: 'pulse 1s infinite'
-                    }}>
-                        ⏳
-                    </div>
-                    <p style={{ color: 'var(--color-text-muted)' }}>
-                        Etiket hazırlanıyor...
-                    </p>
+                    <div style={{ fontSize: '3rem', marginBottom: '1rem', animation: 'pulse 1s infinite' }}>⏳</div>
+                    <p style={{ color: 'var(--color-text-muted)' }}>İşleniyor...</p>
                 </div>
             )}
 
-            <style jsx>{`
-                @keyframes pulse {
-                    0%, 100% { opacity: 1; }
-                    50% { opacity: 0.5; }
-                }
-            `}</style>
+            <style jsx>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }`}</style>
         </div>
     )
 }

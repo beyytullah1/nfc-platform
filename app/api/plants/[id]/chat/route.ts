@@ -102,20 +102,27 @@ Lütfen Türkçe cevap ver ve bitki bakımı konusunda yardımcı ol. Kısa ve a
             return NextResponse.json({ error: 'Gemini API key not configured. Please add your key in settings.' }, { status: 500 })
         }
 
-        // Call Gemini API
-        const geminiResponse = await fetch(GEMINI_API_URL, {
+        // Call Gemini API (using URL parameter for API key)
+        const geminiApiUrl = `${GEMINI_API_URL}?key=${apiKey}`
+        const geminiResponse = await fetch(geminiApiUrl, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'X-goog-api-key': apiKey
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({ contents })
         })
 
         if (!geminiResponse.ok) {
             const errorData = await geminiResponse.json().catch(() => ({}))
-            console.error('Gemini API error:', errorData)
-            return NextResponse.json({ error: 'AI service error' }, { status: 502 })
+            console.error('Gemini API error:', {
+                status: geminiResponse.status,
+                statusText: geminiResponse.statusText,
+                error: errorData
+            })
+            return NextResponse.json({
+                error: 'AI service error',
+                details: errorData?.error?.message || geminiResponse.statusText
+            }, { status: 502 })
         }
 
         const geminiData = await geminiResponse.json()

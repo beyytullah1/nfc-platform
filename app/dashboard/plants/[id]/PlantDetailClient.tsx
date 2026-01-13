@@ -148,20 +148,6 @@ export default function PlantDetailClient({ plant, userName, isOwner, availableT
                 >
                     ✏️ Düzenle
                 </Link>
-                <Link
-                    href={`/p/${plant.id}/ai`}
-                    style={{
-                        padding: "0.75rem 1.25rem",
-                        background: "linear-gradient(135deg, rgba(52, 152, 219, 0.2), rgba(46, 204, 113, 0.2))",
-                        border: "1px solid rgba(52, 152, 219, 0.3)",
-                        borderRadius: "12px",
-                        color: "#60a5fa",
-                        textDecoration: "none",
-                        fontSize: "0.9rem"
-                    }}
-                >
-                    🤖 AI Asistan
-                </Link>
             </div>
 
             <div className={styles.detailGrid}>

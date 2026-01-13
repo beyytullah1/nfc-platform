@@ -35,6 +35,7 @@ interface Plant {
     isVisibleInProfile: boolean
     createdAt: Date
     tag: { id: string; isPublic: boolean } | null
+    coOwners?: { id: string }[] // Co-owners list
 }
 
 interface Mug {
@@ -51,27 +52,36 @@ interface Mug {
 interface UserProfileClientProps {
     user: User
     isOwner: boolean
+    currentUserId: string | null
     cards: Card[]
     plants: Plant[]
     mugs: Mug[]
 }
 
-export default function UserProfileClient({ user, isOwner, cards, plants, mugs }: UserProfileClientProps) {
+export default function UserProfileClient({ user, isOwner, currentUserId, cards, plants, mugs }: UserProfileClientProps) {
     const [activeTab, setActiveTab] = useState<'cards' | 'plants' | 'mugs'>('cards')
 
-    const handleVisibilityToggle = async (itemId: string, itemType: string) => {
+    const handleVisibilityToggle = async (itemId: string, itemType: string, currentVisibility: boolean) => {
         try {
             const res = await fetch(`/api/items/${itemId}/visibility`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ itemType })
+                body: JSON.stringify({
+                    type: itemType,
+                    isPublic: !currentVisibility  // Toggle the current state
+                })
             })
 
             if (res.ok) {
                 window.location.reload()
+            } else {
+                const data = await res.json()
+                console.error('Toggle failed:', data)
+                alert('Görünürlük değiştirilemedi: ' + (data.error || 'Bilinmeyen hata'))
             }
         } catch (error) {
             console.error('Toggle visibility error:', error)
+            alert('Bir hata oluştu. Lütfen tekrar deneyin.')
         }
     }
 
@@ -156,8 +166,15 @@ export default function UserProfileClient({ user, isOwner, cards, plants, mugs }
                                 key={plant.id}
                                 type="plant"
                                 item={plant}
-                                isOwner={isOwner} // Profile is mine
-                                onVisibilityToggle={(isOwner && plant.ownerId === user.id) ? handleVisibilityToggle : undefined}
+                                isOwner={isOwner}
+                                onVisibilityToggle={
+                                    // Can toggle if: profile owner OR plant owner OR co-owner
+                                    (isOwner ||
+                                        plant.ownerId === currentUserId ||
+                                        plant.coOwners?.some((co: any) => co.id === currentUserId))
+                                        ? handleVisibilityToggle
+                                        : undefined
+                                }
                             />
                         ))}
                         {visiblePlants.length === 0 && (

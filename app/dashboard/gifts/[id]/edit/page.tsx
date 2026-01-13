@@ -17,5 +17,18 @@ export default async function EditGiftPage({ params }: { params: Promise<{ id: s
 
     if (!gift) notFound()
 
-    return <GiftForm gift={gift} />
+    // Get available tags (unlinked to any module)
+    const availableTags = await prisma.nfcTag.findMany({
+        where: {
+            ownerId: session.user.id,
+            gift: null,
+            plant: null,
+            mug: null,
+            card: null,
+            page: null
+        },
+        select: { id: true, publicCode: true }
+    })
+
+    return <GiftForm gift={gift} availableTags={availableTags} />
 }

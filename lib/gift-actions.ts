@@ -19,11 +19,20 @@ export async function createGift(formData: FormData) {
     const message = formData.get("message") as string
     const giftType = formData.get("giftType") as string
     const mediaUrl = formData.get("mediaUrl") as string
+    const youtubeUrl1 = formData.get("youtubeUrl1") as string
+    const youtubeUrl2 = formData.get("youtubeUrl2") as string
+    const musicUrl = formData.get("musicUrl") as string
     const spotifyUrl = formData.get("spotifyUrl") as string
     const senderName = formData.get("senderName") as string
     const password = formData.get("password") as string
     const passwordHint = formData.get("passwordHint") as string
+    const isBirthday = formData.get("isBirthday") === "on"
     const tagCode = formData.get("tagCode") as string // Existing NFC tag public code
+
+    // Build YouTube URLs array
+    const youtubeUrls: string[] = []
+    if (youtubeUrl1?.trim()) youtubeUrls.push(youtubeUrl1.trim())
+    if (youtubeUrl2?.trim()) youtubeUrls.push(youtubeUrl2.trim())
 
     // Password is REQUIRED for gifts
     if (!password || password.trim().length < 1) {
@@ -69,7 +78,10 @@ export async function createGift(formData: FormData) {
                 message,
                 giftType,
                 mediaUrl: mediaUrl || null,
+                youtubeUrls: youtubeUrls.length > 0 ? JSON.stringify(youtubeUrls) : null,
+                musicUrl: musicUrl || null,
                 spotifyUrl: spotifyUrl || null,
+                isBirthday,
                 senderName: senderName || null,
                 password: password, // Required
                 passwordHint: passwordHint || null,
@@ -92,10 +104,19 @@ export async function updateGift(id: string, formData: FormData) {
     const message = formData.get("message") as string
     const giftType = formData.get("giftType") as string
     const mediaUrl = formData.get("mediaUrl") as string
+    const youtubeUrl1 = formData.get("youtubeUrl1") as string
+    const youtubeUrl2 = formData.get("youtubeUrl2") as string
+    const musicUrl = formData.get("musicUrl") as string
     const spotifyUrl = formData.get("spotifyUrl") as string
     const senderName = formData.get("senderName") as string
     const password = formData.get("password") as string
     const passwordHint = formData.get("passwordHint") as string
+    const isBirthday = formData.get("isBirthday") === "on"
+
+    // Build YouTube URLs array
+    const youtubeUrls: string[] = []
+    if (youtubeUrl1?.trim()) youtubeUrls.push(youtubeUrl1.trim())
+    if (youtubeUrl2?.trim()) youtubeUrls.push(youtubeUrl2.trim())
 
     try {
         await prisma.gift.update({
@@ -108,7 +129,10 @@ export async function updateGift(id: string, formData: FormData) {
                 message,
                 giftType,
                 mediaUrl: mediaUrl || null,
+                youtubeUrls: youtubeUrls.length > 0 ? JSON.stringify(youtubeUrls) : null,
+                musicUrl: musicUrl || null,
                 spotifyUrl: spotifyUrl || null,
+                isBirthday,
                 senderName: senderName || null,
                 ...(password && { password }),
                 passwordHint: passwordHint || null,

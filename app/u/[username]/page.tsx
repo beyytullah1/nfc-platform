@@ -54,7 +54,10 @@ export default async function UserProfilePage({ params }: Props) {
                         { coOwners: { some: { id: user.id } } }
                     ]
                 },
-                include: { tag: true },
+                include: {
+                    tag: true,
+                    coOwners: { select: { id: true } }
+                },
                 orderBy: { createdAt: 'desc' }
             }),
             prisma.mug.findMany({
@@ -78,6 +81,7 @@ export default async function UserProfilePage({ params }: Props) {
         <UserProfileClient
             user={user}
             isOwner={isOwner}
+            currentUserId={session?.user?.id || null}
             cards={cards}
             plants={plantsWithOwnerId}
             mugs={mugs}

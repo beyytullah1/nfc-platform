@@ -84,13 +84,12 @@ declare module "next-auth" {
         user: ExtendedUser
     }
 
-    interface User extends ExtendedUser {}
-}
+    interface User extends ExtendedUser { }
 
-declare module "next-auth/jwt" {
     interface JWT {
-        id: string
+        id?: string
         username?: string | null
         bio?: string | null
+        role?: string
     }
 }

@@ -37,6 +37,7 @@ export default async function ConnectionsPage() {
                             id: true,
                             slug: true,
                             title: true,
+                            avatarUrl: true,
                             fields: {
                                 where: { fieldType: 'phone' },
                                 take: 1,

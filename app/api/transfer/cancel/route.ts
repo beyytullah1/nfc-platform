@@ -1,67 +1,48 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
-import { auth } from '@/lib/auth'
+import { auth } from "@/lib/auth"
+import { prisma } from "@/lib/db"
+import { NextResponse } from "next/server"
 
-// Cancel transfer request
-export async function POST(request: NextRequest) {
+export async function POST(req: Request) {
     try {
         const session = await auth()
-        if (!session?.user?.id) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        if (!session?.user) {
+            return NextResponse.json({ error: "Oturum açmalısınız" }, { status: 401 })
         }
 
-        const { requestId } = await request.json()
+        const body = await req.json()
+        const { requestId } = body
 
         if (!requestId) {
-            return NextResponse.json({ error: 'Request ID gerekli' }, { status: 400 })
+            return NextResponse.json({ error: "İstek ID gerekli" }, { status: 400 })
         }
 
-        // Find transfer request
-        const transferRequest = await prisma.transferRequest.findUnique({
+        const request = await prisma.transferRequest.findUnique({
+            where: { id: requestId }
+        })
+
+        if (!request) {
+            return NextResponse.json({ error: "Transfer isteği bulunamadı" }, { status: 404 })
+        }
+
+        // Only sender can cancel
+        if (request.fromUserId !== session.user.id) {
+            return NextResponse.json({ error: "Bu işlemi yapmaya yetkiniz yok" }, { status: 403 })
+        }
+
+        if (request.status !== 'pending') {
+            return NextResponse.json({ error: "Bu istek zaten sonuçlanmış" }, { status: 400 })
+        }
+
+        // Update status to cancelled
+        await prisma.transferRequest.update({
             where: { id: requestId },
-            include: {
-                toUser: { select: { id: true, name: true } }
-            }
+            data: { status: 'cancelled' }
         })
 
-        if (!transferRequest) {
-            return NextResponse.json({ error: 'Transfer isteği bulunamadı' }, { status: 404 })
-        }
+        return NextResponse.json({ success: true })
 
-        // Check if user is the sender
-        if (transferRequest.fromUserId !== session.user.id) {
-            return NextResponse.json({ error: 'Bu isteği iptal etme yetkiniz yok' }, { status: 403 })
-        }
-
-        // Check if already processed
-        if (transferRequest.status !== 'pending') {
-            return NextResponse.json({ error: 'Bu istek zaten işlenmiş' }, { status: 400 })
-        }
-
-        // Cancel transfer
-        await prisma.$transaction(async (tx) => {
-            // 1. Update request status
-            await tx.transferRequest.update({
-                where: { id: requestId },
-                data: { status: 'cancelled' }
-            })
-
-            // 2. Notify receiver
-            await tx.notification.create({
-                data: {
-                    userId: transferRequest.toUserId,
-                    senderId: session.user!.id,
-                    type: 'transfer_cancelled',
-                    title: 'Hediye İptal Edildi 🚫',
-                    body: `${session.user!.name} hediye gönderimini iptal etti.`,
-                    data: JSON.stringify({ tagId: transferRequest.tagId })
-                }
-            })
-        })
-
-        return NextResponse.json({ success: true, message: 'Hediye isteği iptal edildi' })
     } catch (error) {
-        console.error('Cancel transfer error:', error)
-        return NextResponse.json({ error: 'Bir hata oluştu' }, { status: 500 })
+        console.error("Cancel transfer error:", error)
+        return NextResponse.json({ error: "Bir hata oluştu" }, { status: 500 })
     }
 }

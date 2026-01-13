@@ -206,9 +206,11 @@ export default function PublicCardClient({ initialCard }: PublicCardClientProps)
     const visibleFields = initialCard.fields.filter(f => f.privacyLevel <= unlockedLevel)
     const lockedFields = initialCard.fields.filter(f => f.privacyLevel > unlockedLevel)
 
-    // Sosyal medya linkleri (hızlı erişim ikonu için)
-    const socialFields = visibleFields.filter(f => SOCIAL_TYPES.includes(f.fieldType))
-    const otherFields = visibleFields.filter(f => !SOCIAL_TYPES.includes(f.fieldType))
+    // Sosyal medya linkleri (hızlı erişim ikonu için - sadece level 0)
+    const socialFields = visibleFields.filter(f => SOCIAL_TYPES.includes(f.fieldType) && f.privacyLevel === 0)
+    // Diğer alanlar - TÜM görünür alanlar (sosyal medya dahil)
+    const otherFields = visibleFields
+
 
     // Kullanıcı avatar veya kart avatar
     const displayAvatar = initialCard.avatarUrl || initialCard.user.avatarUrl
@@ -306,8 +308,8 @@ export default function PublicCardClient({ initialCard }: PublicCardClientProps)
 
                         {/* Quick Social Icons with SVG */}
                         {(() => {
-                            // Sadece header'da gösterilecek popüler ikonlar
-                            const HEADER_ICONS = ['phone', 'whatsapp', 'instagram', 'linkedin', 'twitter', 'github', 'facebook', 'youtube']
+                            // Sadece en önemli 7 sosyal platform ikonu göster
+                            const HEADER_ICONS = ['phone', 'whatsapp', 'instagram', 'linkedin', 'email', 'website', 'twitter']
                             const headerFields = initialCard.fields.filter(f =>
                                 HEADER_ICONS.includes(f.fieldType) && f.privacyLevel === 0
                             )

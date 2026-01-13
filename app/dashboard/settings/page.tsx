@@ -9,7 +9,7 @@ export default function ProfilePage() {
     const { data: session, update } = useSession()
     const { showToast } = useToast()
     const [isLoading, setIsLoading] = useState(false)
-    const [activeTab, setActiveTab] = useState<'info' | 'security'>('info')
+    const [activeTab, setActiveTab] = useState<'info' | 'security' | 'api'>('info')
     const [userData, setUserData] = useState<any>(null)
 
     // Fetch fresh user data from database
@@ -101,6 +101,19 @@ export default function ProfilePage() {
                     }}
                 >
                     Güvenlik
+                </button>
+                <button
+                    onClick={() => setActiveTab('api')}
+                    style={{
+                        padding: '1rem',
+                        background: 'none',
+                        border: 'none',
+                        color: activeTab === 'api' ? '#3b82f6' : '#94a3b8',
+                        borderBottom: activeTab === 'api' ? '2px solid #3b82f6' : '2px solid transparent',
+                        cursor: 'pointer'
+                    }}
+                >
+                    API Ayarları
                 </button>
             </div>
 
@@ -266,6 +279,78 @@ export default function ProfilePage() {
                             }}
                         >
                             {isLoading ? 'İşleniyor...' : 'Şifreyi Değiştir'}
+                        </button>
+                    </form>
+                </div>
+            )}
+
+            {activeTab === 'api' && (
+                <div style={{ background: '#1e293b', padding: '2rem', borderRadius: '1rem' }}>
+                    <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', color: '#fff' }}>🤖 Gemini AI API</h2>
+                    <p style={{ color: '#94a3b8', marginBottom: '1.5rem' }}>
+                        Bitki AI asistanını kullanmak için kendi Gemini API key'inizi girebilirsiniz.
+                    </p>
+                    <form
+                        onSubmit={async (e) => {
+                            e.preventDefault()
+                            setIsLoading(true)
+                            const formData = new FormData(e.currentTarget)
+                            const apiKey = formData.get('geminiApiKey') as string
+
+                            try {
+                                const res = await fetch('/api/settings/api-key', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ geminiApiKey: apiKey })
+                                })
+
+                                if (res.ok) {
+                                    showToast('API key kaydedildi', 'success')
+                                } else {
+                                    const data = await res.json()
+                                    showToast(data.error || 'Bir hata oluştu', 'error')
+                                }
+                            } catch (error) {
+                                showToast('Bir hata oluştu', 'error')
+                            }
+                            setIsLoading(false)
+                        }}
+                        style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
+                    >
+                        <div>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Gemini API Key</label>
+                            <input
+                                type="password"
+                                name="geminiApiKey"
+                                defaultValue={user?.geminiApiKey || ''}
+                                placeholder="AIzaSy..."
+                                style={{
+                                    width: '100%',
+                                    padding: '0.75rem',
+                                    borderRadius: '0.5rem',
+                                    background: '#0f172a',
+                                    border: '1px solid #334155',
+                                    color: 'white'
+                                }}
+                            />
+                            <small style={{ color: '#64748b', display: 'block', marginTop: '0.5rem' }}>
+                                API key'i buradan alabilirsiniz: <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6' }}>https://aistudio.google.com/app/apikey</a>
+                            </small>
+                        </div>
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            style={{
+                                padding: '0.75rem',
+                                background: '#10b981',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '0.5rem',
+                                cursor: isLoading ? 'not-allowed' : 'pointer',
+                                opacity: isLoading ? 0.7 : 1
+                            }}
+                        >
+                            {isLoading ? 'Kaydediliyor...' : 'API Key Kaydet'}
                         </button>
                     </form>
                 </div>

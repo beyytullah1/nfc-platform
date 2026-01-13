@@ -13,11 +13,12 @@ export async function GET(request: NextRequest) {
 
         const tag = await prisma.nfcTag.findUnique({
             where: { publicCode: code },
-            select: {
-                id: true,
-                ownerId: true,
-                moduleType: true,
-                status: true
+            include: {
+                plant: { select: { id: true, slug: true } },
+                mug: { select: { id: true, slug: true } },
+                card: { select: { id: true, slug: true } },
+                gift: { select: { id: true, slug: true } },
+                page: { select: { id: true, slug: true } }
             }
         })
 
@@ -25,11 +26,27 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ exists: false })
         }
 
+        // If tag is linked to a module, prepare redirect URL
+        let redirectUrl: string | null = null
+
+        if (tag.plant) {
+            redirectUrl = `/plant/${tag.plant.slug || tag.plant.id}`
+        } else if (tag.mug) {
+            redirectUrl = `/mug/${tag.mug.slug || tag.mug.id}`
+        } else if (tag.card) {
+            redirectUrl = `/${tag.card.slug || tag.card.id}`
+        } else if (tag.gift) {
+            redirectUrl = `/gift/${tag.gift.slug || tag.gift.id}`
+        } else if (tag.page) {
+            redirectUrl = `/page/${tag.page.slug || tag.page.id}`
+        }
+
         return NextResponse.json({
             exists: true,
             hasOwner: !!tag.ownerId,
             moduleType: tag.moduleType,
-            status: tag.status
+            status: tag.status,
+            redirectUrl
         })
     } catch (error) {
         console.error('NFC check error:', error)

@@ -34,10 +34,19 @@ export async function PATCH(
         } else if (type === 'plant') {
             const plant = await prisma.plant.findUnique({
                 where: { id },
-                select: { ownerId: true }
+                select: {
+                    ownerId: true,
+                    coOwners: {
+                        select: { id: true }
+                    }
+                }
             })
 
-            if (!plant || plant.ownerId !== session.user.id) {
+            // Check if user is owner or co-owner
+            const isOwner = plant?.ownerId === session.user.id
+            const isCoOwner = plant?.coOwners.some(co => co.id === session.user.id)
+
+            if (!plant || (!isOwner && !isCoOwner)) {
                 return NextResponse.json({ error: 'Not found or unauthorized' }, { status: 404 })
             }
 

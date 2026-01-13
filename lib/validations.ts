@@ -46,7 +46,7 @@ export const bioSchema = z
  * Module type validation
  */
 export const moduleTypeSchema = z.enum(['card', 'plant', 'mug', 'gift', 'canvas'], {
-  errorMap: () => ({ message: 'Geçersiz modül tipi' })
+  message: 'Geçersiz modül tipi'
 })
 
 /**
@@ -110,7 +110,7 @@ export const giftClaimSchema = z.object({
  * Upload type schema
  */
 export const uploadTypeSchema = z.enum(['logo', 'avatar', 'vcard'], {
-  errorMap: () => ({ message: 'Geçersiz upload tipi' })
+  message: 'Geçersiz upload tipi'
 })
 
 /**
@@ -130,8 +130,8 @@ export async function validateRequest<T>(
         error: new Response(
           JSON.stringify({
             error: 'Validation hatası',
-            details: error.errors.map(e => ({
-              path: e.path.join('.'),
+            details: error.issues.map((e) => ({
+              path: e.path.map(String).join('.'),
               message: e.message
             }))
           }),
