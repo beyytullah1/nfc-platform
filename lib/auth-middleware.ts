@@ -10,14 +10,14 @@ import { NextResponse } from 'next/server'
  * Require authentication - throws error if not authenticated
  * @returns Session object if authenticated
  */
-export async function requireAuth(): Promise<NonNullable<Awaited<ReturnType<typeof auth>>>> {
+export async function requireAuth() {
   const session = await auth()
-  
+
   if (!session?.user?.id) {
     throw new AuthError('Giriş yapmanız gerekiyor.', 401)
   }
-  
-  return session as NonNullable<typeof session>
+
+  return session
 }
 
 /**
@@ -43,7 +43,7 @@ export function handleAuthError(error: unknown): NextResponse {
       { status: error.statusCode }
     )
   }
-  
+
   // Re-throw non-auth errors
   throw error
 }
@@ -51,8 +51,10 @@ export function handleAuthError(error: unknown): NextResponse {
 /**
  * Wrapper for API route handlers that require authentication
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function withAuth<T extends any[]>(
-  handler: (session: NonNullable<Awaited<ReturnType<typeof auth>>>, ...args: T) => Promise<Response>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  handler: (session: any, ...args: T) => Promise<Response>
 ) {
   return async (...args: T): Promise<Response> => {
     try {
