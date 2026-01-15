@@ -77,10 +77,29 @@ export default async function NfcTagsPage() {
         orderBy: { createdAt: 'desc' }
     })
 
+    // Serialize Date fields to ISO strings for client component
+    const serializedTags = userTags.map(tag => ({
+        ...tag,
+        createdAt: tag.createdAt.toISOString(),
+        claimedAt: tag.claimedAt?.toISOString() ?? null,
+    }))
+
+    const serializedSentRequests = sentRequests.map(req => ({
+        ...req,
+        createdAt: req.createdAt.toISOString(),
+        updatedAt: req.updatedAt.toISOString(),
+    }))
+
+    const serializedReceivedRequests = receivedRequests.map(req => ({
+        ...req,
+        createdAt: req.createdAt.toISOString(),
+        updatedAt: req.updatedAt.toISOString(),
+    }))
+
     return <NfcTagsClient
-        userTags={userTags}
+        userTags={serializedTags}
         userModules={userModules}
-        sentRequests={sentRequests}
-        receivedRequests={receivedRequests}
+        sentRequests={serializedSentRequests}
+        receivedRequests={serializedReceivedRequests}
     />
 }

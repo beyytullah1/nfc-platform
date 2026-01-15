@@ -15,8 +15,8 @@ interface Gift {
     message: string | null
     giftType: string
     isClaimed: boolean
-    claimedAt: Date | null
-    createdAt: Date
+    claimedAt: string | null
+    createdAt: string
     tag?: { publicCode: string } | null
     slug?: string | null
 }

@@ -12,7 +12,7 @@ interface NfcTag {
     status: string
     moduleType: string | null
     createdAt: string
-    claimedAt?: string
+    claimedAt: string | null
     card?: { id: string; title: string | null } | null
     plant?: { id: string; name: string } | null
     mug?: { id: string; name: string } | null
@@ -35,8 +35,8 @@ interface TransferRequest {
     toUserId: string
     status: string
     message: string | null
-    createdAt: Date
-    updatedAt: Date
+    createdAt: string
+    updatedAt: string
     fromUser?: {
         name: string | null
         username: string | null

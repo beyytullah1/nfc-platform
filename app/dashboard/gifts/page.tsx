@@ -71,7 +71,11 @@ export default async function GiftsPage() {
                 </div>
             </div>
 
-            <GiftList gifts={gifts} />
+            <GiftList gifts={gifts.map(g => ({
+                ...g,
+                createdAt: g.createdAt.toISOString(),
+                claimedAt: g.claimedAt?.toISOString() ?? null,
+            }))} />
         </div>
     )
 }

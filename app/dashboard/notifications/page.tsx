@@ -40,8 +40,8 @@ export default async function NotificationsPage() {
                 title: n.title,
                 body: n.body,
                 data: n.data,
-                readAt: n.readAt,
-                createdAt: n.createdAt,
+                readAt: n.readAt?.toISOString() ?? null,
+                createdAt: n.createdAt.toISOString(),
                 sender: n.sender ? {
                     id: n.sender.id,
                     name: n.sender.name,

@@ -11,8 +11,8 @@ interface Notification {
     title: string | null
     body: string | null
     data: string | null
-    readAt: Date | null
-    createdAt: Date
+    readAt: string | null
+    createdAt: string
     sender: {
         id: string
         name: string | null
@@ -30,7 +30,7 @@ export default function NotificationsClient({ notifications, unreadCount }: Noti
     const [markingRead, setMarkingRead] = useState(false)
     const router = useRouter()
 
-    const formatTimeAgo = (date: Date) => {
+    const formatTimeAgo = (date: string) => {
         const now = new Date()
         const diff = now.getTime() - new Date(date).getTime()
         const minutes = Math.floor(diff / 60000)
