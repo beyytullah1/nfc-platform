@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { auth } from "@/lib/auth"
 
 // Reserved paths that should NOT be treated as card slugs
 const RESERVED_PATHS = [
@@ -9,19 +8,11 @@ const RESERVED_PATHS = [
     '/admin', '/claim', '/actions', '/_next', '/favicon'
 ]
 
-export async function middleware(req: NextRequest) {
+export function middleware(req: NextRequest) {
     const { pathname } = req.nextUrl
 
-    // Dashboard auth check - protect all dashboard routes
-    if (pathname.startsWith('/dashboard')) {
-        const session = await auth()
-        if (!session?.user) {
-            const url = req.nextUrl.clone()
-            url.pathname = '/login'
-            url.searchParams.set('callbackUrl', pathname)
-            return NextResponse.redirect(url)
-        }
-    }
+    // NOTE: Dashboard auth moved to app/dashboard/layout.tsx to avoid Edge Prisma errors
+    // Middleware runs on Edge runtime which doesn't support Prisma
 
     // Redirect /u/[code] to /t/[code] for NFC codes
     if (pathname.startsWith('/u/') && pathname.length > 3) {
@@ -33,9 +24,6 @@ export async function middleware(req: NextRequest) {
             return NextResponse.redirect(url)
         }
     }
-
-    // Admin check moved to Layout to prevent Edge Runtime hangs
-    // path rewriting logic below...
 
     // Username rewrite logic - /beytullah → /c/beytullah
     // Skip reserved paths
