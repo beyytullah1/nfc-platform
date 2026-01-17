@@ -202,6 +202,7 @@ model CardLinkGroup {
   card   Card        @relation(fields: [cardId], references: [id], onDelete: Cascade)
   fields CardField[]
 
+  @@index([cardId])
   @@map("card_link_groups")
 }
 
@@ -221,6 +222,8 @@ model CardField {
   card  Card           @relation(fields: [cardId], references: [id], onDelete: Cascade)
   group CardLinkGroup? @relation(fields: [groupId], references: [id])
 
+  @@index([cardId])
+  @@index([groupId])
   @@map("card_fields")
 }
 
@@ -453,6 +456,7 @@ model PageBlock {
   // İlişkiler
   page Page @relation(fields: [pageId], references: [id], onDelete: Cascade)
 
+  @@index([pageId])
   @@map("page_blocks")
 }
 
