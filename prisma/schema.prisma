@@ -92,6 +92,7 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
   @@map("accounts")
 }
 
@@ -102,6 +103,7 @@ model Session {
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("sessions")
 }
 
@@ -202,6 +204,7 @@ model CardLinkGroup {
   card   Card        @relation(fields: [cardId], references: [id], onDelete: Cascade)
   fields CardField[]
 
+  @@index([cardId])
   @@map("card_link_groups")
 }
 
@@ -221,6 +224,8 @@ model CardField {
   card  Card           @relation(fields: [cardId], references: [id], onDelete: Cascade)
   group CardLinkGroup? @relation(fields: [groupId], references: [id])
 
+  @@index([cardId, displayOrder])
+  @@index([groupId])
   @@map("card_fields")
 }
 
